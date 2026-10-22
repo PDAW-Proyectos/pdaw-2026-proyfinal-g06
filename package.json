@@ -8,8 +8,9 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node --test",
-    "start": "node src/server.js"
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test"
   },
   "repository": {
     "type": "git",

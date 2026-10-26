@@ -1,0 +1,31 @@
+{
+  "name": "pdaw---proyecto-final",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PDAW-Proyectos/pdaw-2026-proyfinal-g06.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/PDAW-Proyectos/pdaw-2026-proyfinal-g06/issues"
+  },
+  "homepage": "https://github.com/PDAW-Proyectos/pdaw-2026-proyfinal-g06#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0"
+  }
+}

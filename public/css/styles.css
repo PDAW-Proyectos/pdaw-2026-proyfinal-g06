@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+
+.text-primary { color: #2563eb !important; }
+.bg-primary { background-color: #2563eb !important; }
+
+.fs-xs { font-size: 0.75rem; }
+.fs-sm { font-size: 0.875rem; }
+.fw-medium { font-weight: 500; }
+.cursor-pointer { cursor: pointer; }
+
+.navbar { padding-top: 1rem; padding-bottom: 1rem; }
+.navbar .nav-link { font-size: 0.95rem; }
+.active-dot {
+    width: 6px;
+    height: 6px;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+}
+
+.modal-content {
+    border-radius: 1rem;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+}
+
+.nav-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-color: var(--bs-border-color);
+}
+.game-card { cursor: pointer; }
+.game-img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+.game-card:hover .game-img {
+    transform: scale(1.02);
+}
+
+.avatar-game {
+    width: 40px;
+    height: 40px;
+    font-size: 0.85rem;
+}
+
+body, .bg-body, .bg-body-tertiary, .card, .border-bottom, .border-top {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

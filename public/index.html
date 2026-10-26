@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>respawn. - El juego continúa aquí</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg bg-body border-bottom py-3">
+        <div class="container-fluid px-4 px-lg-5">
+            <a class="navbar-brand fw-bold text-body-emphasis d-flex align-items-center" href="#">
+                <i class="bi bi-asterisk text-primary fs-4 me-2"></i> respawn.
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium text-muted">
+                    <li class="nav-item me-4 position-relative">
+                        <a class="nav-link text-primary fw-bold" href="#">Home</a>
+                        <span class="active-dot bg-primary rounded-circle position-absolute"></span>
+                    </li>
+                    <li class="nav-item me-4"><a class="nav-link" href="#">Buscar videojuego</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Tendencias</a></li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-3">
+                    <button id="theme-toggle" class="btn btn-link text-body p-0 text-decoration-none">
+                        <i class="bi bi-moon fs-5"></i>
+                    </button>
+                    <button class="btn btn-link text-body p-0 text-decoration-none">
+                        <i class="bi bi-bell fs-5"></i>
+                    </button>
+                    <div class="border-start ps-3 ms-2 d-flex align-items-center gap-2">
+                        <button id="auth-trigger" class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#auth-modal">
+                            Iniciar sesión
+                        </button>
+                        <div id="user-profile" class="d-none align-items-center">
+                            <div id="user-avatar" class="avatar bg-body-tertiary text-muted fw-bold rounded-circle d-flex justify-content-center align-items-center me-2"></div>
+                            <span id="user-name" class="fw-medium fs-sm"></span>
+                            <button id="logout-button" class="btn btn-outline-danger btn-sm ms-2" type="button">
+                                Cerrar sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="modal fade" id="auth-modal" tabindex="-1" aria-labelledby="auth-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="auth-modal-title">Iniciar sesión</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="auth-message" class="alert d-none" role="alert" aria-live="polite"></div>
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="login-email" class="form-label">Correo electrónico</label>
+                            <input id="login-email" name="email" class="form-control" type="email" autocomplete="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password" class="form-label">Contraseña</label>
+                            <input id="login-password" name="password" class="form-control" type="password" autocomplete="current-password" required>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Iniciar sesión</button>
+                    </form>
+                    <form id="register-form" class="d-none">
+                        <div class="mb-3">
+                            <label for="register-name" class="form-label">Nombre visible</label>
+                            <input id="register-name" name="name" class="form-control" type="text" autocomplete="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-email" class="form-label">Correo electrónico</label>
+                            <input id="register-email" name="email" class="form-control" type="email" autocomplete="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-password" class="form-label">Contraseña</label>
+                            <input id="register-password" name="password" class="form-control" type="password" autocomplete="new-password" minlength="8" required aria-describedby="password-help">
+                            <div id="password-help" class="form-text">Debe tener al menos 8 caracteres.</div>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Crear cuenta</button>
+                    </form>
+                    <p class="text-center text-muted fs-sm mt-4 mb-0">
+                        <span id="auth-switch-prompt">¿No tienes cuenta?</span>
+                        <button id="auth-switch" class="btn btn-link btn-sm p-0 align-baseline" type="button">Regístrate</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid px-4 px-lg-5 my-5">
+
+        <header class="d-flex justify-content-between align-items-end mb-5">
+            <div>
+                <span class="text-primary fw-bold text-uppercase fs-xs">Tu punto de encuentro</span>
+                <h1 class="display-4 fw-bold text-body-emphasis mt-2 mb-3">El juego continúa aquí.</h1>
+                <p class="text-muted fs-5 mb-0">Descubre tu próximo mundo. Comparte el que ya es tuyo.</p>
+            </div>
+            <div class="text-muted fs-sm d-flex align-items-center">
+                <span class="status-dot bg-secondary rounded-circle me-2"></span> 1.248 jugadores en línea
+            </div>
+        </header>
+
+        <section class="mb-5 pb-4 border-bottom">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fs-4 fw-medium mb-0">Juegos recomendados</h3>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted fs-sm">01 / 03</span>
+                    <button class="btn btn-outline-secondary rounded-circle nav-btn"><i class="bi bi-arrow-left"></i></button>
+                    <button class="btn btn-outline-secondary rounded-circle nav-btn"><i class="bi bi-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="game-card">
+                        <img src="https://i.blogs.es/ea0624/elden-ring-new-header-mobile/1366_2000.jpeg" alt="Elden Ring" class="img-fluid rounded-3 mb-3 game-img">
+                        <span class="text-primary fw-bold fs-xs">Selección de la comunidad</span>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <h4 class="fw-bold mb-0">Elden Ring</h4>
+                            <i class="bi bi-arrow-up-right fs-5"></i>
+                        </div>
+                        <p class="text-muted fs-sm mt-1">RPG · Mundo abierto · 24,8 mil miembros</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="game-card">
+                        <img src="https://m.media-amazon.com/images/M/MV5BMGIyYmJmZDgtOWQ1Ny00NDFiLTk2OTgtM2Q2ZWQ4OWIxZjg3XkEyXkFqcGc@._V1_.jpg" alt="Hollow Knight" class="img-fluid rounded-3 mb-3 game-img">
+                        <span class="text-primary fw-bold fs-xs">Para quienes exploran</span>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <h4 class="fw-bold mb-0">Hollow Knight</h4>
+                            <i class="bi bi-arrow-up-right fs-5"></i>
+                        </div>
+                        <p class="text-muted fs-sm mt-1">Metroidvania · Aventura · 18,2 mil miembros</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="game-card">
+                        <img src="https://m.media-amazon.com/images/M/MV5BYmU1MzVkYjMtNmI2Ny00NWQzLWE5MjQtZTIzNzgzMGY3ODEyXkEyXkFqcGc@._V1_.jpg" alt="Hades II" class="img-fluid rounded-3 mb-3 game-img">
+                        <span class="text-primary fw-bold fs-xs">En boca de todos</span>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <h4 class="fw-bold mb-0">Hades II</h4>
+                            <i class="bi bi-arrow-up-right fs-5"></i>
+                        </div>
+                        <p class="text-muted fs-sm mt-1">Roguelike · Acción · 12,6 mil miembros</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="row gx-5">
+
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <h3 class="fs-4 fw-medium mb-1">Conversaciones para ti</h3>
+                        <p class="text-muted fs-sm mb-0">Por tu interés en los RPG, la exploración y las buenas historias.</p>
+                    </div>
+                    <a href="#" class="text-primary text-decoration-none fw-medium fs-sm">Ver tendencias <i class="bi bi-arrow-right"></i></a>
+                </div>
+
+                <div class="thread-list">
+                    <div class="d-flex justify-content-between py-4 border-bottom">
+                        <div>
+                            <div class="fs-xs fw-medium mb-2">
+                                <span class="text-primary">Elden Ring</span> <span class="text-muted">/ Ayuda y consejos</span>
+                            </div>
+                            <h5 class="fw-bold mb-2">¿Qué build os está funcionando para el DLC?</h5>
+                            <div class="text-muted fs-sm">NicoRuna · hace 12 min</div>
+                        </div>
+                        <div class="d-flex align-items-center text-center ms-3">
+                            <div class="me-4">
+                                <div class="fw-bold fs-5">128</div>
+                                <div class="text-muted fs-xs">respuestas</div>
+                            </div>
+                            <div class="text-muted fw-medium"><i class="bi bi-arrow-up"></i> 246</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between py-4 border-bottom">
+                        <div>
+                            <div class="fs-xs fw-medium mb-2">
+                                <span class="text-primary">Hollow Knight</span> <span class="text-muted">/ Opinión</span>
+                            </div>
+                            <h5 class="fw-bold mb-2">El arte de perderse sin mirar el mapa</h5>
+                            <div class="text-muted fs-sm">Sofi.exe · hace 24 min</div>
+                        </div>
+                        <div class="d-flex align-items-center text-center ms-3">
+                            <div class="me-4">
+                                <div class="fw-bold fs-5">64</div>
+                                <div class="text-muted fs-xs">respuestas</div>
+                            </div>
+                            <div class="text-muted fw-medium"><i class="bi bi-arrow-up"></i> 183</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between py-4 border-bottom">
+                        <div>
+                            <div class="fs-xs fw-medium mb-2">
+                                <span class="text-primary">Hades II</span> <span class="text-muted">/ Debate general</span>
+                            </div>
+                            <h5 class="fw-bold mb-2">Una partida más... y ya van veinte</h5>
+                            <div class="text-muted fs-sm">PixelNómada · hace 38 min</div>
+                        </div>
+                        <div class="d-flex align-items-center text-center ms-3">
+                            <div class="me-4">
+                                <div class="fw-bold fs-5">52</div>
+                                <div class="text-muted fs-xs">respuestas</div>
+                            </div>
+                            <div class="text-muted fw-medium"><i class="bi bi-arrow-up"></i> 159</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="#" class="text-primary text-decoration-none fw-medium">Explorar todos los debates <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mt-5 mt-lg-0">
+                <div class="card border border-opacity-10 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">En tu radar</h5>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-game bg-body-tertiary text-muted fw-bold rounded me-3 d-flex justify-content-center align-items-center">ER</div>
+                                <div>
+                                    <div class="fw-bold fs-sm">Elden Ring</div>
+                                    <div class="text-muted fs-xs">12 debates nuevos</div>
+                                </div>
+                            </div>
+                            <i class="bi bi-chevron-right text-muted"></i>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-game bg-body-tertiary text-muted fw-bold rounded me-3 d-flex justify-content-center align-items-center">HK</div>
+                                <div>
+                                    <div class="fw-bold fs-sm">Hollow Knight</div>
+                                    <div class="text-muted fs-xs">8 debates nuevos</div>
+                                </div>
+                            </div>
+                            <i class="bi bi-chevron-right text-muted"></i>
+                        </div>
+
+                        <a href="#" class="text-primary text-decoration-none fw-medium fs-sm">Descubrir comunidades</a>
+                    </div>
+                </div>
+
+                <div class="card border-0 bg-body-tertiary rounded-4">
+                    <div class="card-body p-4">
+                        <div class="text-muted fs-xs fw-bold mb-2">BUENAS PARTIDAS, BUENAS CHARLAS</div>
+                        <h4 class="fw-bold mb-3">Hay sitio para tu forma de jugar.</h4>
+                        <p class="text-muted fs-sm mb-4">Pregunta sin miedo, comparte sin spoilers y respeta a quien está al otro lado.</p>
+                        <a href="#" class="text-primary text-decoration-none fw-medium fs-sm">Conoce nuestras normas <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="container-fluid px-4 px-lg-5 py-4 border-top mt-5 d-flex justify-content-between align-items-center">
+        <div class="text-muted fs-sm">
+            respawn. © 2026 · El siguiente punto de encuentro.
+        </div>
+        <div class="d-flex gap-4 fs-sm">
+            <a href="#" class="text-muted text-decoration-none">Normas de la comunidad</a>
+            <a href="#" class="text-muted text-decoration-none">Privacidad</a>
+            <a href="#" class="text-muted text-decoration-none">Ayuda</a>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/scripts.js"></script>
+</body>
+</html>

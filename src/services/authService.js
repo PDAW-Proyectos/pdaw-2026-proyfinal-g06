@@ -1,62 +1,62 @@
 const bcrypt = require('bcryptjs');
 const { randomUUID } = require('crypto');
-const userRepository = require('../repositories/userRepository');
+const repositorioUsuarios = require('../repositories/userRepository');
 
-const createAuthError = (message, statusCode) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
+const crearErrorAutenticacion = (mensaje, codigoEstado) => {
+  const error = new Error(mensaje);
+  error.statusCode = codigoEstado;
   return error;
 };
 
-const registerUser = async (name, email, password) => {
-  if (typeof name !== 'string' || !name.trim()) {
-    throw createAuthError('El nombre visible es obligatorio', 400);
+const registrarUsuario = async (nombre, email, password) => {
+  if (typeof nombre !== 'string' || !nombre.trim()) {
+    throw crearErrorAutenticacion('El nombre visible es obligatorio', 400);
   }
   if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    throw createAuthError('Introduce un correo electrónico válido', 400);
+    throw crearErrorAutenticacion('Introduce un correo electrónico válido', 400);
   }
   if (typeof password !== 'string' || password.length < 8) {
-    throw createAuthError('La contraseña debe tener al menos 8 caracteres', 400);
+    throw crearErrorAutenticacion('La contraseña debe tener al menos 8 caracteres', 400);
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
-  const existingUser = await userRepository.findUserByEmail(normalizedEmail);
-  if (existingUser) {
-    throw createAuthError('El correo electrónico ya está registrado', 409);
+  const emailNormalizado = email.trim().toLowerCase();
+  const usuarioExistente = await repositorioUsuarios.buscarUsuarioPorEmail(emailNormalizado);
+  if (usuarioExistente) {
+    throw crearErrorAutenticacion('El correo electrónico ya está registrado', 409);
   }
 
-  const user = {
+  const usuario = {
     id: randomUUID(),
-    name: name.trim(),
-    email: normalizedEmail,
+    name: nombre.trim(),
+    email: emailNormalizado,
     passwordHash: await bcrypt.hash(password, 12)
   };
 
-  await userRepository.createUser(user);
-  return { id: user.id, name: user.name };
+  await repositorioUsuarios.crearUsuario(usuario);
+  return { id: usuario.id, name: usuario.name };
 };
 
-const authenticateUser = async (email, password) => {
+const autenticarUsuario = async (email, password) => {
   if (typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password) {
-    throw createAuthError('Introduce tu correo electrónico y contraseña', 400);
+    throw crearErrorAutenticacion('Introduce tu correo electrónico y contraseña', 400);
   }
 
-  const user = await userRepository.findUserByEmail(email.trim().toLowerCase());
-  if (!user) {
-    throw createAuthError('Credenciales inválidas', 401);
+  const usuario = await repositorioUsuarios.buscarUsuarioPorEmail(email.trim().toLowerCase());
+  if (!usuario) {
+    throw crearErrorAutenticacion('Credenciales inválidas', 401);
   }
 
-  const isMatch = await bcrypt.compare(password, user.passwordHash);
-  if (!isMatch) {
-    throw createAuthError('Credenciales inválidas', 401);
+  const coincide = await bcrypt.compare(password, usuario.passwordHash);
+  if (!coincide) {
+    throw crearErrorAutenticacion('Credenciales inválidas', 401);
   }
 
-  return user;
+  return usuario;
 };
 
-const getUserById = async (id) => {
-  const user = await userRepository.findUserById(id);
-  return user ? { id: user.id, name: user.name } : null;
+const obtenerUsuarioPorId = async (id) => {
+  const usuario = await repositorioUsuarios.buscarUsuarioPorId(id);
+  return usuario ? { id: usuario.id, name: usuario.name } : null;
 };
 
-module.exports = { registerUser, authenticateUser, getUserById };
+module.exports = { registrarUsuario, autenticarUsuario, obtenerUsuarioPorId };

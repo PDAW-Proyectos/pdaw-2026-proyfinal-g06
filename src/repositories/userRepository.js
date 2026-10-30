@@ -1,22 +1,22 @@
-const usersDB = [];
+const usuariosDB = [];
 
-const findUserByEmail = async (email) => {
-  return usersDB.find((user) => user.email === email.toLowerCase());
+const buscarUsuarioPorEmail = async (email) => {
+  return usuariosDB.find((usuario) => usuario.email === email.toLowerCase());
 };
 
-const findUserById = async (id) => {
-  return usersDB.find((user) => user.id === id);
+const buscarUsuarioPorId = async (id) => {
+  return usuariosDB.find((usuario) => usuario.id === id);
 };
 
-const createUser = async (user) => {
-  if (usersDB.some((storedUser) => storedUser.email === user.email)) {
+const crearUsuario = async (usuario) => {
+  if (usuariosDB.some((usuarioGuardado) => usuarioGuardado.email === usuario.email)) {
     const error = new Error('El correo electrónico ya está registrado');
     error.statusCode = 409;
     throw error;
   }
 
-  usersDB.push(user);
-  return user;
+  usuariosDB.push(usuario);
+  return usuario;
 };
 
-module.exports = { findUserByEmail, findUserById, createUser };
+module.exports = { buscarUsuarioPorEmail, buscarUsuarioPorId, crearUsuario };

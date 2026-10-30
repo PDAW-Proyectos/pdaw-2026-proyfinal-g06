@@ -4,96 +4,96 @@ const test = require('node:test');
 const app = require('../src/app');
 
 test('registration and session-backed authentication', async (t) => {
-  const server = app.listen(0);
-  await once(server, 'listening');
+  const servidor = app.listen(0);
+  await once(servidor, 'listening');
   t.after(() => new Promise((resolve, reject) => {
-    server.close((error) => (error ? reject(error) : resolve()));
+    servidor.close((error) => (error ? reject(error) : resolve()));
   }));
 
-  const baseUrl = `http://127.0.0.1:${server.address().port}`;
-  const request = (path, options = {}) => fetch(`${baseUrl}${path}`, options);
-  const post = (path, body, cookie) => request(path, {
+  const urlBase = `http://127.0.0.1:${servidor.address().port}`;
+  const solicitud = (ruta, opciones = {}) => fetch(`${urlBase}${ruta}`, opciones);
+  const enviarPost = (ruta, cuerpo, cookie) => solicitud(ruta, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(cookie ? { Cookie: cookie } : {})
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(cuerpo)
   });
 
-  let response = await request('/api/auth/me');
-  assert.equal(response.status, 200);
-  assert.equal((await response.json()).user, null);
+  let respuesta = await solicitud('/api/auth/me');
+  assert.equal(respuesta.status, 200);
+  assert.equal((await respuesta.json()).user, null);
 
-  response = await post('/api/auth/register', {
+  respuesta = await enviarPost('/api/auth/register', {
     name: '   ',
     email: 'user@example.com',
     password: 'password123'
   });
-  assert.equal(response.status, 400);
+  assert.equal(respuesta.status, 400);
 
-  response = await post('/api/auth/register', {
+  respuesta = await enviarPost('/api/auth/register', {
     name: 'Test User',
     email: 'not-an-email',
     password: 'password123'
   });
-  assert.equal(response.status, 400);
+  assert.equal(respuesta.status, 400);
 
-  response = await post('/api/auth/register', {
+  respuesta = await enviarPost('/api/auth/register', {
     name: 'Test User',
     email: 'USER@example.com',
     password: 'short'
   });
-  assert.equal(response.status, 400);
+  assert.equal(respuesta.status, 400);
 
-  response = await post('/api/auth/register', {
+  respuesta = await enviarPost('/api/auth/register', {
     name: 'Test User',
     email: 'USER@example.com',
     password: 'password123'
   });
-  assert.equal(response.status, 201);
-  const registration = await response.json();
-  assert.equal(registration.user.name, 'Test User');
-  assert.equal('email' in registration.user, false);
-  assert.equal('passwordHash' in registration.user, false);
+  assert.equal(respuesta.status, 201);
+  const registro = await respuesta.json();
+  assert.equal(registro.user.name, 'Test User');
+  assert.equal('email' in registro.user, false);
+  assert.equal('passwordHash' in registro.user, false);
 
-  response = await post('/api/auth/register', {
+  respuesta = await enviarPost('/api/auth/register', {
     name: 'Another User',
     email: 'user@example.com',
     password: 'password123'
   });
-  assert.equal(response.status, 409);
+  assert.equal(respuesta.status, 409);
 
-  response = await post('/api/auth/login', {
+  respuesta = await enviarPost('/api/auth/login', {
     email: 'user@example.com',
     password: 'incorrect-password'
   });
-  assert.equal(response.status, 401);
+  assert.equal(respuesta.status, 401);
 
-  response = await post('/api/auth/login', {
+  respuesta = await enviarPost('/api/auth/login', {
     email: 'USER@example.com',
     password: 'password123'
   });
-  assert.equal(response.status, 200);
-  const loginSetCookie = response.headers.get('set-cookie');
-  assert.match(loginSetCookie, /HttpOnly/i);
-  const loginCookie = loginSetCookie.split(';')[0];
-  const login = await response.json();
-  assert.equal(login.user.name, 'Test User');
+  assert.equal(respuesta.status, 200);
+  const cookieRespuestaLogin = respuesta.headers.get('set-cookie');
+  assert.match(cookieRespuestaLogin, /HttpOnly/i);
+  const cookieLogin = cookieRespuestaLogin.split(';')[0];
+  const datosLogin = await respuesta.json();
+  assert.equal(datosLogin.user.name, 'Test User');
 
-  response = await request('/api/auth/me', { headers: { Cookie: loginCookie } });
-  assert.equal((await response.json()).user.name, 'Test User');
+  respuesta = await solicitud('/api/auth/me', { headers: { Cookie: cookieLogin } });
+  assert.equal((await respuesta.json()).user.name, 'Test User');
 
-  response = await post('/api/auth/login', {
+  respuesta = await enviarPost('/api/auth/login', {
     email: 'user@example.com',
     password: 'password123'
-  }, loginCookie);
-  assert.equal(response.status, 200);
-  const regeneratedCookie = response.headers.get('set-cookie').split(';')[0];
-  assert.notEqual(regeneratedCookie, loginCookie);
+  }, cookieLogin);
+  assert.equal(respuesta.status, 200);
+  const cookieRegenerada = respuesta.headers.get('set-cookie').split(';')[0];
+  assert.notEqual(cookieRegenerada, cookieLogin);
 
-  response = await post('/api/auth/logout', {}, regeneratedCookie);
-  assert.equal(response.status, 200);
-  response = await request('/api/auth/me', { headers: { Cookie: regeneratedCookie } });
-  assert.equal((await response.json()).user, null);
+  respuesta = await enviarPost('/api/auth/logout', {}, cookieRegenerada);
+  assert.equal(respuesta.status, 200);
+  respuesta = await solicitud('/api/auth/me', { headers: { Cookie: cookieRegenerada } });
+  assert.equal((await respuesta.json()).user, null);
 });

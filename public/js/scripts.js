@@ -1,176 +1,176 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const htmlElement = document.documentElement;
-    const themeBtn = document.getElementById('theme-toggle');
-    const icon = themeBtn.querySelector('i');
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    const authTitle = document.getElementById('auth-modal-title');
-    const authSwitchPrompt = document.getElementById('auth-switch-prompt');
-    const authSwitch = document.getElementById('auth-switch');
-    const authMessage = document.getElementById('auth-message');
-    const authModalElement = document.getElementById('auth-modal');
-    const authModal = bootstrap.Modal.getOrCreateInstance(authModalElement);
-    const authTrigger = document.getElementById('auth-trigger');
-    const userProfile = document.getElementById('user-profile');
-    const userName = document.getElementById('user-name');
-    const userAvatar = document.getElementById('user-avatar');
-    const logoutButton = document.getElementById('logout-button');
+    const elementoHtml = document.documentElement;
+    const botonTema = document.getElementById('theme-toggle');
+    const icono = botonTema.querySelector('i');
+    const formularioLogin = document.getElementById('login-form');
+    const formularioRegistro = document.getElementById('register-form');
+    const tituloModalAutenticacion = document.getElementById('auth-modal-title');
+    const textoAlternarAutenticacion = document.getElementById('auth-switch-prompt');
+    const botonAlternarAutenticacion = document.getElementById('auth-switch');
+    const mensajeAutenticacion = document.getElementById('auth-message');
+    const elementoModalAutenticacion = document.getElementById('auth-modal');
+    const modalAutenticacion = bootstrap.Modal.getOrCreateInstance(elementoModalAutenticacion);
+    const botonAbrirAutenticacion = document.getElementById('auth-trigger');
+    const perfilUsuario = document.getElementById('user-profile');
+    const nombreUsuario = document.getElementById('user-name');
+    const avatarUsuario = document.getElementById('user-avatar');
+    const botonCerrarSesion = document.getElementById('logout-button');
 
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        htmlElement.setAttribute('data-bs-theme', savedTheme);
-        updateIcon(savedTheme);
+    const temaGuardado = localStorage.getItem('theme');
+    if (temaGuardado) {
+        elementoHtml.setAttribute('data-bs-theme', temaGuardado);
+        actualizarIcono(temaGuardado);
     }
 
-    themeBtn.addEventListener('click', () => {
-        const currentTheme = htmlElement.getAttribute('data-bs-theme');
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    botonTema.addEventListener('click', () => {
+        const temaActual = elementoHtml.getAttribute('data-bs-theme');
+        const nuevoTema = temaActual === 'light' ? 'dark' : 'light';
         
-        htmlElement.setAttribute('data-bs-theme', newTheme);
+        elementoHtml.setAttribute('data-bs-theme', nuevoTema);
         
-        localStorage.setItem('theme', newTheme);
+        localStorage.setItem('theme', nuevoTema);
         
-        updateIcon(newTheme);
+        actualizarIcono(nuevoTema);
     });
 
-    function updateIcon(theme) {
-        if (theme === 'dark') {
-            icon.classList.remove('bi-moon');
-            icon.classList.add('bi-sun');
+    function actualizarIcono(tema) {
+        if (tema === 'dark') {
+            icono.classList.remove('bi-moon');
+            icono.classList.add('bi-sun');
         } else {
-            icon.classList.remove('bi-sun');
-            icon.classList.add('bi-moon');
+            icono.classList.remove('bi-sun');
+            icono.classList.add('bi-moon');
         }
     }
 
-    function showAuthMessage(message, type = 'danger') {
-        authMessage.textContent = message;
-        authMessage.className = `alert alert-${type}`;
+    function mostrarMensajeAutenticacion(mensaje, tipo = 'danger') {
+        mensajeAutenticacion.textContent = mensaje;
+        mensajeAutenticacion.className = `alert alert-${tipo}`;
     }
 
-    function clearAuthMessage() {
-        authMessage.textContent = '';
-        authMessage.className = 'alert d-none';
+    function limpiarMensajeAutenticacion() {
+        mensajeAutenticacion.textContent = '';
+        mensajeAutenticacion.className = 'alert d-none';
     }
 
-    function showLoginForm() {
-        loginForm.classList.remove('d-none');
-        registerForm.classList.add('d-none');
-        authTitle.textContent = 'Iniciar sesión';
-        authSwitchPrompt.textContent = '¿No tienes cuenta?';
-        authSwitch.textContent = 'Regístrate';
-        clearAuthMessage();
+    function mostrarFormularioLogin() {
+        formularioLogin.classList.remove('d-none');
+        formularioRegistro.classList.add('d-none');
+        tituloModalAutenticacion.textContent = 'Iniciar sesión';
+        textoAlternarAutenticacion.textContent = '¿No tienes cuenta?';
+        botonAlternarAutenticacion.textContent = 'Regístrate';
+        limpiarMensajeAutenticacion();
     }
 
-    function showRegisterForm() {
-        loginForm.classList.add('d-none');
-        registerForm.classList.remove('d-none');
-        authTitle.textContent = 'Crear cuenta';
-        authSwitchPrompt.textContent = '¿Ya tienes cuenta?';
-        authSwitch.textContent = 'Inicia sesión';
-        clearAuthMessage();
+    function mostrarFormularioRegistro() {
+        formularioLogin.classList.add('d-none');
+        formularioRegistro.classList.remove('d-none');
+        tituloModalAutenticacion.textContent = 'Crear cuenta';
+        textoAlternarAutenticacion.textContent = '¿Ya tienes cuenta?';
+        botonAlternarAutenticacion.textContent = 'Inicia sesión';
+        limpiarMensajeAutenticacion();
     }
 
-    function updateUserProfile(user) {
-        if (!user) {
-            authTrigger.classList.remove('d-none');
-            userProfile.classList.add('d-none');
-            userProfile.classList.remove('d-flex');
+    function actualizarPerfilUsuario(usuario) {
+        if (!usuario) {
+            botonAbrirAutenticacion.classList.remove('d-none');
+            perfilUsuario.classList.add('d-none');
+            perfilUsuario.classList.remove('d-flex');
             return;
         }
 
-        userName.textContent = user.name;
-        userAvatar.textContent = user.name.trim().charAt(0).toUpperCase();
-        authTrigger.classList.add('d-none');
-        userProfile.classList.remove('d-none');
-        userProfile.classList.add('d-flex');
+        nombreUsuario.textContent = usuario.name;
+        avatarUsuario.textContent = usuario.name.trim().charAt(0).toUpperCase();
+        botonAbrirAutenticacion.classList.add('d-none');
+        perfilUsuario.classList.remove('d-none');
+        perfilUsuario.classList.add('d-flex');
     }
 
-    async function sendAuthRequest(endpoint, form) {
-        const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        clearAuthMessage();
+    async function enviarPeticionAutenticacion(endpoint, formulario) {
+        const botonEnvio = formulario.querySelector('button[type="submit"]');
+        botonEnvio.disabled = true;
+        limpiarMensajeAutenticacion();
 
         try {
-            const response = await fetch(`/api/auth/${endpoint}`, {
+            const respuesta = await fetch(`/api/auth/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(Object.fromEntries(new FormData(form)))
+                body: JSON.stringify(Object.fromEntries(new FormData(formulario)))
             });
-            const result = await response.json();
+            const resultado = await respuesta.json();
 
-            if (!response.ok) {
-                showAuthMessage(result.error || 'No se pudo completar la solicitud.');
+            if (!respuesta.ok) {
+                mostrarMensajeAutenticacion(resultado.error || 'No se pudo completar la solicitud.');
                 return null;
             }
 
-            return result;
+            return resultado;
         } catch (error) {
-            showAuthMessage('No se pudo conectar con el servidor. Inténtalo de nuevo.');
+            mostrarMensajeAutenticacion('No se pudo conectar con el servidor. Inténtalo de nuevo.');
             return null;
         } finally {
-            submitButton.disabled = false;
+            botonEnvio.disabled = false;
         }
     }
 
-    authSwitch.addEventListener('click', () => {
-        if (loginForm.classList.contains('d-none')) {
-            showLoginForm();
+    botonAlternarAutenticacion.addEventListener('click', () => {
+        if (formularioLogin.classList.contains('d-none')) {
+            mostrarFormularioLogin();
         } else {
-            showRegisterForm();
+            mostrarFormularioRegistro();
         }
     });
 
-    loginForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        if (!loginForm.reportValidity()) return;
+    formularioLogin.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        if (!formularioLogin.reportValidity()) return;
 
-        const result = await sendAuthRequest('login', loginForm);
-        if (!result) return;
+        const resultado = await enviarPeticionAutenticacion('login', formularioLogin);
+        if (!resultado) return;
 
-        updateUserProfile(result.user);
-        loginForm.reset();
-        authModal.hide();
+        actualizarPerfilUsuario(resultado.user);
+        formularioLogin.reset();
+        modalAutenticacion.hide();
     });
 
-    registerForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        if (!registerForm.reportValidity()) return;
+    formularioRegistro.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        if (!formularioRegistro.reportValidity()) return;
 
-        const result = await sendAuthRequest('register', registerForm);
-        if (!result) return;
+        const resultado = await enviarPeticionAutenticacion('register', formularioRegistro);
+        if (!resultado) return;
 
-        const registeredEmail = registerForm.elements.email.value;
-        registerForm.reset();
-        showLoginForm();
-        document.getElementById('login-email').value = registeredEmail;
-        showAuthMessage('Cuenta creada. Ahora inicia sesión con tu correo y contraseña.', 'success');
+        const emailRegistrado = formularioRegistro.elements.email.value;
+        formularioRegistro.reset();
+        mostrarFormularioLogin();
+        document.getElementById('login-email').value = emailRegistrado;
+        mostrarMensajeAutenticacion('Cuenta creada. Ahora inicia sesión con tu correo y contraseña.', 'success');
         document.getElementById('login-password').focus();
     });
 
-    logoutButton.addEventListener('click', async () => {
-        logoutButton.disabled = true;
+    botonCerrarSesion.addEventListener('click', async () => {
+        botonCerrarSesion.disabled = true;
         try {
-            const response = await fetch('/api/auth/logout', { method: 'POST' });
-            if (!response.ok) {
-                showAuthMessage('No se pudo cerrar la sesión. Inténtalo de nuevo.');
+            const respuesta = await fetch('/api/auth/logout', { method: 'POST' });
+            if (!respuesta.ok) {
+                mostrarMensajeAutenticacion('No se pudo cerrar la sesión. Inténtalo de nuevo.');
                 return;
             }
-            updateUserProfile(null);
+            actualizarPerfilUsuario(null);
         } catch (error) {
-            showAuthMessage('No se pudo conectar con el servidor. Inténtalo de nuevo.');
+            mostrarMensajeAutenticacion('No se pudo conectar con el servidor. Inténtalo de nuevo.');
         } finally {
-            logoutButton.disabled = false;
+            botonCerrarSesion.disabled = false;
         }
     });
 
-    authModalElement.addEventListener('show.bs.modal', showLoginForm);
+    elementoModalAutenticacion.addEventListener('show.bs.modal', mostrarFormularioLogin);
 
     fetch('/api/auth/me')
-        .then(async (response) => {
-            if (!response.ok) throw new Error('No se pudo consultar la sesión actual.');
-            const result = await response.json();
-            updateUserProfile(result.user);
+        .then(async (respuesta) => {
+            if (!respuesta.ok) throw new Error('No se pudo consultar la sesión actual.');
+            const resultado = await respuesta.json();
+            actualizarPerfilUsuario(resultado.user);
         })
         .catch((error) => {
             console.error(error);

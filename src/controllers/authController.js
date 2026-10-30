@@ -1,68 +1,68 @@
-const authService = require('../services/authService');
+const servicioAutenticacion = require('../services/authService');
 
-const sendAuthError = (res, error, fallbackMessage) => {
+const enviarErrorAutenticacion = (res, error, mensajePorDefecto) => {
   if (error.statusCode) {
     return res.status(error.statusCode).json({ error: error.message });
   }
 
   console.error(error);
-  return res.status(500).json({ error: fallbackMessage });
+  return res.status(500).json({ error: mensajePorDefecto });
 };
 
-const register = async (req, res) => {
-  const { name, email, password } = req.body || {};
+const registrar = async (req, res) => {
+  const { name: nombre, email, password } = req.body || {};
 
   try {
-    const user = await authService.registerUser(name, email, password);
-    res.status(201).json({ message: 'Cuenta creada correctamente', user });
+    const usuario = await servicioAutenticacion.registrarUsuario(nombre, email, password);
+    res.status(201).json({ message: 'Cuenta creada correctamente', user: usuario });
   } catch (error) {
-    sendAuthError(res, error, 'Error al crear la cuenta');
+    enviarErrorAutenticacion(res, error, 'Error al crear la cuenta');
   }
 };
 
-const login = async (req, res) => {
+const iniciarSesion = async (req, res) => {
   const { email, password } = req.body || {};
 
   try {
-    const user = await authService.authenticateUser(email, password);
+    const usuario = await servicioAutenticacion.autenticarUsuario(email, password);
 
-    req.session.regenerate((err) => {
-      if (err) {
-        console.error(err);
+    req.session.regenerate((error) => {
+      if (error) {
+        console.error(error);
         return res.status(500).json({ error: 'Error al iniciar sesión' });
       }
 
-      req.session.userId = user.id;
+      req.session.userId = usuario.id;
       res.status(200).json({
         message: 'Inicio de sesión exitoso',
-        user: { id: user.id, name: user.name }
+        user: { id: usuario.id, name: usuario.name }
       });
     });
   } catch (error) {
-    sendAuthError(res, error, 'Error al iniciar sesión');
+    enviarErrorAutenticacion(res, error, 'Error al iniciar sesión');
   }
 };
 
-const currentUser = async (req, res) => {
+const usuarioActual = async (req, res) => {
   if (!req.session.userId) {
     return res.status(200).json({ user: null });
   }
 
   try {
-    const user = await authService.getUserById(req.session.userId);
-    if (!user) {
+    const usuario = await servicioAutenticacion.obtenerUsuarioPorId(req.session.userId);
+    if (!usuario) {
       return res.status(200).json({ user: null });
     }
-    return res.status(200).json({ user });
+    return res.status(200).json({ user: usuario });
   } catch (error) {
-    return sendAuthError(res, error, 'Error al consultar la sesión');
+    return enviarErrorAutenticacion(res, error, 'Error al consultar la sesión');
   }
 };
 
-const logout = (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error(err);
+const cerrarSesion = (req, res) => {
+  req.session.destroy((error) => {
+    if (error) {
+      console.error(error);
       return res.status(500).json({ error: 'Error al cerrar sesión' });
     }
     res.clearCookie('connect.sid');
@@ -70,4 +70,4 @@ const logout = (req, res) => {
   });
 };
 
-module.exports = { register, login, currentUser, logout };
+module.exports = { registrar, iniciarSesion, usuarioActual, cerrarSesion };

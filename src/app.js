@@ -1,14 +1,14 @@
 const express = require('express');
-const session = require('express-session');
+const sesion = require('express-session');
 const path = require('path');
 const { randomBytes } = require('crypto');
-const authRoutes = require('./routes/authRoutes');
+const rutasAutenticacion = require('./routes/authRoutes');
 const app = express();
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(express.json());
 
-app.use(session({
+app.use(sesion({
   secret: process.env.SESSION_SECRET || randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
@@ -19,6 +19,6 @@ app.use(session({
   }
 }));
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', rutasAutenticacion);
 
 module.exports = app;

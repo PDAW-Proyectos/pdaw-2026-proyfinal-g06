@@ -178,6 +178,7 @@ const buscarJuegosEnIgdb = async (termino = '') => {
     cacheBusqueda.set(claveCache, resultadosRemotos);
     return resultadosRemotos;
   } catch (error) {
+    console.warn('No se pudo consultar IGDB; se usarán datos de ejemplo:', error.message);
     return filtrarJuegosSimulados(termino);
   }
 };
@@ -204,4 +205,3 @@ module.exports = {
   limpiarCacheIgdb,
   normalizarJuegoIgdb
 };
-

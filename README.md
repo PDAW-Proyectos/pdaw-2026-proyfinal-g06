@@ -28,11 +28,9 @@ Proyecto del equipo **Grupo 06** para *7513 · Proyecto de Desarrollo de Aplicac
 
 ```bash
 npm install
-cp .env.example .env
 npm run dev
 ```
-
-El servidor iniciará en `http://localhost:3000`.
+El servidor lee `.env` al arrancar e inicia en `http://localhost:3000`
 
 ## Cómo ejecutar las pruebas
 

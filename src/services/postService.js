@@ -1,5 +1,6 @@
 const repositorioPublicaciones = require('../repositories/postRepository');
 const repositorioUsuarios = require('../repositories/userRepository');
+const adaptadorIgdb = require('../utils/adaptadorIgdb');
 
 const CATEGORIAS_VALIDAS = ['Informativa', 'Review o reseña', 'Crítica', 'Bug o problema técnico'];
 const LIMITE_POR_PAGINA = 10;
@@ -29,6 +30,10 @@ const crearPublicacion = async (titulo, categoria, contenido, juego, idUsuario) 
     throw crearErrorPublicacion('Autor no encontrado', 404);
   }
 
+  const juegosEncontrados = await adaptadorIgdb.buscarJuegosEnIgdb(juego.trim());
+  const juegoAsociado = juegosEncontrados[0] || null;
+  const nombreJuegoFinal = juegoAsociado ? juegoAsociado.titulo : juego.trim();
+
   const datosPublicacion = {
     title: titulo.trim(),
     titulo: titulo.trim(),
@@ -36,8 +41,10 @@ const crearPublicacion = async (titulo, categoria, contenido, juego, idUsuario) 
     categoria,
     content: contenido.trim(),
     contenido: contenido.trim(),
-    game: juego.trim(),
-    juego: juego.trim(),
+    game: nombreJuegoFinal,
+    juego: nombreJuegoFinal,
+    imagenJuego: juegoAsociado ? juegoAsociado.imagen : '',
+    datosJuego: juegoAsociado,
     author: { id: autor.id, name: autor.name }
   };
 

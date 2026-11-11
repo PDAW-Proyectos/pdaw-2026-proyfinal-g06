@@ -275,6 +275,122 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cargarPublicaciones();
 
+    const formularioBuscarJuego = document.getElementById('formulario-buscar-juego');
+    const campoBuscarJuego = document.getElementById('campo-buscar-juego');
+    const contenedorJuegos = document.getElementById('contenedor-juegos');
+    const mensajeJuegos = document.getElementById('mensaje-juegos');
+    const campoJuegoPublicacion = document.getElementById('campo-juego-publicacion');
+    const listaSugerenciasJuegos = document.getElementById('lista-sugerencias-juegos');
+
+    function actualizarSugerenciasJuegos(juegos) {
+        if (!listaSugerenciasJuegos) return;
+        listaSugerenciasJuegos.innerHTML = '';
+        juegos.forEach((juego) => {
+            const opcion = document.createElement('option');
+            opcion.value = juego.titulo;
+            listaSugerenciasJuegos.appendChild(opcion);
+        });
+    }
+
+    function renderizarJuegos(juegos) {
+        if (!contenedorJuegos) return;
+        contenedorJuegos.innerHTML = '';
+
+        juegos.slice(0, 3).forEach((juego) => {
+            const columna = document.createElement('div');
+            columna.className = 'col-md-4';
+
+            const plataformasTexto = Array.isArray(juego.plataformas) && juego.plataformas.length > 0
+                ? juego.plataformas.join(', ')
+                : 'Sin plataformas';
+            const generosTexto = Array.isArray(juego.generos) && juego.generos.length > 0
+                ? juego.generos.join(' · ')
+                : 'General';
+
+            columna.innerHTML = `
+                <div class="game-card">
+                    <img src="${juego.imagen}" alt="${juego.titulo}" class="img-fluid rounded-3 mb-3 game-img">
+                    <span class="text-primary fw-bold fs-xs">Puntaje: ${juego.puntaje} / 10</span>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <h4 class="fw-bold mb-0">${juego.titulo}</h4>
+                        <i class="bi bi-arrow-up-right fs-5"></i>
+                    </div>
+                    <p class="text-muted fs-sm mt-1 mb-1">${generosTexto} · ${plataformasTexto}</p>
+                    <p class="text-muted fs-xs mb-0">${juego.descripcion}</p>
+                </div>
+            `;
+
+            columna.addEventListener('click', () => {
+                if (campoJuegoPublicacion) {
+                    campoJuegoPublicacion.value = juego.titulo;
+                }
+                if (estaUsuarioAutenticado) {
+                    modalCrearPublicacion.show();
+                } else {
+                    mostrarFormularioLogin();
+                    modalAutenticacion.show();
+                }
+            });
+
+            contenedorJuegos.appendChild(columna);
+        });
+    }
+
+    async function cargarJuegos(termino = '') {
+        if (!contenedorJuegos) return;
+        if (mensajeJuegos) {
+            mensajeJuegos.classList.add('d-none');
+            mensajeJuegos.textContent = '';
+        }
+
+        try {
+            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(termino)}`);
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                contenedorJuegos.innerHTML = '';
+                if (mensajeJuegos) {
+                    mensajeJuegos.textContent = resultado.error || 'Juego no encontrado';
+                    mensajeJuegos.classList.remove('d-none');
+                }
+                return;
+            }
+
+            const juegos = resultado.datos || [];
+            renderizarJuegos(juegos);
+            actualizarSugerenciasJuegos(juegos);
+        } catch (error) {
+            if (mensajeJuegos) {
+                mensajeJuegos.textContent = 'Error al consultar videojuegos.';
+                mensajeJuegos.classList.remove('d-none');
+            }
+        }
+    }
+
+    if (formularioBuscarJuego) {
+        formularioBuscarJuego.addEventListener('submit', (evento) => {
+            evento.preventDefault();
+            cargarJuegos(campoBuscarJuego ? campoBuscarJuego.value : '');
+        });
+    }
+
+    if (campoJuegoPublicacion) {
+        campoJuegoPublicacion.addEventListener('input', async () => {
+            const texto = campoJuegoPublicacion.value.trim();
+            if (!texto) return;
+            try {
+                const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(texto)}`);
+                if (!respuesta.ok) return;
+                const resultado = await respuesta.json();
+                actualizarSugerenciasJuegos(resultado.datos || []);
+            } catch (error) {
+                return;
+            }
+        });
+    }
+
+    cargarJuegos();
+
     fetch('/api/auth/me')
         .then(async (respuesta) => {
             if (!respuesta.ok) throw new Error('No se pudo consultar la sesión actual.');

@@ -1,6 +1,6 @@
 # Respawn · Comunidad y Descubrimientos de Videojuegos
 
-> Plataforma web para buscar videojuegos vía la API de RAWG, compartir descubrimientos y debatir en foros con puntuaciones de la comunidad.
+> Plataforma web para buscar videojuegos vía la API de IGDB, compartir descubrimientos y debatir en foros con puntuaciones de la comunidad.
 
 Proyecto del equipo **Grupo 06** para *7513 · Proyecto de Desarrollo de Aplicaciones Web*
 (Tecnicatura Universitaria en Programación Web y Móvil — DCIC — UNS).
@@ -11,9 +11,9 @@ Proyecto del equipo **Grupo 06** para *7513 · Proyecto de Desarrollo de Aplicac
 | --- | --- |
 | **Problema** | Falta de espacios ágiles y centralizados donde jugadores puedan descubrir secretos o trucos de juegos específicos y debatir en comunidad manteniendo calificaciones colaborativas independientes. |
 | **Usuarios** | Jugadores interesados en descubrir secretos/guías (cazadores de logros) y aficionados que buscan debatir sobre tramas, mecánicas y puntuaciones. |
-| **Funcionalidades núcleo** | 1. Búsqueda y catálogo de videojuegos consumiendo la API de RAWG.<br>2. Sistema de calificación comunitaria (1 al 10) con recálculo dinámico de promedios.<br>3. Foros de discusión por juego con hilos y respuestas. |
+| **Funcionalidades núcleo** | 1. Búsqueda y catálogo de videojuegos consumiendo la API de IGDB.<br>2. Sistema de calificación comunitaria (1 al 10) con recálculo dinámico de promedios.<br>3. Foros de discusión por juego con hilos y respuestas. |
 | **Reglas de negocio** | 1. Cada usuario autenticado puede emitir un único voto por juego (si vuelve a votar, se actualiza el valor anterior).<br>2. El recálculo del puntaje promedio es automático y se valida en el servidor que la nota esté en el rango de 1 a 10.<br>3. Solo usuarios registrados y autenticados pueden publicar hilos, comentarios o descubrimientos; las publicaciones no pueden tener títulos vacíos. |
-| **API externa** | **RAWG Video Games Database API** — [Documentación oficial](https://rawg.io/apidocs). Uso: consulta de fichas técnicas de juegos, portadas, metadatos y géneros. |
+| **API externa** | **IGDB Video Game Database API (Twitch)** — [Documentación oficial](https://api-docs.igdb.com/). Uso: consulta de fichas técnicas de juegos, portadas, descripciones, plataformas, metadatos y géneros. |
 
 ## Equipo y roles del sprint actual
 
@@ -28,11 +28,9 @@ Proyecto del equipo **Grupo 06** para *7513 · Proyecto de Desarrollo de Aplicac
 
 ```bash
 npm install
-cp .env.example .env
 npm run dev
 ```
-
-El servidor iniciará en `http://localhost:3000`.
+El servidor lee `.env` al arrancar e inicia en `http://localhost:3000`
 
 ## Cómo ejecutar las pruebas
 

@@ -3,6 +3,8 @@ const sesion = require('express-session');
 const path = require('path');
 const { randomBytes } = require('crypto');
 const rutasAutenticacion = require('./routes/authRoutes');
+const rutasPublicaciones = require('./routes/postRoutes');
+const rutasJuegos = require('./routes/rutasJuegos');
 const app = express();
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -20,5 +22,8 @@ app.use(sesion({
 }));
 
 app.use('/api/auth', rutasAutenticacion);
+app.use('/api/posts', rutasPublicaciones);
+app.use('/api/juegos', rutasJuegos);
+app.use('/api/games', rutasJuegos);
 
 module.exports = app;

@@ -115,14 +115,15 @@
         <section class="mb-5 pb-4 border-bottom">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fs-4 fw-medium mb-0">Juegos recomendados</h3>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="text-muted fs-sm">01 / 03</span>
-                    <button class="btn btn-outline-secondary rounded-circle nav-btn"><i class="bi bi-arrow-left"></i></button>
-                    <button class="btn btn-outline-secondary rounded-circle nav-btn"><i class="bi bi-arrow-right"></i></button>
-                </div>
+                <form id="formulario-buscar-juego" class="d-flex gap-2">
+                    <input type="search" id="campo-buscar-juego" class="form-control form-control-sm" placeholder="Buscar videojuego...">
+                    <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
+                </form>
             </div>
 
-            <div class="row g-4">
+            <div id="mensaje-juegos" class="alert alert-warning d-none" role="alert"></div>
+
+            <div id="contenedor-juegos" class="row g-4">
                 <div class="col-md-4">
                     <div class="game-card">
                         <img src="https://i.blogs.es/ea0624/elden-ring-new-header-mobile/1366_2000.jpeg" alt="Elden Ring" class="img-fluid rounded-3 mb-3 game-img">
@@ -167,58 +168,71 @@
                         <h3 class="fs-4 fw-medium mb-1">Conversaciones para ti</h3>
                         <p class="text-muted fs-sm mb-0">Por tu interés en los RPG, la exploración y las buenas historias.</p>
                     </div>
-                    <a href="#" class="text-primary text-decoration-none fw-medium fs-sm">Ver tendencias <i class="bi bi-arrow-right"></i></a>
+                    <button id="boton-crear-publicacion" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil-square me-1"></i> Nueva publicación
+                    </button>
                 </div>
 
-                <div class="thread-list">
-                    <div class="d-flex justify-content-between py-4 border-bottom">
-                        <div>
-                            <div class="fs-xs fw-medium mb-2">
-                                <span class="text-primary">Elden Ring</span> <span class="text-muted">/ Ayuda y consejos</span>
-                            </div>
-                            <h5 class="fw-bold mb-2">¿Qué build os está funcionando para el DLC?</h5>
-                            <div class="text-muted fs-sm">NicoRuna · hace 12 min</div>
-                        </div>
-                        <div class="d-flex align-items-center text-center ms-3">
-                            <div class="me-4">
-                                <div class="fw-bold fs-5">128</div>
-                                <div class="text-muted fs-xs">respuestas</div>
-                            </div>
-                            <div class="text-muted fw-medium"><i class="bi bi-arrow-up"></i> 246</div>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between py-4 border-bottom">
-                        <div>
-                            <div class="fs-xs fw-medium mb-2">
-                                <span class="text-primary">Hollow Knight</span> <span class="text-muted">/ Opinión</span>
-                            </div>
-                            <h5 class="fw-bold mb-2">El arte de perderse sin mirar el mapa</h5>
-                            <div class="text-muted fs-sm">Sofi.exe · hace 24 min</div>
-                        </div>
-                        <div class="d-flex align-items-center text-center ms-3">
-                            <div class="me-4">
-                                <div class="fw-bold fs-5">64</div>
-                                <div class="text-muted fs-xs">respuestas</div>
-                            </div>
-                            <div class="text-muted fw-medium"><i class="bi bi-arrow-up"></i> 183</div>
-                        </div>
-                    </div>
+                <div id="contenedor-publicaciones" class="thread-list mb-4">
+                    <div class="text-center text-muted py-5" id="indicador-carga-publicaciones">Cargando publicaciones...</div>
+                </div>
 
+                <template id="plantilla-publicacion">
                     <div class="d-flex justify-content-between py-4 border-bottom">
                         <div>
                             <div class="fs-xs fw-medium mb-2">
-                                <span class="text-primary">Hades II</span> <span class="text-muted">/ Debate general</span>
+                                <span class="text-primary publicacion-juego post-game"></span> 
+                                <span class="text-muted">/ <span class="publicacion-categoria post-category"></span></span>
                             </div>
-                            <h5 class="fw-bold mb-2">Una partida más... y ya van veinte</h5>
-                            <div class="text-muted fs-sm">PixelNómada · hace 38 min</div>
+                            <h5 class="fw-bold mb-2 publicacion-titulo post-title"></h5>
+                            <div class="text-muted fs-sm publicacion-metadatos post-meta"></div>
                         </div>
                         <div class="d-flex align-items-center text-center ms-3">
                             <div class="me-4">
-                                <div class="fw-bold fs-5">52</div>
+                                <div class="fw-bold fs-5">0</div>
                                 <div class="text-muted fs-xs">respuestas</div>
                             </div>
-                            <div class="text-muted fw-medium"><i class="bi bi-arrow-up"></i> 159</div>
+                            <div class="text-muted fw-medium"><i class="bi bi-arrow-up"></i> 0</div>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="modal fade" id="modal-crear-publicacion" tabindex="-1" aria-labelledby="titulo-modal-crear-publicacion" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="titulo-modal-crear-publicacion">Crear nueva publicación</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="alerta-error-publicacion" class="alert alert-danger d-none fs-sm" role="alert" aria-live="polite"></div>
+                                <form id="formulario-crear-publicacion">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="campo-juego-publicacion">Juego</label>
+                                        <input type="text" id="campo-juego-publicacion" name="game" list="lista-sugerencias-juegos" class="form-control" placeholder="Ej. Elden Ring" required>
+                                        <datalist id="lista-sugerencias-juegos"></datalist>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="campo-categoria-publicacion">Categoría</label>
+                                        <select id="campo-categoria-publicacion" name="category" class="form-select" required>
+                                            <option value="">Selecciona una categoría...</option>
+                                            <option value="Informativa">Informativa</option>
+                                            <option value="Review o reseña">Review o reseña</option>
+                                            <option value="Crítica">Crítica</option>
+                                            <option value="Bug o problema técnico">Bug o problema técnico</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="campo-titulo-publicacion">Título</label>
+                                        <input type="text" id="campo-titulo-publicacion" name="title" class="form-control" placeholder="Sé claro y descriptivo..." required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="campo-contenido-publicacion">Contenido</label>
+                                        <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5" placeholder="Comparte tu experiencia..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">Publicar</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

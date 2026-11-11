@@ -13,17 +13,39 @@ const crearPublicacion = async (datosPublicacion) => {
   return publicacion;
 };
 
-const obtenerPublicaciones = async (pagina = 1, limite = 10) => {
+const buscarPublicacionPorId = async (id) => {
+  return publicacionesBD.find((publicacion) => publicacion.id === id) || null;
+};
+
+const actualizarPublicacion = async (id, datosPublicacion) => {
+  const publicacion = await buscarPublicacionPorId(id);
+  if (!publicacion) return null;
+
+  Object.assign(publicacion, datosPublicacion);
+  return publicacion;
+};
+
+const obtenerPublicaciones = async (pagina = 1, limite = 10, juego = '') => {
+  const publicacionesFiltradas = juego
+    ? publicacionesBD.filter((publicacion) =>
+      (publicacion.game || publicacion.juego || '').toLowerCase() === juego.trim().toLowerCase()
+    )
+    : publicacionesBD;
   const indiceInicio = (pagina - 1) * limite;
   const indiceFin = pagina * limite;
-  
+
   return {
-    data: publicacionesBD.slice(indiceInicio, indiceFin),
-    total: publicacionesBD.length,
+    data: publicacionesFiltradas.slice(indiceInicio, indiceFin),
+    total: publicacionesFiltradas.length,
     page: pagina,
-    totalPages: Math.ceil(publicacionesBD.length / limite)
+    totalPages: Math.ceil(publicacionesFiltradas.length / limite)
   };
 };
 
-module.exports = { crearPublicacion, obtenerPublicaciones };
+module.exports = {
+  crearPublicacion,
+  buscarPublicacionPorId,
+  actualizarPublicacion,
+  obtenerPublicaciones
+};
 

@@ -123,7 +123,7 @@
 
             <div id="mensaje-juegos" class="alert alert-warning d-none" role="alert"></div>
 
-            <div id="contenedor-juegos" class="row g-4">
+            <div id="contenedor-juegos" class="game-grid d-none" aria-live="polite">
                 <div class="col-md-4">
                     <div class="game-card">
                         <img src="https://i.blogs.es/ea0624/elden-ring-new-header-mobile/1366_2000.jpeg" alt="Elden Ring" class="img-fluid rounded-3 mb-3 game-img">
@@ -178,7 +178,7 @@
                 </div>
 
                 <template id="plantilla-publicacion">
-                    <div class="d-flex justify-content-between py-4 border-bottom">
+                    <div class="publicacion d-flex justify-content-between py-4 border-bottom">
                         <div>
                             <div class="fs-xs fw-medium mb-2">
                                 <span class="text-primary publicacion-juego post-game"></span> 
@@ -196,6 +196,49 @@
                         </div>
                     </div>
                 </template>
+
+                <div class="modal fade" id="modal-juego" tabindex="-1" aria-labelledby="titulo-modal-juego" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="titulo-modal-juego"></h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="d-flex gap-3 align-items-start mb-4">
+                                    <img id="imagen-modal-juego" class="game-detail-image rounded d-none" alt="">
+                                    <div class="game-detail-information">
+                                        <div class="mb-3">
+                                            <h6 class="fw-bold mb-1">Descripción</h6>
+                                            <p id="descripcion-modal-juego" class="text-muted mb-0"></p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <h6 class="fw-bold mb-1">Géneros</h6>
+                                            <p id="generos-modal-juego" class="text-muted mb-0"></p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <h6 class="fw-bold mb-1">Plataformas</h6>
+                                            <p id="plataformas-modal-juego" class="text-muted mb-0"></p>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">Puntaje de IGDB</h6>
+                                            <p id="puntaje-modal-juego" class="text-muted mb-0"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h6 class="fw-bold mb-3">Publicaciones de este juego</h6>
+                                <div id="estado-publicaciones-juego" class="text-muted mb-3" role="status" aria-live="polite"></div>
+                                <div id="publicaciones-del-juego" class="d-grid gap-3"></div>
+                                <div id="sin-publicaciones-juego" class="alert alert-info d-none mt-3" role="status">
+                                    Todavía no hay publicaciones sobre este juego.
+                                </div>
+                                <button id="boton-primera-publicacion" type="button" class="btn btn-primary w-100 d-none">
+                                    Crear primera publicación
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="modal fade" id="modal-crear-publicacion" tabindex="-1" aria-labelledby="titulo-modal-crear-publicacion" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -230,7 +273,7 @@
                                         <label class="form-label" for="campo-contenido-publicacion">Contenido</label>
                                         <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5" placeholder="Comparte tu experiencia..." required></textarea>
                                     </div>
-                                    <button type="submit" class="btn btn-primary w-100">Publicar</button>
+                                    <button id="boton-enviar-publicacion" type="submit" class="btn btn-primary w-100">Publicar</button>
                                 </form>
                             </div>
                         </div>

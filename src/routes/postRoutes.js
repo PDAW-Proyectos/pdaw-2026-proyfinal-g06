@@ -5,6 +5,7 @@ const { requerirAutenticacion } = require('../middlewares/authMiddleware');
 
 enrutador.get('/', controladorPublicaciones.obtenerPublicaciones);
 enrutador.post('/', requerirAutenticacion, controladorPublicaciones.crearPublicacion);
+enrutador.patch('/:id', requerirAutenticacion, controladorPublicaciones.actualizarPublicacion);
 
 module.exports = enrutador;
 

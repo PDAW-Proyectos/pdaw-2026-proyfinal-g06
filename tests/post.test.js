@@ -91,11 +91,71 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.equal(publicacionCreada.post.title, '¿Qué build recomiendan?');
   assert.equal(publicacionCreada.post.author.name, 'GamerUno');
   assert.equal('email' in publicacionCreada.post.author, false);
+  const idPublicacion = publicacionCreada.post.id;
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'Edición no autenticada' })
+  });
+  assert.equal(respuesta.status, 401);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: cookieLogin
+    },
+    body: JSON.stringify({
+      title: '¿Qué build recomiendan? (editado)',
+      content: 'Contenido actualizado'
+    })
+  });
+  assert.equal(respuesta.status, 200);
+  const publicacionActualizada = await respuesta.json();
+  assert.equal(publicacionActualizada.post.title, '¿Qué build recomiendan? (editado)');
+  assert.equal(publicacionActualizada.post.content, 'Contenido actualizado');
+  assert.equal(publicacionActualizada.post.author.name, 'GamerUno');
+
+  await enviarPost('/api/auth/register', {
+    name: 'GamerDos',
+    email: 'gamer2@example.com',
+    password: 'password123'
+  });
+  const respuestaSegundoInicio = await enviarPost('/api/auth/login', {
+    email: 'gamer2@example.com',
+    password: 'password123'
+  });
+  assert.equal(respuestaSegundoInicio.status, 200);
+  const cookieSegundoUsuario = respuestaSegundoInicio.headers.get('set-cookie').split(';')[0];
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: cookieSegundoUsuario
+    },
+    body: JSON.stringify({ title: 'Solo Puede editar el creador' })
+  });
+  assert.equal(respuesta.status, 403);
+
+  respuesta = await solicitud('/api/posts?game=elden%20ring');
+  assert.equal(respuesta.status, 200);
+  const publicacionesDelJuego = await respuesta.json();
+  assert.equal(publicacionesDelJuego.total, 1);
+  assert.equal(publicacionesDelJuego.data[0].game, 'Elden Ring');
+  assert.equal(publicacionesDelJuego.data[0].title, '¿Qué build recomiendan? (editado)');
+
+  respuesta = await solicitud('/api/posts?game=Juego%20sin%20publicaciones');
+  assert.equal(respuesta.status, 200);
+  const publicacionesVacias = await respuesta.json();
+  assert.deepEqual(publicacionesVacias.data, []);
+  assert.equal(publicacionesVacias.total, 0);
 
   respuesta = await solicitud('/api/posts');
   assert.equal(respuesta.status, 200);
   cargaPublicaciones = await respuesta.json();
   assert.ok(cargaPublicaciones.data.length >= 1);
-  assert.equal(cargaPublicaciones.data[0].title, '¿Qué build recomiendan?');
+  assert.equal(cargaPublicaciones.data[0].title, '¿Qué build recomiendan? (editado)');
   assert.equal(cargaPublicaciones.data[0].author.name, 'GamerUno');
 });

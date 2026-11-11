@@ -11,7 +11,7 @@ const crearErrorPublicacion = (mensaje, codigoEstado) => {
   return error;
 };
 
-const crearPublicacion = async (titulo, categoria, contenido, juego, idUsuario) => {
+const validarDatosPublicacion = (titulo, categoria, contenido, juego) => {
   if (!titulo || typeof titulo !== 'string' || !titulo.trim()) {
     throw crearErrorPublicacion('El título es obligatorio', 400);
   }
@@ -25,22 +25,33 @@ const crearPublicacion = async (titulo, categoria, contenido, juego, idUsuario) 
     throw crearErrorPublicacion('Categoría inválida', 400);
   }
 
-  const autor = await repositorioUsuarios.buscarUsuarioPorId(idUsuario);
-  if (!autor) {
-    throw crearErrorPublicacion('Autor no encontrado', 404);
-  }
-
-  const juegosEncontrados = await adaptadorIgdb.buscarJuegosEnIgdb(juego.trim());
-  const juegoAsociado = juegosEncontrados[0] || null;
-  const nombreJuegoFinal = juegoAsociado ? juegoAsociado.titulo : juego.trim();
-
-  const datosPublicacion = {
+  return {
     title: titulo.trim(),
     titulo: titulo.trim(),
     category: categoria,
     categoria,
     content: contenido.trim(),
     contenido: contenido.trim(),
+    game: juego.trim(),
+    juego: juego.trim()
+  };
+};
+
+const crearPublicacion = async (titulo, categoria, contenido, juego, idUsuario) => {
+  const datosValidados = validarDatosPublicacion(titulo, categoria, contenido, juego);
+  const autor = await repositorioUsuarios.buscarUsuarioPorId(idUsuario);
+  if (!autor) {
+    throw crearErrorPublicacion('Autor no encontrado', 404);
+  }
+
+  const juegosEncontrados = await adaptadorIgdb.buscarJuegosEnIgdb(datosValidados.game);
+  const juegoAsociado = juegosEncontrados.find((juegoEncontrado) =>
+    juegoEncontrado.titulo.toLowerCase() === datosValidados.game.toLowerCase()
+  ) || juegosEncontrados[0] || null;
+  const nombreJuegoFinal = juegoAsociado ? juegoAsociado.titulo : datosValidados.game;
+
+  const datosPublicacion = {
+    ...datosValidados,
     game: nombreJuegoFinal,
     juego: nombreJuegoFinal,
     imagenJuego: juegoAsociado ? juegoAsociado.imagen : '',
@@ -51,10 +62,56 @@ const crearPublicacion = async (titulo, categoria, contenido, juego, idUsuario) 
   return await repositorioPublicaciones.crearPublicacion(datosPublicacion);
 };
 
-const obtenerPublicaciones = async (pagina) => {
-  const paginaActual = Math.max(1, parseInt(pagina, 10) || 1);
-  return await repositorioPublicaciones.obtenerPublicaciones(paginaActual, LIMITE_POR_PAGINA);
+const actualizarPublicacion = async (id, datos, idUsuario) => {
+  const publicacion = await repositorioPublicaciones.buscarPublicacionPorId(id);
+  if (!publicacion) {
+    throw crearErrorPublicacion('Publicación no encontrada', 404);
+  }
+  if (!publicacion.author || String(publicacion.author.id) !== String(idUsuario)) {
+    throw crearErrorPublicacion('Solo puedes editar tus propias publicaciones', 403);
+  }
+
+  const datosValidados = validarDatosPublicacion(
+    datos.title !== undefined ? datos.title : publicacion.title,
+    datos.category !== undefined ? datos.category : publicacion.category,
+    datos.content !== undefined ? datos.content : publicacion.content,
+    datos.game !== undefined ? datos.game : publicacion.game
+  );
+  const juegoActual = publicacion.game || publicacion.juego;
+  let nombreJuegoFinal = juegoActual;
+  let imagenJuego = publicacion.imagenJuego || '';
+  let datosJuego = publicacion.datosJuego || null;
+
+  if (datosValidados.game.toLowerCase() !== juegoActual.toLowerCase()) {
+    const juegosEncontrados = await adaptadorIgdb.buscarJuegosEnIgdb(datosValidados.game);
+    const juegoAsociado = juegosEncontrados.find((juegoEncontrado) =>
+      juegoEncontrado.titulo.toLowerCase() === datosValidados.game.toLowerCase()
+    ) || juegosEncontrados[0] || null;
+    nombreJuegoFinal = juegoAsociado ? juegoAsociado.titulo : datosValidados.game;
+    imagenJuego = juegoAsociado ? juegoAsociado.imagen : '';
+    datosJuego = juegoAsociado;
+  }
+
+  return await repositorioPublicaciones.actualizarPublicacion(id, {
+    ...datosValidados,
+    game: nombreJuegoFinal,
+    juego: nombreJuegoFinal,
+    imagenJuego,
+    datosJuego,
+    author: publicacion.author
+  });
 };
 
-module.exports = { crearPublicacion, obtenerPublicaciones, CATEGORIAS_VALIDAS };
+const obtenerPublicaciones = async (pagina, juego = '') => {
+  const paginaActual = Math.max(1, parseInt(pagina, 10) || 1);
+  const juegoFiltrado = typeof juego === 'string' ? juego.trim() : '';
+  return await repositorioPublicaciones.obtenerPublicaciones(paginaActual, LIMITE_POR_PAGINA, juegoFiltrado);
+};
+
+module.exports = {
+  crearPublicacion,
+  actualizarPublicacion,
+  obtenerPublicaciones,
+  CATEGORIAS_VALIDAS
+};
 

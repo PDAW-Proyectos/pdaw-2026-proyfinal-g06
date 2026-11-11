@@ -28,17 +28,40 @@ const crearPublicacion = async (req, res) => {
   }
 };
 
+const actualizarPublicacion = async (req, res) => {
+  const cuerpo = req.body || {};
+  const datos = {
+    title: cuerpo.title !== undefined ? cuerpo.title : cuerpo.titulo,
+    category: cuerpo.category !== undefined ? cuerpo.category : cuerpo.categoria,
+    content: cuerpo.content !== undefined ? cuerpo.content : cuerpo.contenido,
+    game: cuerpo.game !== undefined ? cuerpo.game : cuerpo.juego
+  };
+
+  try {
+    const publicacion = await servicioPublicaciones.actualizarPublicacion(
+      req.params.id,
+      datos,
+      req.session.userId
+    );
+    res.status(200).json({ message: 'Publicación actualizada', post: publicacion });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      error: error.message || 'Error al actualizar publicación'
+    });
+  }
+};
+
 const obtenerPublicaciones = async (req, res) => {
-  const { page, pagina } = req.query;
+  const { page, pagina, game } = req.query;
   const numeroPagina = pagina || page;
   
   try {
-    const publicaciones = await servicioPublicaciones.obtenerPublicaciones(numeroPagina);
+    const publicaciones = await servicioPublicaciones.obtenerPublicaciones(numeroPagina, game);
     res.status(200).json(publicaciones);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener las publicaciones' });
   }
 };
 
-module.exports = { crearPublicacion, obtenerPublicaciones };
+module.exports = { crearPublicacion, actualizarPublicacion, obtenerPublicaciones };
 

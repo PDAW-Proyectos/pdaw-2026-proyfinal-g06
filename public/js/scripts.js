@@ -129,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!resultado) return;
 
         actualizarPerfilUsuario(resultado.user);
+        cargarPublicaciones();
         formularioLogin.reset();
         modalAutenticacion.hide();
     });
@@ -157,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             actualizarPerfilUsuario(null);
+            cargarPublicaciones();
         } catch (error) {
             mostrarMensajeAutenticacion('No se pudo conectar con el servidor. Inténtalo de nuevo.');
         } finally {
@@ -175,14 +177,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertaErrorPublicacion = document.getElementById('alerta-error-publicacion') || document.getElementById('post-error');
 
     let estaUsuarioAutenticado = false;
+    let idUsuarioActual = null;
+    let publicacionEnEdicion = null;
+    let juegoSeleccionadoModal = null;
 
     const actualizarPerfilUsuarioOriginal = actualizarPerfilUsuario;
     actualizarPerfilUsuario = (usuario) => {
         actualizarPerfilUsuarioOriginal(usuario);
         estaUsuarioAutenticado = Boolean(usuario);
+        idUsuarioActual = usuario ? usuario.id : null;
     };
 
     botonCrearPublicacion.addEventListener('click', () => {
+        juegoSeleccionadoModal = null;
+        prepararNuevaPublicacion();
         if (estaUsuarioAutenticado) {
             modalCrearPublicacion.show();
         } else {
@@ -195,6 +203,45 @@ document.addEventListener('DOMContentLoaded', () => {
         alertaErrorPublicacion.classList.add('d-none');
         alertaErrorPublicacion.textContent = '';
     });
+
+    function prepararNuevaPublicacion() {
+        publicacionEnEdicion = null;
+        formularioCrearPublicacion.reset();
+        document.getElementById('titulo-modal-crear-publicacion').textContent = 'Crear nueva publicación';
+        document.getElementById('boton-enviar-publicacion').textContent = 'Publicar';
+    }
+
+    function editarPublicacion(publicacion, desdeModalJuego = false) {
+        publicacionEnEdicion = publicacion;
+        formularioCrearPublicacion.elements.game.value = publicacion.game || publicacion.juego || '';
+        formularioCrearPublicacion.elements.category.value = publicacion.category || publicacion.categoria || '';
+        formularioCrearPublicacion.elements.title.value = publicacion.title || publicacion.titulo || '';
+        formularioCrearPublicacion.elements.content.value = publicacion.content || publicacion.contenido || '';
+        document.getElementById('titulo-modal-crear-publicacion').textContent = 'Editar publicación';
+        document.getElementById('boton-enviar-publicacion').textContent = 'Guardar cambios';
+
+        if (desdeModalJuego) {
+            elementoModalJuego.addEventListener('hidden.bs.modal', () => modalCrearPublicacion.show(), { once: true });
+            modalJuego.hide();
+        } else {
+            modalCrearPublicacion.show();
+        }
+    }
+
+    function crearAccionesPublicacion(publicacion, desdeModalJuego = false) {
+        const autor = publicacion.author || publicacion.autor;
+        if (!idUsuarioActual || !autor || String(autor.id) !== String(idUsuarioActual)) return null;
+
+        const acciones = document.createElement('div');
+        acciones.className = 'mt-2';
+        const botonEditar = document.createElement('button');
+        botonEditar.type = 'button';
+        botonEditar.className = 'btn btn-outline-primary btn-sm';
+        botonEditar.textContent = 'Editar';
+        botonEditar.addEventListener('click', () => editarPublicacion(publicacion, desdeModalJuego));
+        acciones.appendChild(botonEditar);
+        return acciones;
+    }
 
     async function cargarPublicaciones(pagina = 1) {
         try {
@@ -233,6 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (elementoMetadatos) {
                     elementoMetadatos.textContent = `${nombreAutor} · ${fechaFormateada}`;
                 }
+                const acciones = crearAccionesPublicacion(publicacion);
+                if (acciones && elementoMetadatos) elementoMetadatos.parentElement.appendChild(acciones);
                 
                 contenedorPublicaciones.appendChild(clon);
             });
@@ -248,8 +297,12 @@ document.addEventListener('DOMContentLoaded', () => {
         alertaErrorPublicacion.classList.add('d-none');
 
         try {
-            const respuesta = await fetch('/api/posts', {
-                method: 'POST',
+            const editando = Boolean(publicacionEnEdicion);
+            const endpoint = editando
+                ? `/api/posts/${encodeURIComponent(publicacionEnEdicion.id)}`
+                : '/api/posts';
+            const respuesta = await fetch(endpoint, {
+                method: editando ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(Object.fromEntries(new FormData(formularioCrearPublicacion)))
             });
@@ -257,14 +310,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const resultado = await respuesta.json();
 
             if (!respuesta.ok) {
-                alertaErrorPublicacion.textContent = resultado.error || 'Error al publicar';
+                alertaErrorPublicacion.textContent = resultado.error
+                    || (editando ? 'Error al actualizar la publicación.' : 'Error al publicar.');
                 alertaErrorPublicacion.classList.remove('d-none');
                 return;
             }
 
-            formularioCrearPublicacion.reset();
+            prepararNuevaPublicacion();
             modalCrearPublicacion.hide();
-            cargarPublicaciones(); 
+            await cargarPublicaciones();
+            if (juegoSeleccionadoModal) await cargarPublicacionesJuego(juegoSeleccionadoModal);
         } catch (error) {
             alertaErrorPublicacion.textContent = 'Error de conexión. Inténtalo de nuevo.';
             alertaErrorPublicacion.classList.remove('d-none');
@@ -281,6 +336,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const mensajeJuegos = document.getElementById('mensaje-juegos');
     const campoJuegoPublicacion = document.getElementById('campo-juego-publicacion');
     const listaSugerenciasJuegos = document.getElementById('lista-sugerencias-juegos');
+    const elementoModalJuego = document.getElementById('modal-juego');
+    const modalJuego = bootstrap.Modal.getOrCreateInstance(elementoModalJuego);
+    const tituloModalJuego = document.getElementById('titulo-modal-juego');
+    const imagenModalJuego = document.getElementById('imagen-modal-juego');
+    const descripcionModalJuego = document.getElementById('descripcion-modal-juego');
+    const generosModalJuego = document.getElementById('generos-modal-juego');
+    const plataformasModalJuego = document.getElementById('plataformas-modal-juego');
+    const puntajeModalJuego = document.getElementById('puntaje-modal-juego');
+    const estadoPublicacionesJuego = document.getElementById('estado-publicaciones-juego');
+    const publicacionesDelJuego = document.getElementById('publicaciones-del-juego');
+    const sinPublicacionesJuego = document.getElementById('sin-publicaciones-juego');
+    const botonPrimeraPublicacion = document.getElementById('boton-primera-publicacion');
 
     function actualizarSugerenciasJuegos(juegos) {
         if (!listaSugerenciasJuegos) return;
@@ -295,46 +362,118 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderizarJuegos(juegos) {
         if (!contenedorJuegos) return;
         contenedorJuegos.innerHTML = '';
+        contenedorJuegos.classList.remove('d-none');
 
-        juegos.slice(0, 3).forEach((juego) => {
-            const columna = document.createElement('div');
-            columna.className = 'col-md-4';
+        const juegosAMostrar = campoBuscarJuego && campoBuscarJuego.value.trim()
+            ? juegos
+            : juegos.slice(0, 3);
 
-            const plataformasTexto = Array.isArray(juego.plataformas) && juego.plataformas.length > 0
-                ? juego.plataformas.join(', ')
-                : 'Sin plataformas';
-            const generosTexto = Array.isArray(juego.generos) && juego.generos.length > 0
-                ? juego.generos.join(' · ')
-                : 'General';
+        juegosAMostrar.forEach((juego) => {
+            const tarjeta = document.createElement('button');
+            tarjeta.type = 'button';
+            tarjeta.className = 'game-card';
 
-            columna.innerHTML = `
-                <div class="game-card">
-                    <img src="${juego.imagen}" alt="${juego.titulo}" class="img-fluid rounded-3 mb-3 game-img">
-                    <span class="text-primary fw-bold fs-xs">Puntaje: ${juego.puntaje} / 10</span>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                        <h4 class="fw-bold mb-0">${juego.titulo}</h4>
-                        <i class="bi bi-arrow-up-right fs-5"></i>
-                    </div>
-                    <p class="text-muted fs-sm mt-1 mb-1">${generosTexto} · ${plataformasTexto}</p>
-                    <p class="text-muted fs-xs mb-0">${juego.descripcion}</p>
-                </div>
-            `;
+            if (juego.imagen) {
+                const imagen = document.createElement('img');
+                imagen.src = juego.imagen;
+                imagen.alt = juego.titulo;
+                imagen.className = 'game-img rounded-3 mb-2';
+                tarjeta.appendChild(imagen);
+            }
 
-            columna.addEventListener('click', () => {
-                if (campoJuegoPublicacion) {
-                    campoJuegoPublicacion.value = juego.titulo;
-                }
-                if (estaUsuarioAutenticado) {
-                    modalCrearPublicacion.show();
-                } else {
-                    mostrarFormularioLogin();
-                    modalAutenticacion.show();
-                }
-            });
+            const titulo = document.createElement('h4');
+            titulo.className = 'game-title fw-bold mb-0';
+            titulo.textContent = juego.titulo;
 
-            contenedorJuegos.appendChild(columna);
+            tarjeta.appendChild(titulo);
+            tarjeta.addEventListener('click', () => abrirModalJuego(juego));
+            contenedorJuegos.appendChild(tarjeta);
         });
     }
+
+    async function cargarPublicacionesJuego(juego) {
+        publicacionesDelJuego.innerHTML = '';
+        estadoPublicacionesJuego.textContent = 'Cargando publicaciones...';
+        sinPublicacionesJuego.classList.add('d-none');
+        botonPrimeraPublicacion.classList.add('d-none');
+
+        try {
+            const respuesta = await fetch(`/api/posts?game=${encodeURIComponent(juego.titulo)}`);
+            const resultado = await respuesta.json();
+            if (!juegoSeleccionadoModal || juegoSeleccionadoModal.titulo !== juego.titulo) return;
+            if (!respuesta.ok) throw new Error(resultado.error || 'No se pudieron cargar las publicaciones.');
+
+            const publicaciones = resultado.data || [];
+            estadoPublicacionesJuego.textContent = publicaciones.length
+                ? `${resultado.total} ${resultado.total === 1 ? 'publicación' : 'publicaciones'}`
+                : '';
+
+            publicaciones.forEach((publicacion) => {
+                const tarjeta = document.createElement('article');
+                tarjeta.className = 'card';
+                const cuerpo = document.createElement('div');
+                cuerpo.className = 'card-body';
+                const titulo = document.createElement('h6');
+                titulo.className = 'card-title fw-bold';
+                titulo.textContent = publicacion.title || publicacion.titulo || 'Sin título';
+                const autor = document.createElement('p');
+                autor.className = 'text-muted fs-xs mb-2';
+                autor.textContent = `Por ${publicacion.author && publicacion.author.name || 'Usuario'} · ${publicacion.category || publicacion.categoria || ''}`;
+                const contenido = document.createElement('p');
+                contenido.className = 'card-text mb-0';
+                contenido.textContent = publicacion.content || publicacion.contenido || '';
+                cuerpo.append(titulo, autor, contenido);
+                const acciones = crearAccionesPublicacion(publicacion, true);
+                if (acciones) cuerpo.appendChild(acciones);
+                tarjeta.appendChild(cuerpo);
+                publicacionesDelJuego.appendChild(tarjeta);
+            });
+
+            if (!publicaciones.length) {
+                sinPublicacionesJuego.classList.remove('d-none');
+                botonPrimeraPublicacion.classList.remove('d-none');
+            }
+        } catch (error) {
+            if (!juegoSeleccionadoModal || juegoSeleccionadoModal.titulo !== juego.titulo) return;
+            estadoPublicacionesJuego.textContent = error.message || 'No se pudieron cargar las publicaciones.';
+        }
+    }
+
+    function abrirModalJuego(juego) {
+        juegoSeleccionadoModal = juego;
+        tituloModalJuego.textContent = juego.titulo;
+        descripcionModalJuego.textContent = juego.descripcion || '';
+        generosModalJuego.textContent = Array.isArray(juego.generos) ? juego.generos.join(', ') : '';
+        plataformasModalJuego.textContent = Array.isArray(juego.plataformas) ? juego.plataformas.join(', ') : '';
+        puntajeModalJuego.textContent = juego.puntaje > 0
+            ? `${juego.puntaje} / 10`
+            : 'Sin puntaje disponible';
+        if (juego.imagen) {
+            imagenModalJuego.src = juego.imagen;
+            imagenModalJuego.alt = juego.titulo;
+            imagenModalJuego.classList.remove('d-none');
+        } else {
+            imagenModalJuego.removeAttribute('src');
+            imagenModalJuego.classList.add('d-none');
+        }
+        modalJuego.show();
+        cargarPublicacionesJuego(juego);
+    }
+
+    botonPrimeraPublicacion.addEventListener('click', () => {
+        if (!juegoSeleccionadoModal) return;
+        prepararNuevaPublicacion();
+        campoJuegoPublicacion.value = juegoSeleccionadoModal.titulo;
+        elementoModalJuego.addEventListener('hidden.bs.modal', () => {
+            if (estaUsuarioAutenticado) {
+                modalCrearPublicacion.show();
+            } else {
+                mostrarFormularioLogin();
+                modalAutenticacion.show();
+            }
+        }, { once: true });
+        modalJuego.hide();
+    });
 
     async function cargarJuegos(termino = '') {
         if (!contenedorJuegos) return;
@@ -368,9 +507,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (formularioBuscarJuego) {
-        formularioBuscarJuego.addEventListener('submit', (evento) => {
+        formularioBuscarJuego.addEventListener('submit', async (evento) => {
             evento.preventDefault();
-            cargarJuegos(campoBuscarJuego ? campoBuscarJuego.value : '');
+            const termino = campoBuscarJuego ? campoBuscarJuego.value.trim() : '';
+            if (!termino) {
+                cargarJuegos();
+                return;
+            }
+
+            await cargarJuegos(termino);
+            if (contenedorJuegos && !contenedorJuegos.children.length && mensajeJuegos && mensajeJuegos.classList.contains('d-none')) {
+                mensajeJuegos.textContent = 'No se encontraron juegos. Probá con otro nombre.';
+                mensajeJuegos.classList.remove('d-none');
+            }
         });
     }
 
@@ -396,6 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!respuesta.ok) throw new Error('No se pudo consultar la sesión actual.');
             const resultado = await respuesta.json();
             actualizarPerfilUsuario(resultado.user);
+            cargarPublicaciones();
         })
         .catch((error) => {
             console.error(error);

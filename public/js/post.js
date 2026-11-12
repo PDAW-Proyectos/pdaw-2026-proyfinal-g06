@@ -267,14 +267,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const campoJuego = document.getElementById('campo-juego-publicacion');
     const listaSugerenciasJuegos = document.getElementById('lista-sugerencias-juegos');
-    campoJuego.addEventListener('input', async () => {
+    const demorar = (funcion, espera = 250) => {
+        let temporizador;
+        return (...argumentos) => {
+            clearTimeout(temporizador);
+            temporizador = setTimeout(() => funcion(...argumentos), espera);
+        };
+    };
+    let controladorSugerencias = null;
+
+    const buscarSugerenciasConDemora = demorar(async () => {
+        if (controladorSugerencias) controladorSugerencias.abort();
         const termino = campoJuego.value.trim();
         if (!termino) {
             listaSugerenciasJuegos.replaceChildren();
             return;
         }
         try {
-            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(termino)}`);
+            controladorSugerencias = new AbortController();
+            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(termino)}`, { signal: controladorSugerencias.signal });
             if (!respuesta.ok) return;
             const resultado = await respuesta.json();
             listaSugerenciasJuegos.replaceChildren(...(resultado.datos || []).map((juego) => {

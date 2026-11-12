@@ -540,18 +540,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const demorar = (funcion, espera = 250) => {
+        let temporizador;
+        return (...argumentos) => {
+            clearTimeout(temporizador);
+            temporizador = setTimeout(() => funcion(...argumentos), espera);
+        };
+    };
+    let controladorSugerencias = null;
+
     if (campoJuegoPublicacion) {
-        campoJuegoPublicacion.addEventListener('input', async () => {
-            const texto = campoJuegoPublicacion.value.trim();
-            if (!texto) return;
+        const buscarSugerenciasConDemora = demorar(async (texto) => {
+            if (controladorSugerencias) controladorSugerencias.abort();
+            if (!texto) {
+                if (listaSugerenciasJuegos) listaSugerenciasJuegos.replaceChildren();
+                return;
+            }
+            controladorSugerencias = new AbortController();
             try {
-                const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(texto)}`);
+                const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(texto)}`, {
+                    signal: controladorSugerencias.signal
+                });
                 if (!respuesta.ok) return;
                 const resultado = await respuesta.json();
                 actualizarSugerenciasJuegos(resultado.datos || []);
             } catch (error) {
-                return;
+                if (error.name === 'AbortError') return;
             }
+        }, 250);
+
+        campoJuegoPublicacion.addEventListener('input', () => {
+            buscarSugerenciasConDemora(campoJuegoPublicacion.value.trim());
         });
     }
 

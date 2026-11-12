@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publicación - respawn.</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-body border-bottom py-3">
+        <div class="container-fluid px-4 px-lg-5">
+            <a class="navbar-brand fw-bold text-body-emphasis d-flex align-items-center" href="index.html">
+                <i class="bi bi-asterisk text-primary fs-4 me-2"></i> respawn.
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Abrir navegación">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium text-muted">
+                    <li class="nav-item me-4 position-relative">
+                        <a class="nav-link text-primary fw-bold" href="index.html">Home</a>
+                        <span class="active-dot bg-primary rounded-circle position-absolute"></span>
+                    </li>
+                    <li class="nav-item me-4"><a class="nav-link" href="index.html#formulario-buscar-juego">Buscar videojuego</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#contenedor-publicaciones">Tendencias</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <button id="theme-toggle" class="btn btn-link text-body p-0 text-decoration-none" type="button" aria-label="Cambiar tema">
+                        <i class="bi bi-moon fs-5"></i>
+                    </button>
+                    <button class="btn btn-link text-body p-0 text-decoration-none" type="button" aria-label="Notificaciones">
+                        <i class="bi bi-bell fs-5"></i>
+                    </button>
+                    <div class="border-start ps-3 ms-2 d-flex align-items-center gap-2">
+                        <button id="auth-trigger" class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#auth-modal">
+                            Iniciar sesión
+                        </button>
+                        <div id="user-profile" class="d-none align-items-center">
+                            <div id="user-avatar" class="avatar bg-body-tertiary text-muted fw-bold rounded-circle d-flex justify-content-center align-items-center me-2"></div>
+                            <span id="user-name" class="fw-medium fs-sm"></span>
+                            <button id="logout-button" class="btn btn-outline-danger btn-sm ms-2" type="button">
+                                Cerrar sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="modal fade" id="auth-modal" tabindex="-1" aria-labelledby="auth-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="auth-modal-title">Iniciar sesión</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="auth-message" class="alert d-none" role="alert" aria-live="polite"></div>
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="login-email" class="form-label">Correo electrónico</label>
+                            <input id="login-email" name="email" class="form-control" type="email" autocomplete="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password" class="form-label">Contraseña</label>
+                            <input id="login-password" name="password" class="form-control" type="password" autocomplete="current-password" required>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Iniciar sesión</button>
+                    </form>
+                    <form id="register-form" class="d-none">
+                        <div class="mb-3">
+                            <label for="register-name" class="form-label">Nombre visible</label>
+                            <input id="register-name" name="name" class="form-control" type="text" autocomplete="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-email" class="form-label">Correo electrónico</label>
+                            <input id="register-email" name="email" class="form-control" type="email" autocomplete="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-password" class="form-label">Contraseña</label>
+                            <input id="register-password" name="password" class="form-control" type="password" autocomplete="new-password" minlength="8" required aria-describedby="password-help">
+                            <div id="password-help" class="form-text">Debe tener al menos 8 caracteres.</div>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Crear cuenta</button>
+                    </form>
+                    <p class="text-center text-muted fs-sm mt-4 mb-0">
+                        <span id="auth-switch-prompt">¿No tienes cuenta?</span>
+                        <button id="auth-switch" class="btn btn-link btn-sm p-0 align-baseline" type="button">Regístrate</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container my-5" style="max-width: 800px;">
+        <p id="indicador-carga-publicacion" class="text-center text-muted py-5" role="status" aria-live="polite">
+            Cargando publicación...
+        </p>
+
+        <article id="detalle-publicacion" class="d-none">
+            <section class="d-flex flex-column flex-md-row gap-4 align-items-start">
+                <img id="publicacion-portada" class="game-detail-image rounded d-none" alt="">
+                <div class="flex-grow-1 w-100">
+                    <div class="mb-3 fs-sm fw-medium">
+                        <span id="publicacion-juego" class="text-primary"></span>
+                        <span class="text-muted">/ <span id="publicacion-categoria"></span></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <h1 id="publicacion-titulo" class="fw-bold mb-0"></h1>
+                        <button id="boton-editar-publicacion" class="btn btn-outline-primary btn-sm d-none flex-shrink-0" type="button">
+                            <i class="bi bi-pencil-square me-1"></i> Editar
+                        </button>
+                    </div>
+                    <div class="d-flex align-items-center text-muted fs-sm mb-4 border-bottom pb-3">
+                        <div id="publicacion-avatar" class="avatar bg-body-tertiary fw-bold rounded-circle d-flex justify-content-center align-items-center me-2"></div>
+                        <span id="publicacion-autor" class="fw-medium text-body me-2"></span>
+                        <span id="publicacion-fecha"></span>
+                    </div>
+                    <h2 class="fs-5 fw-bold">Contenido</h2>
+                    <div id="publicacion-contenido" class="fs-6" style="white-space: pre-wrap;"></div>
+                </div>
+            </section>
+
+            <section id="informacion-juego" class="card bg-body-tertiary border-0 rounded-4 mt-5 d-none">
+                <div class="card-body p-4">
+                    <h2 class="fs-5 fw-bold mb-4">Información del juego</h2>
+                    <div class="mb-3">
+                        <h3 class="fs-sm fw-bold mb-1">Descripción</h3>
+                        <p id="juego-descripcion" class="text-muted mb-0"></p>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <h3 class="fs-sm fw-bold mb-1">Géneros</h3>
+                            <p id="juego-generos" class="text-muted mb-0"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="fs-sm fw-bold mb-1">Plataformas</h3>
+                            <p id="juego-plataformas" class="text-muted mb-0"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="fs-sm fw-bold mb-1">Puntaje de IGDB</h3>
+                            <p id="juego-puntaje" class="text-muted mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </article>
+    </main>
+
+    <div class="modal fade" id="modal-crear-publicacion" tabindex="-1" aria-labelledby="titulo-modal-crear-publicacion" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titulo-modal-crear-publicacion">Editar publicación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="alerta-error-publicacion" class="alert alert-danger d-none fs-sm" role="alert" aria-live="polite"></div>
+                    <form id="formulario-crear-publicacion">
+                        <div class="mb-3">
+                            <label class="form-label" for="campo-juego-publicacion">Juego</label>
+                            <input type="text" id="campo-juego-publicacion" name="game" list="lista-sugerencias-juegos" class="form-control" required>
+                            <datalist id="lista-sugerencias-juegos"></datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="campo-categoria-publicacion">Categoría</label>
+                            <select id="campo-categoria-publicacion" name="category" class="form-select" required>
+                                <option value="Informativa">Informativa</option>
+                                <option value="Review o reseña">Review o reseña</option>
+                                <option value="Crítica">Crítica</option>
+                                <option value="Bug o problema técnico">Bug o problema técnico</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="campo-titulo-publicacion">Título</label>
+                            <input type="text" id="campo-titulo-publicacion" name="title" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="campo-contenido-publicacion">Contenido</label>
+                            <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5" required></textarea>
+                        </div>
+                        <button id="boton-enviar-publicacion" type="submit" class="btn btn-primary w-100">Guardar cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/post.js"></script>
+</body>
+</html>

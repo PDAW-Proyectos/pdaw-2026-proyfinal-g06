@@ -264,10 +264,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const elementoCategoria = clon.querySelector('.publicacion-categoria, .post-category');
                 const elementoTitulo = clon.querySelector('.publicacion-titulo, .post-title');
                 const elementoMetadatos = clon.querySelector('.publicacion-metadatos, .post-meta');
+                const enlacePublicacion = clon.querySelector('.publicacion-enlace');
+                const imagenPortada = clon.querySelector('.publicacion-portada');
+                const juego = publicacion.game || publicacion.juego || '';
+                const portada = publicacion.imagenJuego || (publicacion.datosJuego && publicacion.datosJuego.imagen);
 
-                if (elementoJuego) elementoJuego.textContent = publicacion.game || publicacion.juego || '';
+                if (elementoJuego) elementoJuego.textContent = juego;
                 if (elementoCategoria) elementoCategoria.textContent = publicacion.category || publicacion.categoria || '';
                 if (elementoTitulo) elementoTitulo.textContent = publicacion.title || publicacion.titulo || '';
+                if (enlacePublicacion) enlacePublicacion.href = `/post.html?id=${encodeURIComponent(publicacion.id)}`;
+                if (imagenPortada && portada) {
+                    imagenPortada.src = portada;
+                    imagenPortada.alt = `Portada de ${juego}`;
+                    imagenPortada.classList.remove('d-none');
+                    imagenPortada.addEventListener('error', () => imagenPortada.classList.add('d-none'), { once: true });
+                }
                 
                 const fechaFormateada = new Date(publicacion.createdAt).toLocaleDateString('es-ES', {
                     month: 'short',
@@ -415,7 +426,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 cuerpo.className = 'card-body';
                 const titulo = document.createElement('h6');
                 titulo.className = 'card-title fw-bold';
-                titulo.textContent = publicacion.title || publicacion.titulo || 'Sin título';
+                const enlacePublicacion = document.createElement('a');
+                enlacePublicacion.href = `/post.html?id=${encodeURIComponent(publicacion.id)}`;
+                enlacePublicacion.target = '_blank';
+                enlacePublicacion.rel = 'noopener noreferrer';
+                enlacePublicacion.className = 'text-decoration-none text-body-emphasis';
+                enlacePublicacion.textContent = publicacion.title || publicacion.titulo || 'Sin título';
+                titulo.appendChild(enlacePublicacion);
                 const autor = document.createElement('p');
                 autor.className = 'text-muted fs-xs mb-2';
                 autor.textContent = `Por ${publicacion.author && publicacion.author.name || 'Usuario'} · ${publicacion.category || publicacion.categoria || ''}`;

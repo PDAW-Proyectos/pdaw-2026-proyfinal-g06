@@ -108,9 +108,18 @@ const obtenerPublicaciones = async (pagina, juego = '') => {
   return await repositorioPublicaciones.obtenerPublicaciones(paginaActual, LIMITE_POR_PAGINA, juegoFiltrado);
 };
 
+const obtenerPublicacionPorId = async (id) => {
+  const publicacion = await repositorioPublicaciones.buscarPublicacionPorId(id);
+  if (!publicacion) {
+    throw crearErrorPublicacion('Publicación no encontrada', 404);
+  }
+  return publicacion;
+};
+
 module.exports = {
   crearPublicacion,
   actualizarPublicacion,
+  obtenerPublicacionPorId,
   obtenerPublicaciones,
   CATEGORIAS_VALIDAS
 };

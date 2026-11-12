@@ -91,6 +91,12 @@ body {
     object-fit: cover;
 }
 .game-detail-information { min-width: 0; }
+.post-cover {
+    flex: 0 0 72px;
+    width: 72px;
+    height: 96px;
+    object-fit: cover;
+}
 
 @media (max-width: 575.98px) {
     .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }

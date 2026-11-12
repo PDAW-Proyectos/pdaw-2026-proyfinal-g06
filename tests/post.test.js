@@ -21,7 +21,20 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
     body: JSON.stringify(cuerpo)
   });
 
-  let respuesta = await solicitud('/api/posts');
+  let respuesta = await solicitud('/post.html');
+  assert.equal(respuesta.status, 200);
+  assert.match(respuesta.headers.get('content-type'), /text\/html/);
+  const paginaDetalleHtml = await respuesta.text();
+  assert.match(paginaDetalleHtml, /id="boton-editar-publicacion"/);
+  assert.match(paginaDetalleHtml, /id="theme-toggle"/);
+  assert.match(paginaDetalleHtml, /id="publicacion-portada"/);
+  assert.match(paginaDetalleHtml, /id="modal-crear-publicacion"/);
+
+  respuesta = await solicitud('/index.html');
+  assert.equal(respuesta.status, 200);
+  assert.match(await respuesta.text(), /class="publicacion-portada post-cover/);
+
+  respuesta = await solicitud('/api/posts');
   assert.equal(respuesta.status, 200);
   let cargaPublicaciones = await respuesta.json();
   assert.ok(Array.isArray(cargaPublicaciones.data));
@@ -151,6 +164,17 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   const publicacionesVacias = await respuesta.json();
   assert.deepEqual(publicacionesVacias.data, []);
   assert.equal(publicacionesVacias.total, 0);
+
+  respuesta = await solicitud(`/api/posts/${publicacionCreada.post.id}`);
+  assert.equal(respuesta.status, 200);
+  const publicacionDetalle = await respuesta.json();
+  assert.equal(publicacionDetalle.id, publicacionCreada.post.id);
+  assert.equal(publicacionDetalle.title, '¿Qué build recomiendan? (editado)');
+  assert.equal(publicacionDetalle.content, 'Contenido actualizado');
+
+  respuesta = await solicitud('/api/posts/publicacion-inexistente');
+  assert.equal(respuesta.status, 404);
+  assert.deepEqual(await respuesta.json(), { error: 'Publicación no encontrada' });
 
   respuesta = await solicitud('/api/posts');
   assert.equal(respuesta.status, 200);

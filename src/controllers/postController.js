@@ -63,5 +63,21 @@ const obtenerPublicaciones = async (req, res) => {
   }
 };
 
-module.exports = { crearPublicacion, actualizarPublicacion, obtenerPublicaciones };
+const obtenerPublicacionPorId = async (req, res) => {
+  try {
+    const publicacion = await servicioPublicaciones.obtenerPublicacionPorId(req.params.id);
+    res.status(200).json(publicacion);
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      error: error.message || 'Error al obtener la publicación'
+    });
+  }
+};
+
+module.exports = {
+  crearPublicacion,
+  actualizarPublicacion,
+  obtenerPublicaciones,
+  obtenerPublicacionPorId
+};
 

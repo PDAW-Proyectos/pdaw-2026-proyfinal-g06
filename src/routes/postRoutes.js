@@ -7,6 +7,7 @@ enrutador.get('/', controladorPublicaciones.obtenerPublicaciones);
 enrutador.get('/:id', controladorPublicaciones.obtenerPublicacionPorId);
 enrutador.post('/', requerirAutenticacion, controladorPublicaciones.crearPublicacion);
 enrutador.patch('/:id', requerirAutenticacion, controladorPublicaciones.actualizarPublicacion);
+enrutador.post('/:id/voto', requerirAutenticacion, controladorPublicaciones.votarPublicacion);
+enrutador.post('/:id/vote', requerirAutenticacion, controladorPublicaciones.votarPublicacion);
 
 module.exports = enrutador;
-

@@ -63,7 +63,7 @@ const crearPublicacion = async (titulo, categoria, contenido, juego, idUsuario) 
 };
 
 const actualizarPublicacion = async (id, datos, idUsuario) => {
-  const publicacion = await repositorioPublicaciones.buscarPublicacionPorId(id);
+  const publicacion = await repositorioPublicaciones.buscarPublicacionPorId(id, idUsuario);
   if (!publicacion) {
     throw crearErrorPublicacion('Publicación no encontrada', 404);
   }
@@ -99,17 +99,40 @@ const actualizarPublicacion = async (id, datos, idUsuario) => {
     imagenJuego,
     datosJuego,
     author: publicacion.author
-  });
+  }, idUsuario);
 };
 
-const obtenerPublicaciones = async (pagina, juego = '') => {
+const votarPublicacion = async (id, valorVoto, idUsuario) => {
+  if (!idUsuario) {
+    throw crearErrorPublicacion('Se requiere iniciar sesión para realizar esta acción', 401);
+  }
+
+  const valorNormalizado = valorVoto === 'up' ? 1 : valorVoto === 'down' ? -1 : Number(valorVoto);
+  if (valorNormalizado !== 1 && valorNormalizado !== -1) {
+    throw crearErrorPublicacion('El voto debe ser positivo (1) o negativo (-1)', 400);
+  }
+
+  const publicacionExistente = await repositorioPublicaciones.buscarPublicacionPorId(id, idUsuario);
+  if (!publicacionExistente) {
+    throw crearErrorPublicacion('Publicación no encontrada', 404);
+  }
+
+  return await repositorioPublicaciones.registrarVotoPublicacion(id, idUsuario, valorNormalizado);
+};
+
+const obtenerPublicaciones = async (pagina, juego = '', idUsuario = null) => {
   const paginaActual = Math.max(1, parseInt(pagina, 10) || 1);
   const juegoFiltrado = typeof juego === 'string' ? juego.trim() : '';
-  return await repositorioPublicaciones.obtenerPublicaciones(paginaActual, LIMITE_POR_PAGINA, juegoFiltrado);
+  return await repositorioPublicaciones.obtenerPublicaciones(
+    paginaActual,
+    LIMITE_POR_PAGINA,
+    juegoFiltrado,
+    idUsuario
+  );
 };
 
-const obtenerPublicacionPorId = async (id) => {
-  const publicacion = await repositorioPublicaciones.buscarPublicacionPorId(id);
+const obtenerPublicacionPorId = async (id, idUsuario = null) => {
+  const publicacion = await repositorioPublicaciones.buscarPublicacionPorId(id, idUsuario);
   if (!publicacion) {
     throw crearErrorPublicacion('Publicación no encontrada', 404);
   }
@@ -119,8 +142,8 @@ const obtenerPublicacionPorId = async (id) => {
 module.exports = {
   crearPublicacion,
   actualizarPublicacion,
+  votarPublicacion,
   obtenerPublicacionPorId,
   obtenerPublicaciones,
   CATEGORIAS_VALIDAS
 };
-

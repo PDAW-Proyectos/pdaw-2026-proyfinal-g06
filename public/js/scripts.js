@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatarUsuario = document.getElementById('user-avatar');
     const botonCerrarSesion = document.getElementById('logout-button');
 
+    const demorar = (funcion, espera = 250) => {
+        let temporizador;
+        return (...argumentos) => {
+            clearTimeout(temporizador);
+            temporizador = setTimeout(() => funcion(...argumentos), espera);
+        };
+    };
+
     const temaGuardado = localStorage.getItem('theme');
     if (temaGuardado) {
         elementoHtml.setAttribute('data-bs-theme', temaGuardado);
@@ -25,11 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
     botonTema.addEventListener('click', () => {
         const temaActual = elementoHtml.getAttribute('data-bs-theme');
         const nuevoTema = temaActual === 'light' ? 'dark' : 'light';
-        
+
         elementoHtml.setAttribute('data-bs-theme', nuevoTema);
-        
         localStorage.setItem('theme', nuevoTema);
-        
         actualizarIcono(nuevoTema);
     });
 
@@ -243,29 +249,96 @@ document.addEventListener('DOMContentLoaded', () => {
         return acciones;
     }
 
+    function actualizarEstadoVisualVoto(contenedorVotos, puntajeVotos, miVoto) {
+        if (!contenedorVotos) return;
+        const elementoPuntaje = contenedorVotos.querySelector('.puntaje-votos');
+        const botonArriba = contenedorVotos.querySelector('[data-accion-voto="1"]');
+        const botonAbajo = contenedorVotos.querySelector('[data-accion-voto="-1"]');
+
+        if (elementoPuntaje) {
+            elementoPuntaje.textContent = String(puntajeVotos ?? 0);
+        }
+        if (botonArriba) {
+            botonArriba.classList.toggle('text-primary', miVoto === 1);
+            botonArriba.classList.toggle('fw-bold', miVoto === 1);
+            botonArriba.classList.toggle('text-muted', miVoto !== 1);
+            botonArriba.setAttribute('aria-pressed', String(miVoto === 1));
+        }
+        if (botonAbajo) {
+            botonAbajo.classList.toggle('text-danger', miVoto === -1);
+            botonAbajo.classList.toggle('fw-bold', miVoto === -1);
+            botonAbajo.classList.toggle('text-muted', miVoto !== -1);
+            botonAbajo.setAttribute('aria-pressed', String(miVoto === -1));
+        }
+    }
+
+    async function enviarVotoPublicacion(idPublicacion, valor, contenedorVotos) {
+        if (!estaUsuarioAutenticado) {
+            mostrarFormularioLogin();
+            modalAutenticacion.show();
+            return;
+        }
+
+        const botones = contenedorVotos ? contenedorVotos.querySelectorAll('button[data-accion-voto]') : [];
+        botones.forEach((boton) => { boton.disabled = true; });
+
+        try {
+            const respuesta = await fetch(`/api/posts/${encodeURIComponent(idPublicacion)}/voto`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ valor: Number(valor) })
+            });
+
+            if (respuesta.status === 401) {
+                mostrarFormularioLogin();
+                modalAutenticacion.show();
+                return;
+            }
+
+            if (!respuesta.ok) return;
+            const resultado = await respuesta.json();
+            actualizarEstadoVisualVoto(contenedorVotos, resultado.puntajeVotos, resultado.miVoto);
+        } catch (error) {
+            return;
+        } finally {
+            botones.forEach((boton) => { boton.disabled = false; });
+        }
+    }
+
+    contenedorPublicaciones.addEventListener('click', (evento) => {
+        const botonVoto = evento.target.closest('button[data-accion-voto]');
+        if (!botonVoto) return;
+        const contenedorVotos = botonVoto.closest('[data-contenedor-votos]');
+        const idPublicacion = contenedorVotos ? contenedorVotos.dataset.idPublicacion : null;
+        if (!idPublicacion) return;
+        enviarVotoPublicacion(idPublicacion, Number(botonVoto.dataset.accionVoto), contenedorVotos);
+    });
+
     async function cargarPublicaciones(pagina = 1) {
         try {
             const respuesta = await fetch(`/api/posts?page=${pagina}`);
             if (!respuesta.ok) throw new Error('Error al cargar publicaciones');
             const resultado = await respuesta.json();
 
-            contenedorPublicaciones.innerHTML = '';
-
             const listaPublicaciones = resultado.data || [];
             if (listaPublicaciones.length === 0) {
-                contenedorPublicaciones.innerHTML = '<div class="text-center text-muted py-4">Aún no hay publicaciones. ¡Sé el primero en iniciar una conversación!</div>';
+                const avisoVacio = document.createElement('div');
+                avisoVacio.className = 'text-center text-muted py-4';
+                avisoVacio.textContent = 'Aún no hay publicaciones. ¡Sé el primero en iniciar una conversación!';
+                contenedorPublicaciones.replaceChildren(avisoVacio);
                 return;
             }
 
-            listaPublicaciones.forEach((publicacion) => {
+            const nodosPublicaciones = listaPublicaciones.map((publicacion) => {
                 const clon = plantillaPublicacion.content.cloneNode(true);
-                
+
                 const elementoJuego = clon.querySelector('.publicacion-juego, .post-game');
                 const elementoCategoria = clon.querySelector('.publicacion-categoria, .post-category');
                 const elementoTitulo = clon.querySelector('.publicacion-titulo, .post-title');
                 const elementoMetadatos = clon.querySelector('.publicacion-metadatos, .post-meta');
                 const enlacePublicacion = clon.querySelector('.publicacion-enlace');
                 const imagenPortada = clon.querySelector('.publicacion-portada');
+                const contenedorVotos = clon.querySelector('[data-contenedor-votos]');
                 const juego = publicacion.game || publicacion.juego || '';
                 const portada = publicacion.imagenJuego || (publicacion.datosJuego && publicacion.datosJuego.imagen);
 
@@ -279,7 +352,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     imagenPortada.classList.remove('d-none');
                     imagenPortada.addEventListener('error', () => imagenPortada.classList.add('d-none'), { once: true });
                 }
-                
+
+                if (contenedorVotos) {
+                    contenedorVotos.dataset.idPublicacion = publicacion.id;
+                    const puntajeInicial = publicacion.puntajeVotos ?? publicacion.votes ?? 0;
+                    const miVotoInicial = publicacion.miVoto ?? publicacion.userVote ?? 0;
+                    actualizarEstadoVisualVoto(contenedorVotos, puntajeInicial, miVotoInicial);
+                }
+
                 const fechaFormateada = new Date(publicacion.createdAt).toLocaleDateString('es-ES', {
                     month: 'short',
                     day: 'numeric',
@@ -293,11 +373,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const acciones = crearAccionesPublicacion(publicacion);
                 if (acciones && elementoMetadatos) elementoMetadatos.parentElement.appendChild(acciones);
-                
-                contenedorPublicaciones.appendChild(clon);
+
+                return clon;
             });
+
+            contenedorPublicaciones.replaceChildren(...nodosPublicaciones);
         } catch (error) {
-            contenedorPublicaciones.innerHTML = '<div class="alert alert-danger">Error al cargar las publicaciones.</div>';
+            const alertaError = document.createElement('div');
+            alertaError.className = 'alert alert-danger';
+            alertaError.textContent = 'Error al cargar las publicaciones.';
+            contenedorPublicaciones.replaceChildren(alertaError);
         }
     }
 
@@ -317,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(Object.fromEntries(new FormData(formularioCrearPublicacion)))
             });
-            
+
             const resultado = await respuesta.json();
 
             if (!respuesta.ok) {
@@ -355,6 +440,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const generosModalJuego = document.getElementById('generos-modal-juego');
     const plataformasModalJuego = document.getElementById('plataformas-modal-juego');
     const puntajeModalJuego = document.getElementById('puntaje-modal-juego');
+    const puntajeComunidadModalJuego = document.getElementById('puntaje-comunidad-modal-juego');
+    const formularioPuntuarJuego = document.getElementById('formulario-puntuar-juego');
+    const campoNotaJuego = document.getElementById('campo-nota-juego');
+    const botonEnviarPuntuacion = document.getElementById('boton-enviar-puntuacion');
+    const mensajePuntuacionJuego = document.getElementById('mensaje-puntuacion-juego');
     const estadoPublicacionesJuego = document.getElementById('estado-publicaciones-juego');
     const publicacionesDelJuego = document.getElementById('publicaciones-del-juego');
     const sinPublicacionesJuego = document.getElementById('sin-publicaciones-juego');
@@ -362,24 +452,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function actualizarSugerenciasJuegos(juegos) {
         if (!listaSugerenciasJuegos) return;
-        listaSugerenciasJuegos.innerHTML = '';
-        juegos.forEach((juego) => {
+        const opciones = juegos.map((juego) => {
             const opcion = document.createElement('option');
             opcion.value = juego.titulo;
-            listaSugerenciasJuegos.appendChild(opcion);
+            return opcion;
         });
+        listaSugerenciasJuegos.replaceChildren(...opciones);
     }
 
     function renderizarJuegos(juegos) {
         if (!contenedorJuegos) return;
-        contenedorJuegos.innerHTML = '';
         contenedorJuegos.classList.remove('d-none');
 
         const juegosAMostrar = campoBuscarJuego && campoBuscarJuego.value.trim()
             ? juegos
             : juegos.slice(0, 3);
 
-        juegosAMostrar.forEach((juego) => {
+        const tarjetas = juegosAMostrar.map((juego) => {
             const tarjeta = document.createElement('button');
             tarjeta.type = 'button';
             tarjeta.className = 'game-card';
@@ -398,12 +487,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tarjeta.appendChild(titulo);
             tarjeta.addEventListener('click', () => abrirModalJuego(juego));
-            contenedorJuegos.appendChild(tarjeta);
+            return tarjeta;
         });
+
+        contenedorJuegos.replaceChildren(...tarjetas);
     }
 
     async function cargarPublicacionesJuego(juego) {
-        publicacionesDelJuego.innerHTML = '';
+        publicacionesDelJuego.replaceChildren();
         estadoPublicacionesJuego.textContent = 'Cargando publicaciones...';
         sinPublicacionesJuego.classList.add('d-none');
         botonPrimeraPublicacion.classList.add('d-none');
@@ -419,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `${resultado.total} ${resultado.total === 1 ? 'publicación' : 'publicaciones'}`
                 : '';
 
-            publicaciones.forEach((publicacion) => {
+            const tarjetas = publicaciones.map((publicacion) => {
                 const tarjeta = document.createElement('article');
                 tarjeta.className = 'card';
                 const cuerpo = document.createElement('div');
@@ -435,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 titulo.appendChild(enlacePublicacion);
                 const autor = document.createElement('p');
                 autor.className = 'text-muted fs-xs mb-2';
-                autor.textContent = `Por ${publicacion.author && publicacion.author.name || 'Usuario'} · ${publicacion.category || publicacion.categoria || ''}`;
+                autor.textContent = `Por ${(publicacion.author && publicacion.author.name) || 'Usuario'} · ${publicacion.category || publicacion.categoria || ''}`;
                 const contenido = document.createElement('p');
                 contenido.className = 'card-text mb-0';
                 contenido.textContent = publicacion.content || publicacion.contenido || '';
@@ -443,8 +534,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const acciones = crearAccionesPublicacion(publicacion, true);
                 if (acciones) cuerpo.appendChild(acciones);
                 tarjeta.appendChild(cuerpo);
-                publicacionesDelJuego.appendChild(tarjeta);
+                return tarjeta;
             });
+
+            publicacionesDelJuego.replaceChildren(...tarjetas);
 
             if (!publicaciones.length) {
                 sinPublicacionesJuego.classList.remove('d-none');
@@ -454,6 +547,107 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!juegoSeleccionadoModal || juegoSeleccionadoModal.titulo !== juego.titulo) return;
             estadoPublicacionesJuego.textContent = error.message || 'No se pudieron cargar las publicaciones.';
         }
+    }
+
+    function actualizarVistaPuntuacionComunidad(resumen) {
+        if (!puntajeComunidadModalJuego) return;
+        const promedio = Number(resumen && resumen.promedio) || 0;
+        const cantidadVotos = Number(resumen && resumen.cantidadVotos) || 0;
+        const miPuntuacion = resumen ? resumen.miPuntuacion : null;
+
+        if (cantidadVotos > 0) {
+            puntajeComunidadModalJuego.textContent = `${promedio} / 10 (${cantidadVotos} ${cantidadVotos === 1 ? 'voto' : 'votos'})`;
+        } else {
+            puntajeComunidadModalJuego.textContent = 'Sin votos de la comunidad aún';
+        }
+
+        if (campoNotaJuego && miPuntuacion) {
+            campoNotaJuego.value = String(miPuntuacion);
+        }
+        if (botonEnviarPuntuacion) {
+            botonEnviarPuntuacion.textContent = miPuntuacion ? 'Actualizar nota' : 'Enviar';
+        }
+    }
+
+    async function cargarPuntuacionJuegoModal(juego) {
+        if (!puntajeComunidadModalJuego) return;
+        if (mensajePuntuacionJuego) {
+            mensajePuntuacionJuego.textContent = '';
+        }
+        actualizarVistaPuntuacionComunidad({
+            promedio: juego.puntajeComunidad || 0,
+            cantidadVotos: juego.cantidadVotos || 0,
+            miPuntuacion: juego.miPuntuacion || null
+        });
+
+        try {
+            const respuesta = await fetch(`/api/juegos/puntuaciones?juego=${encodeURIComponent(juego.titulo)}`);
+            if (!respuesta.ok) return;
+            const resultado = await respuesta.json();
+            if (!juegoSeleccionadoModal || juegoSeleccionadoModal.titulo !== juego.titulo) return;
+            if (resultado.datos) {
+                juego.puntajeComunidad = resultado.datos.promedio;
+                juego.cantidadVotos = resultado.datos.cantidadVotos;
+                juego.miPuntuacion = resultado.datos.miPuntuacion;
+                actualizarVistaPuntuacionComunidad(resultado.datos);
+            }
+        } catch (error) {
+            return;
+        }
+    }
+
+    if (formularioPuntuarJuego) {
+        formularioPuntuarJuego.addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            if (!juegoSeleccionadoModal) return;
+
+            if (!estaUsuarioAutenticado) {
+                elementoModalJuego.addEventListener('hidden.bs.modal', () => {
+                    mostrarFormularioLogin();
+                    modalAutenticacion.show();
+                }, { once: true });
+                modalJuego.hide();
+                return;
+            }
+
+            if (botonEnviarPuntuacion) botonEnviarPuntuacion.disabled = true;
+            if (mensajePuntuacionJuego) mensajePuntuacionJuego.textContent = '';
+
+            try {
+                const respuesta = await fetch('/api/juegos/puntuaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        juego: juegoSeleccionadoModal.titulo,
+                        nota: Number(campoNotaJuego.value)
+                    })
+                });
+                const resultado = await respuesta.json();
+
+                if (!respuesta.ok) {
+                    if (mensajePuntuacionJuego) {
+                        mensajePuntuacionJuego.textContent = resultado.error || 'No se pudo registrar tu voto.';
+                    }
+                    return;
+                }
+
+                if (resultado.datos) {
+                    juegoSeleccionadoModal.puntajeComunidad = resultado.datos.promedio;
+                    juegoSeleccionadoModal.cantidadVotos = resultado.datos.cantidadVotos;
+                    juegoSeleccionadoModal.miPuntuacion = resultado.datos.miPuntuacion;
+                    actualizarVistaPuntuacionComunidad(resultado.datos);
+                    if (mensajePuntuacionJuego) {
+                        mensajePuntuacionJuego.textContent = 'Tu puntuación fue guardada.';
+                    }
+                }
+            } catch (error) {
+                if (mensajePuntuacionJuego) {
+                    mensajePuntuacionJuego.textContent = 'Error de conexión al guardar la puntuación.';
+                }
+            } finally {
+                if (botonEnviarPuntuacion) botonEnviarPuntuacion.disabled = false;
+            }
+        });
     }
 
     function abrirModalJuego(juego) {
@@ -474,6 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
             imagenModalJuego.classList.add('d-none');
         }
         modalJuego.show();
+        cargarPuntuacionJuegoModal(juego);
         cargarPublicacionesJuego(juego);
     }
 
@@ -492,6 +687,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modalJuego.hide();
     });
 
+    let controladorBusquedaJuegos = null;
+
     async function cargarJuegos(termino = '') {
         if (!contenedorJuegos) return;
         if (mensajeJuegos) {
@@ -499,12 +696,19 @@ document.addEventListener('DOMContentLoaded', () => {
             mensajeJuegos.textContent = '';
         }
 
+        if (controladorBusquedaJuegos) {
+            controladorBusquedaJuegos.abort();
+        }
+        controladorBusquedaJuegos = new AbortController();
+
         try {
-            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(termino)}`);
+            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(termino)}`, {
+                signal: controladorBusquedaJuegos.signal
+            });
             const resultado = await respuesta.json();
 
             if (!respuesta.ok) {
-                contenedorJuegos.innerHTML = '';
+                contenedorJuegos.replaceChildren();
                 if (mensajeJuegos) {
                     mensajeJuegos.textContent = resultado.error || 'Juego no encontrado';
                     mensajeJuegos.classList.remove('d-none');
@@ -516,6 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderizarJuegos(juegos);
             actualizarSugerenciasJuegos(juegos);
         } catch (error) {
+            if (error.name === 'AbortError') return;
             if (mensajeJuegos) {
                 mensajeJuegos.textContent = 'Error al consultar videojuegos.';
                 mensajeJuegos.classList.remove('d-none');
@@ -540,22 +745,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const demorar = (funcion, espera = 250) => {
-        let temporizador;
-        return (...argumentos) => {
-            clearTimeout(temporizador);
-            temporizador = setTimeout(() => funcion(...argumentos), espera);
-        };
-    };
+    if (campoBuscarJuego) {
+        const buscarEnTiempoReal = demorar((texto) => {
+            cargarJuegos(texto);
+        }, 250);
+
+        campoBuscarJuego.addEventListener('input', () => {
+            buscarEnTiempoReal(campoBuscarJuego.value.trim());
+        });
+    }
+
     let controladorSugerencias = null;
 
     if (campoJuegoPublicacion) {
         const buscarSugerenciasConDemora = demorar(async (texto) => {
-            if (controladorSugerencias) controladorSugerencias.abort();
+            if (controladorSugerencias) {
+                controladorSugerencias.abort();
+            }
             if (!texto) {
                 if (listaSugerenciasJuegos) listaSugerenciasJuegos.replaceChildren();
                 return;
             }
+
             controladorSugerencias = new AbortController();
             try {
                 const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(texto)}`, {

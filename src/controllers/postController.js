@@ -51,12 +51,36 @@ const actualizarPublicacion = async (req, res) => {
   }
 };
 
+const votarPublicacion = async (req, res) => {
+  const cuerpo = req.body || {};
+  const valor = cuerpo.valor !== undefined ? cuerpo.valor : cuerpo.value;
+
+  try {
+    const publicacion = await servicioPublicaciones.votarPublicacion(
+      req.params.id,
+      valor,
+      req.session.userId
+    );
+    res.status(200).json({
+      message: 'Voto procesado correctamente',
+      post: publicacion,
+      puntajeVotos: publicacion.puntajeVotos,
+      miVoto: publicacion.miVoto
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      error: error.message || 'Error al procesar el voto'
+    });
+  }
+};
+
 const obtenerPublicaciones = async (req, res) => {
   const { page, pagina, game } = req.query;
   const numeroPagina = pagina || page;
-  
+  const idUsuario = req.session ? req.session.userId : null;
+
   try {
-    const publicaciones = await servicioPublicaciones.obtenerPublicaciones(numeroPagina, game);
+    const publicaciones = await servicioPublicaciones.obtenerPublicaciones(numeroPagina, game, idUsuario);
     res.status(200).json(publicaciones);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener las publicaciones' });
@@ -64,8 +88,10 @@ const obtenerPublicaciones = async (req, res) => {
 };
 
 const obtenerPublicacionPorId = async (req, res) => {
+  const idUsuario = req.session ? req.session.userId : null;
+
   try {
-    const publicacion = await servicioPublicaciones.obtenerPublicacionPorId(req.params.id);
+    const publicacion = await servicioPublicaciones.obtenerPublicacionPorId(req.params.id, idUsuario);
     res.status(200).json(publicacion);
   } catch (error) {
     res.status(error.statusCode || 500).json({
@@ -77,7 +103,7 @@ const obtenerPublicacionPorId = async (req, res) => {
 module.exports = {
   crearPublicacion,
   actualizarPublicacion,
+  votarPublicacion,
   obtenerPublicaciones,
   obtenerPublicacionPorId
 };
-

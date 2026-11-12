@@ -1,6 +1,7 @@
 const URL_TOKEN_TWITCH = process.env.TWITCH_AUTH_URL || 'https://id.twitch.tv/oauth2/token';
 const URL_API_IGDB = process.env.IGDB_API_URL || 'https://api.igdb.com/v4/games';
 const TIEMPO_LIMITE_MS = 5000;
+const TIEMPO_VIDA_CACHE_MS = 5 * 60 * 1000;
 
 const cacheBusqueda = new Map();
 let tokenAccesoCache = null;
@@ -54,6 +55,23 @@ const juegosSimulados = [
   }
 ];
 
+const obtenerDeCache = (clave) => {
+  const entrada = cacheBusqueda.get(clave);
+  if (!entrada) return null;
+  if (Date.now() > entrada.expira) {
+    cacheBusqueda.delete(clave);
+    return null;
+  }
+  return entrada.valor;
+};
+
+const guardarEnCache = (clave, valor, tiempoVidaMs = TIEMPO_VIDA_CACHE_MS) => {
+  cacheBusqueda.set(clave, {
+    valor,
+    expira: Date.now() + tiempoVidaMs
+  });
+};
+
 const tieneCredencialesValidas = () => {
   const idCliente = process.env.TWITCH_CLIENT_ID;
   const secretoCliente = process.env.TWITCH_CLIENT_SECRET;
@@ -94,7 +112,7 @@ const normalizarJuegoIgdb = (datosJuego) => {
   };
 };
 
-const obtenerTokenTwitch = async () => {
+const obtenerTokenTwitch = async (fetchImpl = fetch) => {
   if (process.env.IGDB_ACCESS_TOKEN) {
     return process.env.IGDB_ACCESS_TOKEN;
   }
@@ -109,7 +127,7 @@ const obtenerTokenTwitch = async () => {
     grant_type: 'client_credentials'
   });
 
-  const respuesta = await fetch(`${URL_TOKEN_TWITCH}?${parametros.toString()}`, {
+  const respuesta = await fetchImpl(`${URL_TOKEN_TWITCH}?${parametros.toString()}`, {
     method: 'POST',
     signal: AbortSignal.timeout(TIEMPO_LIMITE_MS)
   });
@@ -134,14 +152,14 @@ const filtrarJuegosSimulados = (termino) => {
   );
 };
 
-const consultarIgdbRemoto = async (termino) => {
-  const token = await obtenerTokenTwitch();
+const consultarIgdbRemoto = async (termino, fetchImpl = fetch) => {
+  const token = await obtenerTokenTwitch(fetchImpl);
   const terminoLimpio = termino.replace(/"/g, '').trim();
   const consulta = terminoLimpio
     ? `search "${terminoLimpio}"; fields id,name,summary,cover.url,platforms.name,genres.name,rating; limit 10;`
     : 'fields id,name,summary,cover.url,platforms.name,genres.name,rating; sort rating desc; limit 10;';
 
-  const respuesta = await fetch(URL_API_IGDB, {
+  const respuesta = await fetchImpl(URL_API_IGDB, {
     method: 'POST',
     headers: {
       'Client-ID': process.env.TWITCH_CLIENT_ID,
@@ -161,21 +179,23 @@ const consultarIgdbRemoto = async (termino) => {
   return Array.isArray(datos) ? datos.map(normalizarJuegoIgdb) : [];
 };
 
-const buscarJuegosEnIgdb = async (termino = '') => {
+const buscarJuegosEnIgdb = async (termino = '', opciones = {}) => {
+  const { fetchImpl = fetch, tiempoVidaMs = TIEMPO_VIDA_CACHE_MS } = opciones;
   const claveCache = termino.trim().toLowerCase();
-  if (cacheBusqueda.has(claveCache)) {
-    return cacheBusqueda.get(claveCache);
+  const enCache = obtenerDeCache(claveCache);
+  if (enCache) {
+    return enCache;
   }
 
   if (!tieneCredencialesValidas()) {
     const resultadosSimulados = filtrarJuegosSimulados(termino);
-    cacheBusqueda.set(claveCache, resultadosSimulados);
+    guardarEnCache(claveCache, resultadosSimulados, tiempoVidaMs);
     return resultadosSimulados;
   }
 
   try {
-    const resultadosRemotos = await consultarIgdbRemoto(termino);
-    cacheBusqueda.set(claveCache, resultadosRemotos);
+    const resultadosRemotos = await consultarIgdbRemoto(termino, fetchImpl);
+    guardarEnCache(claveCache, resultadosRemotos, tiempoVidaMs);
     return resultadosRemotos;
   } catch (error) {
     console.warn('No se pudo consultar IGDB; se usarán datos de ejemplo:', error.message);
@@ -183,9 +203,9 @@ const buscarJuegosEnIgdb = async (termino = '') => {
   }
 };
 
-const obtenerJuegoPorIdEnIgdb = async (idJuego) => {
+const obtenerJuegoPorIdEnIgdb = async (idJuego, opciones = {}) => {
   const idNumerico = Number(idJuego);
-  const juegos = await buscarJuegosEnIgdb('');
+  const juegos = await buscarJuegosEnIgdb('', opciones);
   const encontrado = juegos.find((juego) => Number(juego.id) === idNumerico);
   if (encontrado) {
     return encontrado;
@@ -200,8 +220,11 @@ const limpiarCacheIgdb = () => {
 };
 
 module.exports = {
+  TIEMPO_VIDA_CACHE_MS,
   buscarJuegosEnIgdb,
   obtenerJuegoPorIdEnIgdb,
   limpiarCacheIgdb,
-  normalizarJuegoIgdb
+  normalizarJuegoIgdb,
+  obtenerDeCache,
+  guardarEnCache
 };

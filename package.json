@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --test"
+    "lint": "node -e \"const fs=require('fs'),path=require('path'),{execFileSync}=require('child_process');function revisar(dir){for(const e of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,e.name);if(e.isDirectory())revisar(p);else if(p.endsWith('.js'))execFileSync(process.execPath,['--check',p],{stdio:'inherit'});}}['src','public/js','tests'].forEach(revisar);\"",
+    "test": "node --test --experimental-test-coverage"
   },
   "repository": {
     "type": "git",

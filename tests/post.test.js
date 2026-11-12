@@ -182,4 +182,51 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.ok(cargaPublicaciones.data.length >= 1);
   assert.equal(cargaPublicaciones.data[0].title, '¿Qué build recomiendan? (editado)');
   assert.equal(cargaPublicaciones.data[0].author.name, 'GamerUno');
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/voto`, { valor: 1 });
+  assert.equal(respuesta.status, 401);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/voto`, { valor: 1 }, cookieLogin);
+  assert.equal(respuesta.status, 200);
+  let votoResultado = await respuesta.json();
+  assert.equal(votoResultado.puntajeVotos, 1);
+  assert.equal(votoResultado.miVoto, 1);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/voto`, { valor: -1 }, cookieLogin);
+  assert.equal(respuesta.status, 200);
+  votoResultado = await respuesta.json();
+  assert.equal(votoResultado.puntajeVotos, -1);
+  assert.equal(votoResultado.miVoto, -1);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/voto`, { valor: -1 }, cookieLogin);
+  assert.equal(respuesta.status, 200);
+  votoResultado = await respuesta.json();
+  assert.equal(votoResultado.puntajeVotos, 0);
+  assert.equal(votoResultado.miVoto, 0);
+
+  respuesta = await enviarPost('/api/juegos/puntuaciones', { juego: 'Elden Ring', nota: 9 });
+  assert.equal(respuesta.status, 401);
+
+  respuesta = await enviarPost('/api/juegos/puntuaciones', { juego: 'Elden Ring', nota: 11 }, cookieLogin);
+  assert.equal(respuesta.status, 400);
+
+  respuesta = await enviarPost('/api/juegos/puntuaciones', { juego: 'Elden Ring', nota: 8 }, cookieLogin);
+  assert.equal(respuesta.status, 200);
+  let puntuacionResultado = await respuesta.json();
+  assert.equal(puntuacionResultado.datos.promedio, 8);
+  assert.equal(puntuacionResultado.datos.cantidadVotos, 1);
+  assert.equal(puntuacionResultado.datos.miPuntuacion, 8);
+
+  respuesta = await enviarPost('/api/juegos/puntuaciones', { juego: 'Elden Ring', nota: 10 }, cookieLogin);
+  assert.equal(respuesta.status, 200);
+  puntuacionResultado = await respuesta.json();
+  assert.equal(puntuacionResultado.datos.promedio, 10);
+  assert.equal(puntuacionResultado.datos.cantidadVotos, 1);
+  assert.equal(puntuacionResultado.datos.miPuntuacion, 10);
+
+  respuesta = await enviarPost('/api/juegos/puntuaciones', { juego: 'Elden Ring', nota: 7 }, cookieSegundoUsuario);
+  assert.equal(respuesta.status, 200);
+  puntuacionResultado = await respuesta.json();
+  assert.equal(puntuacionResultado.datos.promedio, 8.5);
+  assert.equal(puntuacionResultado.datos.cantidadVotos, 2);
 });

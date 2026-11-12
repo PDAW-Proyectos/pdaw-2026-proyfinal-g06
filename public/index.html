@@ -195,7 +195,15 @@
                                 <div class="fw-bold fs-5">0</div>
                                 <div class="text-muted fs-xs">respuestas</div>
                             </div>
-                            <div class="text-muted fw-medium"><i class="bi bi-arrow-up"></i> 0</div>
+                            <div class="d-flex align-items-center gap-1" data-contenedor-votos>
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-1 text-muted boton-voto-arriba" data-accion-voto="1" aria-label="Votar positivamente">
+                                    <i class="bi bi-arrow-up"></i>
+                                </button>
+                                <span class="fw-medium puntaje-votos">0</span>
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-1 text-muted boton-voto-abajo" data-accion-voto="-1" aria-label="Votar negativamente">
+                                    <i class="bi bi-arrow-down"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -223,9 +231,30 @@
                                             <h6 class="fw-bold mb-1">Plataformas</h6>
                                             <p id="plataformas-modal-juego" class="text-muted mb-0"></p>
                                         </div>
-                                        <div>
+                                        <div class="mb-3">
                                             <h6 class="fw-bold mb-1">Puntaje de IGDB</h6>
                                             <p id="puntaje-modal-juego" class="text-muted mb-0"></p>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">Puntaje de la comunidad</h6>
+                                            <p id="puntaje-comunidad-modal-juego" class="text-muted mb-2"></p>
+                                            <form id="formulario-puntuar-juego" class="d-flex align-items-center gap-2 flex-wrap">
+                                                <label for="campo-nota-juego" class="form-label fs-sm mb-0">Tu nota (1 a 10):</label>
+                                                <select id="campo-nota-juego" name="nota" class="form-select form-select-sm w-auto" required>
+                                                    <option value="10">10</option>
+                                                    <option value="9">9</option>
+                                                    <option value="8">8</option>
+                                                    <option value="7">7</option>
+                                                    <option value="6">6</option>
+                                                    <option value="5">5</option>
+                                                    <option value="4">4</option>
+                                                    <option value="3">3</option>
+                                                    <option value="2">2</option>
+                                                    <option value="1">1</option>
+                                                </select>
+                                                <button id="boton-enviar-puntuacion" type="submit" class="btn btn-primary btn-sm">Enviar</button>
+                                            </form>
+                                            <div id="mensaje-puntuacion-juego" class="fs-xs text-muted mt-1" role="status" aria-live="polite"></div>
                                         </div>
                                     </div>
                                 </div>

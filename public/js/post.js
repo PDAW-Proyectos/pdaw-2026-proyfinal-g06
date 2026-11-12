@@ -8,6 +8,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         actualizarIconoTema(temaGuardado);
     }
 
+    const demorar = (funcion, espera = 250) => {
+        let temporizador;
+        return (...argumentos) => {
+            clearTimeout(temporizador);
+            temporizador = setTimeout(() => funcion(...argumentos), espera);
+        };
+    };
+
     botonTema.addEventListener('click', () => {
         const temaNuevo = elementoHtml.getAttribute('data-bs-theme') === 'light' ? 'dark' : 'light';
         elementoHtml.setAttribute('data-bs-theme', temaNuevo);
@@ -40,6 +48,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const botonGuardarEdicion = document.getElementById('boton-enviar-publicacion');
     const alertaEdicion = document.getElementById('alerta-error-publicacion');
     const modalEditar = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-crear-publicacion'));
+    const contenedorVotosDetalle = document.getElementById('contenedor-votos-detalle');
+    const botonVotoArribaDetalle = document.getElementById('boton-voto-arriba-detalle');
+    const botonVotoAbajoDetalle = document.getElementById('boton-voto-abajo-detalle');
+    const puntajeVotosDetalle = document.getElementById('puntaje-votos-detalle');
     const idPublicacion = new URLSearchParams(window.location.search).get('id');
     let usuarioActual = null;
     let publicacionActual = null;
@@ -76,6 +88,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         const autor = publicacionActual && (publicacionActual.author || publicacionActual.autor);
         const esAutor = usuarioActual && autor && String(usuarioActual.id) === String(autor.id);
         botonEditar.classList.toggle('d-none', !esAutor);
+    }
+
+    function actualizarEstadoVotoDetalle(puntaje, miVoto) {
+        if (puntajeVotosDetalle) {
+            puntajeVotosDetalle.textContent = String(puntaje ?? 0);
+        }
+        if (botonVotoArribaDetalle) {
+            botonVotoArribaDetalle.classList.toggle('text-primary', miVoto === 1);
+            botonVotoArribaDetalle.classList.toggle('fw-bold', miVoto === 1);
+            botonVotoArribaDetalle.classList.toggle('text-muted', miVoto !== 1);
+            botonVotoArribaDetalle.setAttribute('aria-pressed', String(miVoto === 1));
+        }
+        if (botonVotoAbajoDetalle) {
+            botonVotoAbajoDetalle.classList.toggle('text-danger', miVoto === -1);
+            botonVotoAbajoDetalle.classList.toggle('fw-bold', miVoto === -1);
+            botonVotoAbajoDetalle.classList.toggle('text-muted', miVoto !== -1);
+            botonVotoAbajoDetalle.setAttribute('aria-pressed', String(miVoto === -1));
+        }
     }
 
     function actualizarPerfilUsuario(usuario) {
@@ -140,6 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         actualizarPerfilUsuario(resultado.user);
         formularioLogin.reset();
         modalAutenticacion.hide();
+        await recargarPublicacionActual();
     });
 
     formularioRegistro.addEventListener('submit', async (evento) => {
@@ -166,12 +197,55 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             actualizarPerfilUsuario(null);
+            await recargarPublicacionActual();
         } catch (error) {
             mostrarMensajeAutenticacion('No se pudo conectar con el servidor. Inténtalo de nuevo.');
         } finally {
             botonCerrarSesion.disabled = false;
         }
     });
+
+    if (contenedorVotosDetalle) {
+        contenedorVotosDetalle.addEventListener('click', async (evento) => {
+            const botonVoto = evento.target.closest('button[data-accion-voto]');
+            if (!botonVoto || !idPublicacion) return;
+
+            if (!usuarioActual) {
+                mostrarFormularioLogin();
+                modalAutenticacion.show();
+                return;
+            }
+
+            const botones = contenedorVotosDetalle.querySelectorAll('button[data-accion-voto]');
+            botones.forEach((boton) => { boton.disabled = true; });
+
+            try {
+                const respuesta = await fetch(`/api/posts/${encodeURIComponent(idPublicacion)}/voto`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ valor: Number(botonVoto.dataset.accionVoto) })
+                });
+
+                if (respuesta.status === 401) {
+                    mostrarFormularioLogin();
+                    modalAutenticacion.show();
+                    return;
+                }
+                if (!respuesta.ok) return;
+
+                const resultado = await respuesta.json();
+                if (publicacionActual) {
+                    publicacionActual.puntajeVotos = resultado.puntajeVotos;
+                    publicacionActual.miVoto = resultado.miVoto;
+                }
+                actualizarEstadoVotoDetalle(resultado.puntajeVotos, resultado.miVoto);
+            } catch (error) {
+                return;
+            } finally {
+                botones.forEach((boton) => { boton.disabled = false; });
+            }
+        });
+    }
 
     function mostrarAlertaEdicion(mensaje) {
         alertaEdicion.textContent = mensaje;
@@ -199,6 +273,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('publicacion-autor').textContent = nombreAutor;
         document.getElementById('publicacion-avatar').textContent = nombreAutor.trim().charAt(0).toUpperCase();
         document.getElementById('publicacion-fecha').textContent = `· ${fecha}`;
+        actualizarEstadoVotoDetalle(
+            publicacion.puntajeVotos ?? publicacion.votes ?? 0,
+            publicacion.miVoto ?? publicacion.userVote ?? 0
+        );
+
         const imagenPortada = document.getElementById('publicacion-portada');
         if (imagenJuego) {
             imagenPortada.src = imagenJuego;
@@ -267,25 +346,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const campoJuego = document.getElementById('campo-juego-publicacion');
     const listaSugerenciasJuegos = document.getElementById('lista-sugerencias-juegos');
-    const demorar = (funcion, espera = 250) => {
-        let temporizador;
-        return (...argumentos) => {
-            clearTimeout(temporizador);
-            temporizador = setTimeout(() => funcion(...argumentos), espera);
-        };
-    };
     let controladorSugerencias = null;
 
-    const buscarSugerenciasConDemora = demorar(async () => {
-        if (controladorSugerencias) controladorSugerencias.abort();
-        const termino = campoJuego.value.trim();
+    const buscarSugerenciasConDemora = demorar(async (termino) => {
+        if (controladorSugerencias) {
+            controladorSugerencias.abort();
+        }
         if (!termino) {
             listaSugerenciasJuegos.replaceChildren();
             return;
         }
+        controladorSugerencias = new AbortController();
         try {
-            controladorSugerencias = new AbortController();
-            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(termino)}`, { signal: controladorSugerencias.signal });
+            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(termino)}`, {
+                signal: controladorSugerencias.signal
+            });
             if (!respuesta.ok) return;
             const resultado = await respuesta.json();
             listaSugerenciasJuegos.replaceChildren(...(resultado.datos || []).map((juego) => {
@@ -294,8 +369,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return opcion;
             }));
         } catch (error) {
+            if (error.name === 'AbortError') return;
             console.error(error);
         }
+    }, 250);
+
+    campoJuego.addEventListener('input', () => {
+        buscarSugerenciasConDemora(campoJuego.value.trim());
     });
 
     async function cargarUsuarioActual() {
@@ -309,7 +389,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    cargarUsuarioActual();
+    async function recargarPublicacionActual() {
+        if (!idPublicacion) return;
+        try {
+            const respuesta = await fetch(`/api/posts/${encodeURIComponent(idPublicacion)}`);
+            if (!respuesta.ok) return;
+            publicacionActual = await respuesta.json();
+            mostrarPublicacion(publicacionActual);
+        } catch (error) {
+            return;
+        }
+    }
+
+    await cargarUsuarioActual();
     if (!idPublicacion) {
         indicadorCarga.textContent = 'Publicación no especificada.';
         return;

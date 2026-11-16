@@ -5,6 +5,7 @@ const controladorComentarios = require('../controllers/commentController');
 const { requerirAutenticacion } = require('../middlewares/authMiddleware');
 
 enrutador.get('/', controladorPublicaciones.obtenerPublicaciones);
+enrutador.get('/mejores-puntuadas', controladorPublicaciones.obtenerPublicacionesMejorPuntuadas);
 enrutador.get('/:id/comments', controladorComentarios.obtenerComentarios);
 enrutador.post('/:id/comments', requerirAutenticacion, controladorComentarios.crearComentario);
 enrutador.patch('/:id/comments/:commentId', requerirAutenticacion, controladorComentarios.editarComentario);
@@ -14,5 +15,6 @@ enrutador.post('/', requerirAutenticacion, controladorPublicaciones.crearPublica
 enrutador.patch('/:id', requerirAutenticacion, controladorPublicaciones.actualizarPublicacion);
 enrutador.post('/:id/voto', requerirAutenticacion, controladorPublicaciones.votarPublicacion);
 enrutador.post('/:id/vote', requerirAutenticacion, controladorPublicaciones.votarPublicacion);
+enrutador.post('/:id/calificacion', requerirAutenticacion, controladorPublicaciones.calificarPublicacion);
 
 module.exports = enrutador;

@@ -51,6 +51,20 @@ const actualizarPublicacion = async (req, res) => {
   }
 };
 
+const eliminarPublicacion = async (req, res) => {
+  try {
+    const publicacion = await servicioPublicaciones.eliminarPublicacion(
+      req.params.id,
+      req.session.userId
+    );
+    res.status(200).json({ message: 'Publicación eliminada', post: publicacion });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      error: error.message || 'Error al eliminar publicación'
+    });
+  }
+};
+
 const votarPublicacion = async (req, res) => {
   const cuerpo = req.body || {};
   const valor = cuerpo.valor !== undefined ? cuerpo.valor : cuerpo.value;
@@ -139,6 +153,7 @@ const obtenerPublicacionPorId = async (req, res) => {
 module.exports = {
   crearPublicacion,
   actualizarPublicacion,
+  eliminarPublicacion,
   votarPublicacion,
   calificarPublicacion,
   obtenerPublicaciones,

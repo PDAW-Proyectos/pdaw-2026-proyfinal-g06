@@ -240,18 +240,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function eliminarPublicacionPropia(publicacion) {
+        if (!window.confirm('¿Eliminar esta publicación de forma definitiva?')) return;
+        try {
+            const respuesta = await fetch(`/api/posts/${encodeURIComponent(publicacion.id)}`, {
+                method: 'DELETE'
+            });
+            if (!respuesta.ok) return;
+            await cargarPublicaciones();
+            await cargarPublicacionesDestacadas();
+            if (juegoSeleccionadoModal) await cargarPublicacionesJuego(juegoSeleccionadoModal);
+        } catch (error) {
+            return;
+        }
+    }
+
     function crearAccionesPublicacion(publicacion, desdeModalJuego = false) {
         const autor = publicacion.author || publicacion.autor;
         if (!idUsuarioActual || !autor || String(autor.id) !== String(idUsuarioActual)) return null;
 
         const acciones = document.createElement('div');
-        acciones.className = 'mt-2';
+        acciones.className = 'mt-2 d-flex gap-2';
         const botonEditar = document.createElement('button');
         botonEditar.type = 'button';
         botonEditar.className = 'btn btn-outline-primary btn-sm';
         botonEditar.textContent = 'Editar';
         botonEditar.addEventListener('click', () => editarPublicacion(publicacion, desdeModalJuego));
-        acciones.appendChild(botonEditar);
+
+        const botonEliminar = document.createElement('button');
+        botonEliminar.type = 'button';
+        botonEliminar.className = 'btn btn-outline-danger btn-sm';
+        botonEliminar.textContent = 'Eliminar';
+        botonEliminar.addEventListener('click', () => eliminarPublicacionPropia(publicacion));
+
+        acciones.append(botonEditar, botonEliminar);
         return acciones;
     }
 

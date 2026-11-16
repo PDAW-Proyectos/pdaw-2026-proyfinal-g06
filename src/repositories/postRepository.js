@@ -108,6 +108,25 @@ const actualizarPublicacion = async (id, datosPublicacion, idUsuario = null) => 
   return formatearPublicacion(publicacion, idUsuario);
 };
 
+const eliminarPublicacion = async (id, idUsuario = null) => {
+  const indice = publicacionesBD.findIndex((item) => item.id === id);
+  if (indice === -1) return null;
+
+  const [eliminada] = publicacionesBD.splice(indice, 1);
+  const respaldo = formatearPublicacion(eliminada, idUsuario);
+  for (let i = votosPublicacionesBD.length - 1; i >= 0; i -= 1) {
+    if (votosPublicacionesBD[i].idPublicacion === id) {
+      votosPublicacionesBD.splice(i, 1);
+    }
+  }
+  for (let i = calificacionesPublicacionesBD.length - 1; i >= 0; i -= 1) {
+    if (calificacionesPublicacionesBD[i].idPublicacion === id) {
+      calificacionesPublicacionesBD.splice(i, 1);
+    }
+  }
+  return respaldo;
+};
+
 const registrarVotoPublicacion = async (idPublicacion, idUsuario, valor) => {
   const publicacion = publicacionesBD.find((item) => item.id === idPublicacion) || null;
   if (!publicacion) return null;
@@ -182,6 +201,7 @@ module.exports = {
   crearPublicacion,
   buscarPublicacionPorId,
   actualizarPublicacion,
+  eliminarPublicacion,
   registrarVotoPublicacion,
   registrarCalificacionPublicacion,
   obtenerPublicacionesMejorPuntuadas,

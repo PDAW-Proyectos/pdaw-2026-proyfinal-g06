@@ -8,14 +8,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         actualizarIconoTema(temaGuardado);
     }
 
-    const demorar = (funcion, espera = 250) => {
-        let temporizador;
-        return (...argumentos) => {
-            clearTimeout(temporizador);
-            temporizador = setTimeout(() => funcion(...argumentos), espera);
-        };
-    };
-
     botonTema.addEventListener('click', () => {
         const temaNuevo = elementoHtml.getAttribute('data-bs-theme') === 'light' ? 'dark' : 'light';
         elementoHtml.setAttribute('data-bs-theme', temaNuevo);
@@ -703,7 +695,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     botonEditar.addEventListener('click', () => {
-        formularioEditar.elements.game.value = publicacionActual.game || publicacionActual.juego || '';
         formularioEditar.elements.category.value = publicacionActual.category || publicacionActual.categoria || '';
         formularioEditar.elements.title.value = publicacionActual.title || publicacionActual.titulo || '';
         formularioEditar.elements.content.value = publicacionActual.content || publicacionActual.contenido || '';
@@ -739,40 +730,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } finally {
             botonGuardarEdicion.disabled = false;
         }
-    });
-
-    const campoJuego = document.getElementById('campo-juego-publicacion');
-    const listaSugerenciasJuegos = document.getElementById('lista-sugerencias-juegos');
-    let controladorSugerencias = null;
-
-    const buscarSugerenciasConDemora = demorar(async (termino) => {
-        if (controladorSugerencias) {
-            controladorSugerencias.abort();
-        }
-        if (!termino) {
-            listaSugerenciasJuegos.replaceChildren();
-            return;
-        }
-        controladorSugerencias = new AbortController();
-        try {
-            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(termino)}`, {
-                signal: controladorSugerencias.signal
-            });
-            if (!respuesta.ok) return;
-            const resultado = await respuesta.json();
-            listaSugerenciasJuegos.replaceChildren(...(resultado.datos || []).map((juego) => {
-                const opcion = document.createElement('option');
-                opcion.value = juego.titulo;
-                return opcion;
-            }));
-        } catch (error) {
-            if (error.name === 'AbortError') return;
-            console.error(error);
-        }
-    }, 250);
-
-    campoJuego.addEventListener('input', () => {
-        buscarSugerenciasConDemora(campoJuego.value.trim());
     });
 
     async function cargarUsuarioActual() {

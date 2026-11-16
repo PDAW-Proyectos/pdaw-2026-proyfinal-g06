@@ -29,6 +29,7 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.match(paginaDetalleHtml, /id="theme-toggle"/);
   assert.match(paginaDetalleHtml, /id="publicacion-portada"/);
   assert.match(paginaDetalleHtml, /id="modal-crear-publicacion"/);
+  assert.doesNotMatch(paginaDetalleHtml, /id="campo-juego-publicacion"/);
   assert.match(paginaDetalleHtml, /id="formulario-comentario"/);
   assert.match(paginaDetalleHtml, /id="lista-comentarios"/);
 
@@ -151,6 +152,7 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   const publicacionActualizada = await respuesta.json();
   assert.equal(publicacionActualizada.post.title, '¿Qué build recomiendan? (editado)');
   assert.equal(publicacionActualizada.post.content, 'Contenido actualizado');
+  assert.equal(publicacionActualizada.post.game, 'Elden Ring');
   assert.equal(publicacionActualizada.post.author.name, 'GamerUno');
 
   await enviarPost('/api/auth/register', {

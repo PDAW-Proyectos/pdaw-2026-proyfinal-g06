@@ -181,6 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const elementoModalCrearPublicacion = document.getElementById('modal-crear-publicacion') || document.getElementById('create-post-modal');
     const modalCrearPublicacion = bootstrap.Modal.getOrCreateInstance(elementoModalCrearPublicacion);
     const alertaErrorPublicacion = document.getElementById('alerta-error-publicacion') || document.getElementById('post-error');
+    const grupoJuegoPublicacion = document.getElementById('grupo-juego-publicacion');
+    const campoJuegoPublicacion = document.getElementById('campo-juego-publicacion');
 
     let estaUsuarioAutenticado = false;
     let idUsuarioActual = null;
@@ -213,13 +215,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function prepararNuevaPublicacion() {
         publicacionEnEdicion = null;
         formularioCrearPublicacion.reset();
+        grupoJuegoPublicacion.classList.remove('d-none');
+        campoJuegoPublicacion.disabled = false;
         document.getElementById('titulo-modal-crear-publicacion').textContent = 'Crear nueva publicación';
         document.getElementById('boton-enviar-publicacion').textContent = 'Publicar';
     }
 
     function editarPublicacion(publicacion, desdeModalJuego = false) {
         publicacionEnEdicion = publicacion;
-        formularioCrearPublicacion.elements.game.value = publicacion.game || publicacion.juego || '';
+        grupoJuegoPublicacion.classList.add('d-none');
+        campoJuegoPublicacion.disabled = true;
         formularioCrearPublicacion.elements.category.value = publicacion.category || publicacion.categoria || '';
         formularioCrearPublicacion.elements.title.value = publicacion.title || publicacion.titulo || '';
         formularioCrearPublicacion.elements.content.value = publicacion.content || publicacion.contenido || '';
@@ -430,7 +435,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const campoBuscarJuego = document.getElementById('campo-buscar-juego');
     const contenedorJuegos = document.getElementById('contenedor-juegos');
     const mensajeJuegos = document.getElementById('mensaje-juegos');
-    const campoJuegoPublicacion = document.getElementById('campo-juego-publicacion');
     const listaSugerenciasJuegos = document.getElementById('lista-sugerencias-juegos');
     const elementoModalJuego = document.getElementById('modal-juego');
     const modalJuego = bootstrap.Modal.getOrCreateInstance(elementoModalJuego);

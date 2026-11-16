@@ -1,14 +1,13 @@
 const { randomUUID } = require('crypto');
 const { VotoPublicacion } = require('../models/votoPublicacion');
-const { CalificacionPublicacion } = require('../models/calificacionPublicacion');
 
 const publicacionesBD = [];
 const votosPublicacionesBD = [];
-const calificacionesPublicacionesBD = [];
 
 const calcularResumenVotos = (idPublicacion, idUsuario = null) => {
   const votos = votosPublicacionesBD.filter((voto) => voto.idPublicacion === idPublicacion);
   const puntajeVotos = votos.reduce((total, voto) => total + voto.valor, 0);
+  const cantidadVotos = votos.length;
   const votoUsuario = idUsuario
     ? votos.find((voto) => voto.idUsuario === String(idUsuario))
     : null;
@@ -17,31 +16,9 @@ const calcularResumenVotos = (idPublicacion, idUsuario = null) => {
   return {
     puntajeVotos,
     votes: puntajeVotos,
+    cantidadVotos,
     miVoto,
     userVote: miVoto
-  };
-};
-
-const obtenerCalificacionesPublicacion = (idPublicacion) => calificacionesPublicacionesBD.filter(
-  (calificacion) => calificacion.idPublicacion === idPublicacion
-);
-
-const calcularResumenCalificaciones = (idPublicacion, idUsuario = null) => {
-  const calificaciones = obtenerCalificacionesPublicacion(idPublicacion);
-  const sumaCalificaciones = calificaciones.reduce(
-    (total, calificacion) => total + calificacion.valor,
-    0
-  );
-  const miCalificacion = idUsuario
-    ? calificaciones.find((calificacion) => calificacion.idUsuario === String(idUsuario))
-    : null;
-
-  return {
-    promedioPuntuacion: calificaciones.length > 0
-      ? Number((sumaCalificaciones / calificaciones.length).toFixed(1))
-      : 0,
-    cantidadPuntuaciones: calificaciones.length,
-    miCalificacionPublicacion: miCalificacion ? miCalificacion.valor : null
   };
 };
 
@@ -49,39 +26,24 @@ const formatearPublicacion = (publicacion, idUsuario = null) => {
   if (!publicacion) return null;
   return {
     ...publicacion,
-    ...calcularResumenVotos(publicacion.id, idUsuario),
-    ...calcularResumenCalificaciones(publicacion.id, idUsuario)
+    ...calcularResumenVotos(publicacion.id, idUsuario)
   };
 };
 
-const obtenerPublicacionesMejorPuntuadas = async (limite = 5, idUsuario = null) => {
-  const limiteSeguro = Math.max(1, Math.floor(Number(limite) || 5));
-  const resumenes = new Map();
+const ordenarPublicacionesInmutable = (publicaciones, orden = 'recientes') => {
+  const criterio = typeof orden === 'string' ? orden.trim().toLowerCase() : 'recientes';
+  const ordenarPorVotos = criterio === 'votados' || criterio === 'votos' || criterio === 'votes';
 
-  calificacionesPublicacionesBD.forEach((calificacion) => {
-    const resumen = resumenes.get(calificacion.idPublicacion) || { suma: 0, cantidad: 0 };
-    resumen.suma += calificacion.valor;
-    resumen.cantidad += 1;
-    resumenes.set(calificacion.idPublicacion, resumen);
+  return [...publicaciones].sort((a, b) => {
+    if (ordenarPorVotos) {
+      return (
+        b.puntajeVotos - a.puntajeVotos
+        || b.cantidadVotos - a.cantidadVotos
+        || Date.parse(b.createdAt) - Date.parse(a.createdAt)
+      );
+    }
+    return Date.parse(b.createdAt) - Date.parse(a.createdAt);
   });
-
-  return publicacionesBD
-    .map((publicacion) => {
-      const resumen = resumenes.get(publicacion.id) || { suma: 0, cantidad: 0 };
-      return {
-        publicacion: formatearPublicacion(publicacion, idUsuario),
-        promedio: resumen.cantidad ? resumen.suma / resumen.cantidad : 0,
-        cantidadPuntuaciones: resumen.cantidad
-      };
-    })
-    .filter((item) => item.cantidadPuntuaciones > 0)
-    .sort((a, b) =>
-      b.promedio - a.promedio
-      || b.cantidadPuntuaciones - a.cantidadPuntuaciones
-      || Date.parse(b.publicacion.createdAt) - Date.parse(a.publicacion.createdAt)
-    )
-    .slice(0, limiteSeguro)
-    .map((item) => item.publicacion);
 };
 
 const crearPublicacion = async (datosPublicacion) => {
@@ -113,18 +75,12 @@ const eliminarPublicacion = async (id, idUsuario = null) => {
   if (indice === -1) return null;
 
   const [eliminada] = publicacionesBD.splice(indice, 1);
-  const respaldo = formatearPublicacion(eliminada, idUsuario);
   for (let i = votosPublicacionesBD.length - 1; i >= 0; i -= 1) {
     if (votosPublicacionesBD[i].idPublicacion === id) {
       votosPublicacionesBD.splice(i, 1);
     }
   }
-  for (let i = calificacionesPublicacionesBD.length - 1; i >= 0; i -= 1) {
-    if (calificacionesPublicacionesBD[i].idPublicacion === id) {
-      calificacionesPublicacionesBD.splice(i, 1);
-    }
-  }
-  return respaldo;
+  return formatearPublicacion(eliminada, idUsuario);
 };
 
 const registrarVotoPublicacion = async (idPublicacion, idUsuario, valor) => {
@@ -154,47 +110,42 @@ const registrarVotoPublicacion = async (idPublicacion, idUsuario, valor) => {
   return formatearPublicacion(publicacion, idUsuario);
 };
 
-const registrarCalificacionPublicacion = async (idPublicacion, idUsuario, valor) => {
-  const publicacion = publicacionesBD.find((item) => item.id === idPublicacion) || null;
-  if (!publicacion) return null;
-
-  const yaCalifico = calificacionesPublicacionesBD.some(
-    (calificacion) =>
-      calificacion.idPublicacion === idPublicacion &&
-      calificacion.idUsuario === String(idUsuario)
-  );
-  if (yaCalifico) {
-    const error = new Error('Ya calificaste esta publicación');
-    error.statusCode = 409;
-    error.status = 409;
-    throw error;
-  }
-
-  calificacionesPublicacionesBD.push(new CalificacionPublicacion({
-    idUsuario: String(idUsuario),
-    idPublicacion,
-    valor
-  }));
-  return formatearPublicacion(publicacion, idUsuario);
-};
-
-const obtenerPublicaciones = async (pagina = 1, limite = 10, juego = '', idUsuario = null) => {
+const obtenerPublicaciones = async (
+  pagina = 1,
+  limite = 10,
+  juego = '',
+  idUsuario = null,
+  orden = 'recientes'
+) => {
   const publicacionesFiltradas = juego
     ? publicacionesBD.filter((publicacion) =>
       (publicacion.game || publicacion.juego || '').toLowerCase() === juego.trim().toLowerCase()
     )
     : publicacionesBD;
+
+  const publicacionesFormateadas = publicacionesFiltradas.map((publicacion) =>
+    formatearPublicacion(publicacion, idUsuario)
+  );
+  const publicacionesOrdenadas = ordenarPublicacionesInmutable(publicacionesFormateadas, orden);
+
   const indiceInicio = (pagina - 1) * limite;
   const indiceFin = pagina * limite;
 
   return {
-    data: publicacionesFiltradas
-      .slice(indiceInicio, indiceFin)
-      .map((publicacion) => formatearPublicacion(publicacion, idUsuario)),
-    total: publicacionesFiltradas.length,
+    data: publicacionesOrdenadas.slice(indiceInicio, indiceFin),
+    total: publicacionesOrdenadas.length,
     page: pagina,
-    totalPages: Math.ceil(publicacionesFiltradas.length / limite)
+    totalPages: Math.ceil(publicacionesOrdenadas.length / limite)
   };
+};
+
+const obtenerPublicacionesMejorPuntuadas = async (limite = 5, idUsuario = null) => {
+  const limiteSeguro = Math.max(1, parseInt(limite, 10) || 5);
+  const publicacionesFormateadas = publicacionesBD
+    .map((publicacion) => formatearPublicacion(publicacion, idUsuario))
+    .filter((publicacion) => publicacion.puntajeVotos > 0);
+  return ordenarPublicacionesInmutable(publicacionesFormateadas, 'votados')
+    .slice(0, limiteSeguro);
 };
 
 module.exports = {
@@ -203,7 +154,6 @@ module.exports = {
   actualizarPublicacion,
   eliminarPublicacion,
   registrarVotoPublicacion,
-  registrarCalificacionPublicacion,
-  obtenerPublicacionesMejorPuntuadas,
-  obtenerPublicaciones
+  obtenerPublicaciones,
+  obtenerPublicacionesMejorPuntuadas
 };

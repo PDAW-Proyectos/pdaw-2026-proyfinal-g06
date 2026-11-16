@@ -175,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
     elementoModalAutenticacion.addEventListener('show.bs.modal', mostrarFormularioLogin);
 
     const contenedorPublicaciones = document.getElementById('contenedor-publicaciones') || document.getElementById('posts-container');
-    const contenedorPublicacionesDestacadas = document.getElementById('contenedor-publicaciones-destacadas');
     const plantillaPublicacion = document.getElementById('plantilla-publicacion') || document.getElementById('post-template');
     const botonCrearPublicacion = document.getElementById('boton-crear-publicacion') || document.getElementById('create-post-btn');
     const formularioCrearPublicacion = document.getElementById('formulario-crear-publicacion') || document.getElementById('create-post-form');
@@ -184,6 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertaErrorPublicacion = document.getElementById('alerta-error-publicacion') || document.getElementById('post-error');
     const grupoJuegoPublicacion = document.getElementById('grupo-juego-publicacion');
     const campoJuegoPublicacion = document.getElementById('campo-juego-publicacion');
+    const selectorOrdenPublicaciones = document.getElementById('selector-orden-publicaciones');
+    const contenedorPublicacionesDestacadas = document.getElementById('contenedor-publicaciones-destacadas');
 
     let estaUsuarioAutenticado = false;
     let idUsuarioActual = null;
@@ -326,6 +327,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!respuesta.ok) return;
             const resultado = await respuesta.json();
             actualizarEstadoVisualVoto(contenedorVotos, resultado.puntajeVotos, resultado.miVoto);
+            cargarPublicacionesDestacadas();
+            if (selectorOrdenPublicaciones && selectorOrdenPublicaciones.value === 'votados') {
+                cargarPublicaciones();
+            }
         } catch (error) {
             return;
         } finally {
@@ -343,8 +348,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function cargarPublicaciones(pagina = 1) {
+        const orden = selectorOrdenPublicaciones ? selectorOrdenPublicaciones.value : 'recientes';
         try {
-            const respuesta = await fetch(`/api/posts?page=${pagina}`);
+            const respuesta = await fetch(`/api/posts?page=${pagina}&orden=${encodeURIComponent(orden)}`);
             if (!respuesta.ok) throw new Error('Error al cargar publicaciones');
             const resultado = await respuesta.json();
 
@@ -367,7 +373,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const enlacePublicacion = clon.querySelector('.publicacion-enlace');
                 const imagenPortada = clon.querySelector('.publicacion-portada');
                 const contenedorVotos = clon.querySelector('[data-contenedor-votos]');
-                const promedioPuntuacion = clon.querySelector('.promedio-puntuacion-publicacion');
                 const juego = publicacion.game || publicacion.juego || '';
                 const portada = publicacion.imagenJuego || (publicacion.datosJuego && publicacion.datosJuego.imagen);
 
@@ -387,14 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const puntajeInicial = publicacion.puntajeVotos ?? publicacion.votes ?? 0;
                     const miVotoInicial = publicacion.miVoto ?? publicacion.userVote ?? 0;
                     actualizarEstadoVisualVoto(contenedorVotos, puntajeInicial, miVotoInicial);
-                }
-                if (promedioPuntuacion) {
-                    const promedio = Number(publicacion.promedioPuntuacion) || 0;
-                    const cantidad = Number(publicacion.cantidadPuntuaciones) || 0;
-                    promedioPuntuacion.textContent = cantidad > 0 ? promedio.toFixed(1) : '—';
-                    promedioPuntuacion.parentElement.title = cantidad > 0
-                        ? `Promedio: ${promedio.toFixed(1)} / 5 (${cantidad} ${cantidad === 1 ? 'puntuación' : 'puntuaciones'})`
-                        : 'Sin puntuaciones';
                 }
 
                 const fechaFormateada = new Date(publicacion.createdAt).toLocaleDateString('es-ES', {
@@ -424,68 +421,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function cargarPublicacionesDestacadas() {
+        if (!contenedorPublicacionesDestacadas) return;
+
         try {
             const respuesta = await fetch('/api/posts/mejores-puntuadas');
+            if (!respuesta.ok) throw new Error('Error al cargar publicaciones destacadas');
             const resultado = await respuesta.json();
-            if (!respuesta.ok) {
-                throw new Error(resultado.error || 'Error al cargar las publicaciones mejor puntuadas.');
-            }
+            const publicaciones = Array.isArray(resultado.data) ? resultado.data.slice(0, 5) : [];
 
-            const publicaciones = Array.isArray(resultado.data) ? resultado.data : [];
-            if (publicaciones.length === 0) {
+            if (!publicaciones.length) {
                 const aviso = document.createElement('p');
                 aviso.className = 'text-muted fs-sm mb-3';
-                aviso.textContent = 'Todavía no hay publicaciones.';
+                aviso.textContent = 'Aún no hay publicaciones destacadas.';
                 contenedorPublicacionesDestacadas.replaceChildren(aviso);
                 return;
             }
 
             const elementos = publicaciones.map((publicacion) => {
                 const enlace = document.createElement('a');
-                enlace.className = 'd-flex justify-content-between align-items-center gap-3 text-decoration-none text-body border-bottom py-2';
                 enlace.href = `/post.html?id=${encodeURIComponent(publicacion.id)}`;
+                enlace.className = 'd-flex justify-content-between align-items-start gap-3 text-decoration-none text-body mb-3';
 
-                const detalles = document.createElement('span');
+                const detalles = document.createElement('div');
                 detalles.className = 'min-w-0';
-                const titulo = document.createElement('span');
-                titulo.className = 'd-block fw-bold fs-sm text-truncate';
-                titulo.textContent = publicacion.title || publicacion.titulo || 'Publicación sin título';
+                const titulo = document.createElement('div');
+                titulo.className = 'fw-bold fs-sm text-truncate';
+                titulo.textContent = publicacion.title || publicacion.titulo || 'Sin título';
+                const metadatos = document.createElement('div');
+                metadatos.className = 'text-muted fs-xs text-truncate';
                 const autor = publicacion.author || publicacion.autor || {};
-                const juego = publicacion.game || publicacion.juego || '';
-                const metadatos = document.createElement('span');
-                metadatos.className = 'd-block text-muted fs-xs text-truncate';
+                const juego = publicacion.game || publicacion.juego || 'Juego';
                 metadatos.textContent = `${juego} · ${autor.name || autor.nombre || 'Usuario'}`;
                 detalles.append(titulo, metadatos);
 
-                const puntuacion = document.createElement('span');
-                puntuacion.className = 'text-end flex-shrink-0';
-                const promedio = document.createElement('span');
-                promedio.className = 'd-block text-warning fw-bold fs-sm';
-                promedio.textContent = Number(publicacion.promedioPuntuacion) > 0
-                    ? `${Number(publicacion.promedioPuntuacion).toFixed(1)} / 5`
-                    : 'Sin calificar';
-                const cantidad = Number(publicacion.cantidadPuntuaciones) || 0;
-                const votos = document.createElement('span');
-                votos.className = 'd-block text-muted fs-xs';
-                votos.textContent = `${cantidad} ${cantidad === 1 ? 'voto' : 'votos'}`;
-                puntuacion.append(promedio, votos);
+                const puntaje = document.createElement('span');
+                puntaje.className = 'badge rounded-pill text-bg-light flex-shrink-0';
+                const valorVotos = Number(publicacion.puntajeVotos ?? publicacion.votes ?? 0);
+                puntaje.textContent = `${valorVotos > 0 ? `+${valorVotos}` : valorVotos} votos`;
 
-                enlace.setAttribute(
-                    'aria-label',
-                    `${titulo.textContent}, ${promedio.textContent}, ${votos.textContent}`
-                );
-                enlace.append(detalles, puntuacion);
+                enlace.append(detalles, puntaje);
                 return enlace;
             });
 
             contenedorPublicacionesDestacadas.replaceChildren(...elementos);
         } catch (error) {
-            console.error('Error al cargar las publicaciones mejor puntuadas:', error);
             const aviso = document.createElement('p');
             aviso.className = 'text-danger fs-sm mb-3';
-            aviso.textContent = 'No se pudieron cargar las publicaciones mejor puntuadas.';
+            aviso.textContent = 'No se pudieron cargar las publicaciones destacadas.';
             contenedorPublicacionesDestacadas.replaceChildren(aviso);
         }
+    }
+
+    if (selectorOrdenPublicaciones) {
+        selectorOrdenPublicaciones.addEventListener('change', () => {
+            cargarPublicaciones(1);
+        });
     }
 
     formularioCrearPublicacion.addEventListener('submit', async (evento) => {
@@ -544,9 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const plataformasModalJuego = document.getElementById('plataformas-modal-juego');
     const puntajeModalJuego = document.getElementById('puntaje-modal-juego');
     const puntajeComunidadModalJuego = document.getElementById('puntaje-comunidad-modal-juego');
-    const formularioPuntuarJuego = document.getElementById('formulario-puntuar-juego');
-    const campoNotaJuego = document.getElementById('campo-nota-juego');
-    const botonEnviarPuntuacion = document.getElementById('boton-enviar-puntuacion');
+    const contenedorEstrellasJuego = document.getElementById('estrellas-nota-juego');
     const mensajePuntuacionJuego = document.getElementById('mensaje-puntuacion-juego');
     const estadoPublicacionesJuego = document.getElementById('estado-publicaciones-juego');
     const publicacionesDelJuego = document.getElementById('publicaciones-del-juego');
@@ -659,16 +647,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const miPuntuacion = resumen ? resumen.miPuntuacion : null;
 
         if (cantidadVotos > 0) {
-            puntajeComunidadModalJuego.textContent = `${promedio} / 10 (${cantidadVotos} ${cantidadVotos === 1 ? 'voto' : 'votos'})`;
+            puntajeComunidadModalJuego.textContent = `${promedio} / 5 (${cantidadVotos} ${cantidadVotos === 1 ? 'voto' : 'votos'})`;
         } else {
             puntajeComunidadModalJuego.textContent = 'Sin votos de la comunidad aún';
         }
 
-        if (campoNotaJuego && miPuntuacion) {
-            campoNotaJuego.value = String(miPuntuacion);
-        }
-        if (botonEnviarPuntuacion) {
-            botonEnviarPuntuacion.textContent = miPuntuacion ? 'Actualizar nota' : 'Enviar';
+        if (contenedorEstrellasJuego) {
+            const botones = contenedorEstrellasJuego.querySelectorAll('[data-nota-juego]');
+            botones.forEach((boton) => {
+                const valor = Number(boton.dataset.notaJuego);
+                const activa = Boolean(miPuntuacion && valor <= Number(miPuntuacion));
+                boton.classList.toggle('text-warning', activa);
+                boton.classList.toggle('text-muted', !activa);
+                const iconoEstrella = boton.querySelector('i');
+                if (iconoEstrella) {
+                    iconoEstrella.classList.toggle('bi-star-fill', activa);
+                    iconoEstrella.classList.toggle('bi-star', !activa);
+                }
+            });
         }
     }
 
@@ -699,10 +695,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (formularioPuntuarJuego) {
-        formularioPuntuarJuego.addEventListener('submit', async (evento) => {
-            evento.preventDefault();
-            if (!juegoSeleccionadoModal) return;
+    if (contenedorEstrellasJuego) {
+        contenedorEstrellasJuego.addEventListener('click', async (evento) => {
+            const botonEstrella = evento.target.closest('[data-nota-juego]');
+            if (!botonEstrella || !juegoSeleccionadoModal) return;
 
             if (!estaUsuarioAutenticado) {
                 elementoModalJuego.addEventListener('hidden.bs.modal', () => {
@@ -713,7 +709,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (botonEnviarPuntuacion) botonEnviarPuntuacion.disabled = true;
+            const notaElegida = Number(botonEstrella.dataset.notaJuego);
+            const botones = contenedorEstrellasJuego.querySelectorAll('[data-nota-juego]');
+            botones.forEach((b) => { b.disabled = true; });
             if (mensajePuntuacionJuego) mensajePuntuacionJuego.textContent = '';
 
             try {
@@ -722,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         juego: juegoSeleccionadoModal.titulo,
-                        nota: Number(campoNotaJuego.value)
+                        nota: notaElegida
                     })
                 });
                 const resultado = await respuesta.json();
@@ -740,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     juegoSeleccionadoModal.miPuntuacion = resultado.datos.miPuntuacion;
                     actualizarVistaPuntuacionComunidad(resultado.datos);
                     if (mensajePuntuacionJuego) {
-                        mensajePuntuacionJuego.textContent = 'Tu puntuación fue guardada.';
+                        mensajePuntuacionJuego.textContent = `Puntuaste este juego con ${notaElegida} / 5.`;
                     }
                 }
             } catch (error) {
@@ -748,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     mensajePuntuacionJuego.textContent = 'Error de conexión al guardar la puntuación.';
                 }
             } finally {
-                if (botonEnviarPuntuacion) botonEnviarPuntuacion.disabled = false;
+                botones.forEach((b) => { b.disabled = false; });
             }
         });
     }

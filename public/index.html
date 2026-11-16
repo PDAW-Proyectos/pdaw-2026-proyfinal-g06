@@ -160,14 +160,20 @@
         <div class="row gx-5">
 
             <div class="col-lg-8">
-                <div class="d-flex justify-content-between align-items-end mb-4">
+                <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
                     <div>
                         <h3 class="fs-4 fw-medium mb-1">Conversaciones para ti</h3>
                         <p class="text-muted fs-sm mb-0">Por tu interés en los RPG, la exploración y las buenas historias.</p>
                     </div>
-                    <button id="boton-crear-publicacion" class="btn btn-primary btn-sm">
-                        <i class="bi bi-pencil-square me-1"></i> Nueva publicación
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        <select id="selector-orden-publicaciones" class="form-select form-select-sm w-auto" aria-label="Ordenar publicaciones">
+                            <option value="recientes">Más recientes</option>
+                            <option value="votados">Más votados</option>
+                        </select>
+                        <button id="boton-crear-publicacion" class="btn btn-primary btn-sm">
+                            <i class="bi bi-pencil-square me-1"></i> Nueva publicación
+                        </button>
+                    </div>
                 </div>
 
                 <div id="contenedor-publicaciones" class="thread-list mb-4">
@@ -201,10 +207,6 @@
                                     <i class="bi bi-arrow-down"></i>
                                 </button>
                             </div>
-                            <div class="d-flex align-items-center ms-3 text-warning" title="Promedio de puntuaciones">
-                                <i class="bi bi-star-fill me-1"></i>
-                                <span class="fw-medium promedio-puntuacion-publicacion text-body">0</span>
-                            </div>
                         </div>
                     </div>
                 </template>
@@ -237,24 +239,15 @@
                                             <p id="puntaje-modal-juego" class="text-muted mb-0"></p>
                                         </div>
                                         <div>
-                                            <h6 class="fw-bold mb-1">Puntaje de la comunidad</h6>
+                                            <h6 class="fw-bold mb-1">Puntaje de la comunidad (Juego)</h6>
                                             <p id="puntaje-comunidad-modal-juego" class="text-muted mb-2"></p>
-                                            <form id="formulario-puntuar-juego" class="d-flex align-items-center gap-2 flex-wrap">
-                                                <label for="campo-nota-juego" class="form-label fs-sm mb-0">Tu nota (1 a 10):</label>
-                                                <select id="campo-nota-juego" name="nota" class="form-select form-select-sm w-auto">
-                                                    <option value="10">10</option>
-                                                    <option value="9">9</option>
-                                                    <option value="8">8</option>
-                                                    <option value="7">7</option>
-                                                    <option value="6">6</option>
-                                                    <option value="5">5</option>
-                                                    <option value="4">4</option>
-                                                    <option value="3">3</option>
-                                                    <option value="2">2</option>
-                                                    <option value="1">1</option>
-                                                </select>
-                                                <button id="boton-enviar-puntuacion" type="submit" class="btn btn-primary btn-sm">Enviar</button>
-                                            </form>
+                                            <div id="estrellas-nota-juego" class="d-flex align-items-center flex-wrap gap-1" role="group" aria-label="Puntuar videojuego del 1 al 5">
+                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="1" aria-label="1 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="2" aria-label="2 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="3" aria-label="3 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="4" aria-label="4 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="5" aria-label="5 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                            </div>
                                             <div id="mensaje-puntuacion-juego" class="fs-xs text-muted mt-1" role="status" aria-live="polite"></div>
                                         </div>
                                     </div>
@@ -321,7 +314,7 @@
             <div class="col-lg-4 mt-5 mt-lg-0">
                 <div class="card border border-opacity-10 shadow-sm rounded-4 mb-4">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-4">Publicaciones mejor puntuadas</h5>
+                        <h5 class="fw-bold mb-4">Publicaciones más votadas</h5>
                         <div id="contenedor-publicaciones-destacadas" aria-live="polite">
                             <p class="text-muted fs-sm mb-3" role="status">Cargando publicaciones...</p>
                         </div>

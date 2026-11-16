@@ -16,6 +16,5 @@ enrutador.patch('/:id', requerirAutenticacion, controladorPublicaciones.actualiz
 enrutador.delete('/:id', requerirAutenticacion, controladorPublicaciones.eliminarPublicacion);
 enrutador.post('/:id/voto', requerirAutenticacion, controladorPublicaciones.votarPublicacion);
 enrutador.post('/:id/vote', requerirAutenticacion, controladorPublicaciones.votarPublicacion);
-enrutador.post('/:id/calificacion', requerirAutenticacion, controladorPublicaciones.calificarPublicacion);
 
 module.exports = enrutador;

@@ -29,8 +29,6 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.match(paginaDetalleHtml, /id="theme-toggle"/);
   assert.match(paginaDetalleHtml, /id="publicacion-portada"/);
   assert.match(paginaDetalleHtml, /id="modal-crear-publicacion"/);
-  assert.match(paginaDetalleHtml, /data-calificacion-publicacion="5"/);
-  assert.match(paginaDetalleHtml, /id="promedio-calificacion-publicacion"/);
   assert.doesNotMatch(paginaDetalleHtml, /id="campo-juego-publicacion"/);
   assert.match(paginaDetalleHtml, /id="formulario-comentario"/);
   assert.match(paginaDetalleHtml, /id="lista-comentarios"/);
@@ -39,14 +37,7 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.equal(respuesta.status, 200);
   const paginaInicioHtml = await respuesta.text();
   assert.match(paginaInicioHtml, /class="publicacion-portada post-cover/);
-  assert.match(paginaInicioHtml, /id="contenedor-publicaciones-destacadas"/);
-  assert.match(paginaInicioHtml, /Publicaciones mejor puntuadas/);
-  assert.doesNotMatch(paginaInicioHtml, /En tu radar/);
   assert.doesNotMatch(paginaInicioHtml, /jugadores en línea/);
-
-  respuesta = await solicitud('/api/posts/mejores-puntuadas');
-  assert.equal(respuesta.status, 200);
-  assert.deepEqual((await respuesta.json()).data, []);
 
   respuesta = await solicitud('/api/posts');
   assert.equal(respuesta.status, 200);
@@ -118,20 +109,7 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.equal(publicacionCreada.post.title, '¿Qué build recomiendan?');
   assert.equal(publicacionCreada.post.author.name, 'GamerUno');
   assert.equal('email' in publicacionCreada.post.author, false);
-  assert.equal(publicacionCreada.post.promedioPuntuacion, 0);
-  assert.equal(publicacionCreada.post.cantidadPuntuaciones, 0);
-  assert.equal(publicacionCreada.post.miCalificacionPublicacion, null);
   const idPublicacion = publicacionCreada.post.id;
-
-  respuesta = await solicitud('/api/posts/mejores-puntuadas');
-  assert.equal(respuesta.status, 200);
-  assert.deepEqual((await respuesta.json()).data, []);
-
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/calificacion`, { valor: 5 });
-  assert.equal(respuesta.status, 401);
-
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/calificacion`, { valor: 5 }, cookieLogin);
-  assert.equal(respuesta.status, 403);
 
   respuesta = await solicitud(`/api/posts/${idPublicacion}/comments`);
   assert.equal(respuesta.status, 200);
@@ -188,60 +166,6 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   });
   assert.equal(respuestaSegundoInicio.status, 200);
   const cookieSegundoUsuario = respuestaSegundoInicio.headers.get('set-cookie').split(';')[0];
-
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/calificacion`, { valor: 0 }, cookieSegundoUsuario);
-  assert.equal(respuesta.status, 400);
-
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/calificacion`, { valor: 6 }, cookieSegundoUsuario);
-  assert.equal(respuesta.status, 400);
-
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/calificacion`, { valor: 3.5 }, cookieSegundoUsuario);
-  assert.equal(respuesta.status, 400);
-
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/calificacion`, { valor: 4 }, cookieSegundoUsuario);
-  assert.equal(respuesta.status, 201);
-  let calificacionResultado = await respuesta.json();
-  assert.equal(calificacionResultado.promedioPuntuacion, 4);
-  assert.equal(calificacionResultado.cantidadPuntuaciones, 1);
-  assert.equal(calificacionResultado.miCalificacionPublicacion, 4);
-
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/calificacion`, { valor: 5 }, cookieSegundoUsuario);
-  assert.equal(respuesta.status, 409);
-
-  await enviarPost('/api/auth/register', {
-    name: 'GamerTres',
-    email: 'gamer3@example.com',
-    password: 'password123'
-  });
-  const respuestaTercerInicio = await enviarPost('/api/auth/login', {
-    email: 'gamer3@example.com',
-    password: 'password123'
-  });
-  assert.equal(respuestaTercerInicio.status, 200);
-  const cookieTercerUsuario = respuestaTercerInicio.headers.get('set-cookie').split(';')[0];
-
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/calificacion`, { valor: 5 }, cookieTercerUsuario);
-  assert.equal(respuesta.status, 201);
-  calificacionResultado = await respuesta.json();
-  assert.equal(calificacionResultado.promedioPuntuacion, 4.5);
-  assert.equal(calificacionResultado.cantidadPuntuaciones, 2);
-  assert.equal(calificacionResultado.miCalificacionPublicacion, 5);
-
-  respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
-    headers: { Cookie: cookieSegundoUsuario }
-  });
-  assert.equal(respuesta.status, 200);
-  const detallePuntuado = await respuesta.json();
-  assert.equal(detallePuntuado.promedioPuntuacion, 4.5);
-  assert.equal(detallePuntuado.cantidadPuntuaciones, 2);
-  assert.equal(detallePuntuado.miCalificacionPublicacion, 4);
-
-  respuesta = await solicitud(`/api/posts/${idPublicacion}`);
-  assert.equal(respuesta.status, 200);
-  const detallePublicoPuntuado = await respuesta.json();
-  assert.equal(detallePublicoPuntuado.promedioPuntuacion, 4.5);
-  assert.equal(detallePublicoPuntuado.cantidadPuntuaciones, 2);
-  assert.equal(detallePublicoPuntuado.miCalificacionPublicacion, null);
 
   respuesta = await enviarPost(`/api/posts/${idPublicacion}/comments`, {
     content: 'Está muy bueno.',
@@ -353,16 +277,6 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.equal(publicacionesDelJuego.total, 1);
   assert.equal(publicacionesDelJuego.data[0].game, 'Elden Ring');
   assert.equal(publicacionesDelJuego.data[0].title, '¿Qué build recomiendan? (editado)');
-  assert.equal(publicacionesDelJuego.data[0].promedioPuntuacion, 4.5);
-  assert.equal(publicacionesDelJuego.data[0].cantidadPuntuaciones, 2);
-
-  respuesta = await solicitud('/api/posts/mejores-puntuadas');
-  assert.equal(respuesta.status, 200);
-  const publicacionesMejorPuntuadas = await respuesta.json();
-  assert.equal(publicacionesMejorPuntuadas.data.length, 1);
-  assert.equal(publicacionesMejorPuntuadas.data[0].id, idPublicacion);
-  assert.equal(publicacionesMejorPuntuadas.data[0].promedioPuntuacion, 4.5);
-  assert.equal(publicacionesMejorPuntuadas.data[0].cantidadPuntuaciones, 2);
 
   respuesta = await solicitud('/api/posts?game=Juego%20sin%20publicaciones');
   assert.equal(respuesta.status, 200);
@@ -434,4 +348,32 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   puntuacionResultado = await respuesta.json();
   assert.equal(puntuacionResultado.datos.promedio, 8.5);
   assert.equal(puntuacionResultado.datos.cantidadVotos, 2);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/voto`, { valor: 1 }, cookieLogin);
+  assert.equal(respuesta.status, 200);
+
+  respuesta = await solicitud('/api/posts?orden=votados');
+  assert.equal(respuesta.status, 200);
+  const ordenadasPorVotos = await respuesta.json();
+  assert.equal(ordenadasPorVotos.data[0].id, idPublicacion);
+
+  respuesta = await solicitud('/api/posts/mejores-puntuadas');
+  assert.equal(respuesta.status, 200);
+  const destacadas = await respuesta.json();
+  assert.equal(destacadas.data[0].id, idPublicacion);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
+    method: 'DELETE',
+    headers: { Cookie: cookieSegundoUsuario }
+  });
+  assert.equal(respuesta.status, 403);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
+    method: 'DELETE',
+    headers: { Cookie: cookieLogin }
+  });
+  assert.equal(respuesta.status, 200);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}`);
+  assert.equal(respuesta.status, 404);
 });

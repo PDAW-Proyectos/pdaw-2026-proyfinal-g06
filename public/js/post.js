@@ -45,9 +45,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const botonVotoArribaDetalle = document.getElementById('boton-voto-arriba-detalle');
     const botonVotoAbajoDetalle = document.getElementById('boton-voto-abajo-detalle');
     const puntajeVotosDetalle = document.getElementById('puntaje-votos-detalle');
-    const promedioCalificacion = document.getElementById('promedio-calificacion-publicacion');
-    const estrellasCalificacion = document.getElementById('estrellas-calificacion-publicacion');
-    const estadoCalificacion = document.getElementById('estado-calificacion-publicacion');
+    const tituloCalificacionJuego = document.getElementById('titulo-calificacion-publicacion');
+    const promedioCalificacionJuego = document.getElementById('promedio-calificacion-publicacion');
+    const estrellasCalificacionJuego = document.getElementById('estrellas-calificacion-publicacion');
+    const estadoCalificacionJuego = document.getElementById('estado-calificacion-publicacion');
     const formularioComentario = document.getElementById('formulario-comentario');
     const campoComentario = document.getElementById('campo-comentario');
     const botonEnviarComentario = document.getElementById('boton-enviar-comentario');
@@ -99,6 +100,58 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function pintarEstrellasJuegoPost(resumen, nombreJuego) {
+        if (!estrellasCalificacionJuego || !promedioCalificacionJuego) return;
+        const promedio = Number(resumen && resumen.promedio) || 0;
+        const cantidadVotos = Number(resumen && resumen.cantidadVotos) || 0;
+        const miPuntuacion = resumen ? resumen.miPuntuacion : null;
+
+        if (tituloCalificacionJuego && nombreJuego) {
+            tituloCalificacionJuego.textContent = `Puntuar juego: ${nombreJuego}`;
+        }
+
+        promedioCalificacionJuego.textContent = cantidadVotos > 0
+            ? `${promedio} / 5 (${cantidadVotos} ${cantidadVotos === 1 ? 'voto' : 'votos'} de la comunidad)`
+            : 'Sin votos de la comunidad aún';
+
+        const botones = estrellasCalificacionJuego.querySelectorAll('[data-calificacion-publicacion]');
+        botones.forEach((boton) => {
+            const valor = Number(boton.dataset.calificacionPublicacion);
+            const seleccionada = Boolean(miPuntuacion && valor <= Number(miPuntuacion));
+            boton.classList.toggle('text-warning', seleccionada);
+            boton.classList.toggle('text-muted', !seleccionada);
+            const icono = boton.querySelector('i');
+            if (icono) {
+                icono.classList.toggle('bi-star-fill', seleccionada);
+                icono.classList.toggle('bi-star', !seleccionada);
+            }
+        });
+
+        if (estadoCalificacionJuego) {
+            if (!usuarioActual) {
+                estadoCalificacionJuego.textContent = 'Inicia sesión para puntuar este videojuego del 1 al 5.';
+            } else if (miPuntuacion) {
+                estadoCalificacionJuego.textContent = `Tu puntuación para este juego es ${miPuntuacion} / 5 (puedes tocar otra estrella para actualizarla).`;
+            } else {
+                estadoCalificacionJuego.textContent = 'Selecciona de 1 a 5 estrellas para puntuar este videojuego.';
+            }
+        }
+    }
+
+    async function cargarPuntuacionJuegoEnPost(nombreJuego) {
+        if (!nombreJuego || !estrellasCalificacionJuego) return;
+        try {
+            const respuesta = await fetch(`/api/juegos/puntuaciones?juego=${encodeURIComponent(nombreJuego)}`);
+            if (!respuesta.ok) return;
+            const resultado = await respuesta.json();
+            if (resultado.datos) {
+                pintarEstrellasJuegoPost(resultado.datos, nombreJuego);
+            }
+        } catch (error) {
+            return;
+        }
+    }
+
     function actualizarEstadoVotoDetalle(puntaje, miVoto) {
         if (puntajeVotosDetalle) {
             puntajeVotosDetalle.textContent = String(puntaje ?? 0);
@@ -117,45 +170,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function actualizarCalificacionPublicacion(publicacion) {
-        const cantidad = Number(publicacion.cantidadPuntuaciones) || 0;
-        const promedio = Number(publicacion.promedioPuntuacion) || 0;
-        const miCalificacion = publicacion.miCalificacionPublicacion;
-        const yaCalifico = miCalificacion !== null && miCalificacion !== undefined;
-        const autor = publicacion.author || publicacion.autor || {};
-        const esAutor = usuarioActual && String(usuarioActual.id) === String(autor.id);
-
-        promedioCalificacion.textContent = cantidad > 0
-            ? `${promedio.toFixed(1)} / 5 · ${cantidad} ${cantidad === 1 ? 'puntuación' : 'puntuaciones'}`
-            : 'Sin puntuaciones';
-
-        const botones = estrellasCalificacion.querySelectorAll('[data-calificacion-publicacion]');
-        botones.forEach((boton) => {
-            const valor = Number(boton.dataset.calificacionPublicacion);
-            const seleccionada = yaCalifico && valor <= Number(miCalificacion);
-            boton.disabled = Boolean(esAutor || yaCalifico);
-            boton.classList.toggle('text-warning', seleccionada);
-            boton.classList.toggle('text-muted', !seleccionada);
-            const icono = boton.querySelector('i');
-            icono.classList.toggle('bi-star-fill', seleccionada);
-            icono.classList.toggle('bi-star', !seleccionada);
-        });
-
-        if (esAutor) {
-            estadoCalificacion.textContent = 'No puedes puntuar tu propia publicación.';
-        } else if (yaCalifico) {
-            estadoCalificacion.textContent = `Ya puntuaste esta publicación con ${miCalificacion} de 5.`;
-        } else if (!usuarioActual) {
-            estadoCalificacion.textContent = 'Inicia sesión para puntuar esta publicación una sola vez.';
-        } else {
-            estadoCalificacion.textContent = 'Selecciona de 1 a 5 estrellas. Solo puedes puntuar una vez.';
-        }
-    }
-
     function actualizarPerfilUsuario(usuario) {
         usuarioActual = usuario;
         actualizarFormularioComentarios();
-        if (publicacionActual) actualizarCalificacionPublicacion(publicacionActual);
         if (!usuario) {
             botonAbrirAutenticacion.classList.remove('d-none');
             perfilUsuario.classList.add('d-none');
@@ -293,66 +310,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    estrellasCalificacion.addEventListener('click', async (evento) => {
-        const boton = evento.target.closest('[data-calificacion-publicacion]');
-        if (!boton || !idPublicacion) return;
+    if (estrellasCalificacionJuego) {
+        estrellasCalificacionJuego.addEventListener('click', async (evento) => {
+            const boton = evento.target.closest('[data-calificacion-publicacion]');
+            if (!boton || !publicacionActual) return;
 
-        if (!usuarioActual) {
-            mostrarFormularioLogin();
-            modalAutenticacion.show();
-            return;
-        }
-
-        const botones = estrellasCalificacion.querySelectorAll('[data-calificacion-publicacion]');
-        botones.forEach((elemento) => { elemento.disabled = true; });
-        estadoCalificacion.textContent = 'Guardando tu puntuación...';
-
-        try {
-            const respuesta = await fetch(`/api/posts/${encodeURIComponent(idPublicacion)}/calificacion`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ valor: Number(boton.dataset.calificacionPublicacion) })
-            });
-            const tipoContenido = respuesta.headers.get('content-type') || '';
-            if (!tipoContenido.includes('application/json')) {
-                throw new Error(
-                    `El servidor respondió HTTP ${respuesta.status} sin JSON. Reinicia el servidor para cargar la ruta de calificación.`
-                );
-            }
-            const resultado = await respuesta.json();
-
-            if (respuesta.status === 401) {
+            if (!usuarioActual) {
                 mostrarFormularioLogin();
                 modalAutenticacion.show();
-                estadoCalificacion.textContent = 'Inicia sesión para puntuar esta publicación una sola vez.';
-                return;
-            }
-            if (!respuesta.ok) {
-                estadoCalificacion.textContent = resultado.error || 'No se pudo guardar la puntuación.';
-                if (respuesta.status === 409) await recargarPublicacionActual();
                 return;
             }
 
-            publicacionActual = resultado.post;
-            actualizarCalificacionPublicacion(publicacionActual);
-        } catch (error) {
-            console.error('Error al calificar la publicación:', error);
-            estadoCalificacion.textContent = error instanceof TypeError
-                ? 'No se pudo conectar con el servidor. Inténtalo de nuevo.'
-                : error.message || 'No se pudo guardar la puntuación.';
-        } finally {
-            const autor = publicacionActual && (publicacionActual.author || publicacionActual.autor || {});
-            const esAutor = usuarioActual && autor
-                && String(usuarioActual.id) === String(autor.id);
-            const miCalificacion = publicacionActual
-                ? publicacionActual.miCalificacionPublicacion
-                : null;
-            const yaCalifico = miCalificacion !== null && miCalificacion !== undefined;
-            botones.forEach((elemento) => {
-                elemento.disabled = Boolean(esAutor || yaCalifico);
-            });
-        }
-    });
+            const nombreJuego = publicacionActual.game || publicacionActual.juego || '';
+            if (!nombreJuego) return;
+
+            const notaElegida = Number(boton.dataset.calificacionPublicacion);
+            const botones = estrellasCalificacionJuego.querySelectorAll('[data-calificacion-publicacion]');
+            botones.forEach((elemento) => { elemento.disabled = true; });
+
+            try {
+                const respuesta = await fetch('/api/juegos/puntuaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ juego: nombreJuego, nota: notaElegida })
+                });
+                const resultado = await respuesta.json();
+                if (!respuesta.ok) {
+                    if (estadoCalificacionJuego) {
+                        estadoCalificacionJuego.textContent = resultado.error || 'No se pudo guardar tu puntuación.';
+                    }
+                    return;
+                }
+                if (resultado.datos) {
+                    pintarEstrellasJuegoPost(resultado.datos, nombreJuego);
+                }
+            } catch (error) {
+                if (estadoCalificacionJuego) {
+                    estadoCalificacionJuego.textContent = 'Error de conexión al guardar la puntuación.';
+                }
+            } finally {
+                botones.forEach((elemento) => { elemento.disabled = false; });
+            }
+        });
+    }
 
     function mostrarAlertaEdicion(mensaje) {
         alertaEdicion.textContent = mensaje;
@@ -770,7 +770,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             publicacion.puntajeVotos ?? publicacion.votes ?? 0,
             publicacion.miVoto ?? publicacion.userVote ?? 0
         );
-        actualizarCalificacionPublicacion(publicacion);
 
         const imagenPortada = document.getElementById('publicacion-portada');
         if (imagenJuego) {
@@ -797,6 +796,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('juego-puntaje').textContent = puntaje || 'Sin puntaje disponible.';
         document.title = `${titulo || 'Publicación'} - respawn.`;
         actualizarBotonEdicion();
+        cargarPuntuacionJuegoEnPost(juego);
     }
 
     botonEditar.addEventListener('click', () => {

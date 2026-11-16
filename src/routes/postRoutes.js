@@ -13,6 +13,7 @@ enrutador.delete('/:id/comments/:commentId', requerirAutenticacion, controladorC
 enrutador.get('/:id', controladorPublicaciones.obtenerPublicacionPorId);
 enrutador.post('/', requerirAutenticacion, controladorPublicaciones.crearPublicacion);
 enrutador.patch('/:id', requerirAutenticacion, controladorPublicaciones.actualizarPublicacion);
+enrutador.delete('/:id', requerirAutenticacion, controladorPublicaciones.eliminarPublicacion);
 enrutador.post('/:id/voto', requerirAutenticacion, controladorPublicaciones.votarPublicacion);
 enrutador.post('/:id/vote', requerirAutenticacion, controladorPublicaciones.votarPublicacion);
 enrutador.post('/:id/calificacion', requerirAutenticacion, controladorPublicaciones.calificarPublicacion);

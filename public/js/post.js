@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const indicadorCarga = document.getElementById('indicador-carga-publicacion');
     const detallePublicacion = document.getElementById('detalle-publicacion');
     const botonEditar = document.getElementById('boton-editar-publicacion');
+    const botonEliminarPublicacion = document.getElementById('boton-eliminar-publicacion');
     const formularioEditar = document.getElementById('formulario-crear-publicacion');
     const botonGuardarEdicion = document.getElementById('boton-enviar-publicacion');
     const alertaEdicion = document.getElementById('alerta-error-publicacion');
@@ -93,6 +94,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const autor = publicacionActual && (publicacionActual.author || publicacionActual.autor);
         const esAutor = usuarioActual && autor && String(usuarioActual.id) === String(autor.id);
         botonEditar.classList.toggle('d-none', !esAutor);
+        if (botonEliminarPublicacion) {
+            botonEliminarPublicacion.classList.toggle('d-none', !esAutor);
+        }
     }
 
     function actualizarEstadoVotoDetalle(puntaje, miVoto) {
@@ -804,6 +808,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         alertaEdicion.classList.add('d-none');
         modalEditar.show();
     });
+
+    if (botonEliminarPublicacion) {
+        botonEliminarPublicacion.addEventListener('click', async () => {
+            if (!idPublicacion || !window.confirm('¿Eliminar esta publicación de forma definitiva?')) return;
+            botonEliminarPublicacion.disabled = true;
+            try {
+                const respuesta = await fetch(`/api/posts/${encodeURIComponent(idPublicacion)}`, {
+                    method: 'DELETE'
+                });
+                if (!respuesta.ok) return;
+                window.location.href = '/';
+            } catch (error) {
+                return;
+            } finally {
+                botonEliminarPublicacion.disabled = false;
+            }
+        });
+    }
 
     formularioEditar.addEventListener('submit', async (evento) => {
         evento.preventDefault();

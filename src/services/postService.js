@@ -1,4 +1,5 @@
 const repositorioPublicaciones = require('../repositories/postRepository');
+const repositorioComentarios = require('../repositories/commentRepository');
 const repositorioUsuarios = require('../repositories/userRepository');
 const adaptadorIgdb = require('../utils/adaptadorIgdb');
 
@@ -102,6 +103,19 @@ const actualizarPublicacion = async (id, datos, idUsuario) => {
   }, idUsuario);
 };
 
+const eliminarPublicacion = async (id, idUsuario) => {
+  const publicacion = await repositorioPublicaciones.buscarPublicacionPorId(id, idUsuario);
+  if (!publicacion) {
+    throw crearErrorPublicacion('Publicación no encontrada', 404);
+  }
+  if (!publicacion.author || String(publicacion.author.id) !== String(idUsuario)) {
+    throw crearErrorPublicacion('Solo puedes eliminar tus propias publicaciones', 403);
+  }
+
+  await repositorioComentarios.eliminarComentariosPorPublicacion(id);
+  return await repositorioPublicaciones.eliminarPublicacion(id, idUsuario);
+};
+
 const votarPublicacion = async (id, valorVoto, idUsuario) => {
   if (!idUsuario) {
     throw crearErrorPublicacion('Se requiere iniciar sesión para realizar esta acción', 401);
@@ -162,6 +176,7 @@ const obtenerPublicacionPorId = async (id, idUsuario = null) => {
 module.exports = {
   crearPublicacion,
   actualizarPublicacion,
+  eliminarPublicacion,
   votarPublicacion,
   calificarPublicacion,
   obtenerPublicacionPorId,

@@ -1,43 +1,36 @@
-const { randomUUID } = require('crypto');
+const { Comentario } = require('../models/comentario');
 
 const comentariosBD = [];
 
 const obtenerComentariosPorPublicacion = async (idPublicacion) => comentariosBD
   .filter((comentario) => comentario.postId === idPublicacion)
-  .map((comentario) => ({ ...comentario }));
+  .map((comentario) => comentario.toJSON());
 
 const buscarComentarioPorId = async (id) => {
   const comentario = comentariosBD.find((item) => item.id === id);
-  return comentario ? { ...comentario } : null;
+  return comentario ? comentario.toJSON() : null;
 };
 
 const crearComentario = async (datosComentario) => {
-  const comentario = {
-    id: randomUUID(),
-    ...datosComentario,
-    createdAt: new Date().toISOString()
-  };
+  const comentario = new Comentario(datosComentario);
   comentariosBD.push(comentario);
-  return { ...comentario };
+  return comentario.toJSON();
 };
 
 const actualizarComentario = async (id, contenido) => {
   const comentario = comentariosBD.find((item) => item.id === id);
   if (!comentario || comentario.deleted) return null;
 
-  comentario.content = contenido;
-  comentario.updatedAt = new Date().toISOString();
-  return { ...comentario };
+  comentario.actualizarContenido(contenido);
+  return comentario.toJSON();
 };
 
 const eliminarComentario = async (id) => {
   const comentario = comentariosBD.find((item) => item.id === id);
   if (!comentario || comentario.deleted) return null;
 
-  comentario.content = '';
-  comentario.deleted = true;
-  comentario.deletedAt = new Date().toISOString();
-  return { ...comentario };
+  comentario.marcarEliminado();
+  return comentario.toJSON();
 };
 
 const eliminarHiloComentario = async (id) => {
@@ -56,12 +49,21 @@ const eliminarHiloComentario = async (id) => {
     }
   }
 
+  const respaldo = comentario.toJSON();
   for (let indice = comentariosBD.length - 1; indice >= 0; indice -= 1) {
     if (idsHilo.has(comentariosBD[indice].id)) {
       comentariosBD.splice(indice, 1);
     }
   }
-  return { ...comentario, content: '', deleted: true };
+  return { ...respaldo, content: '', deleted: true };
+};
+
+const eliminarComentariosPorPublicacion = async (idPublicacion) => {
+  for (let indice = comentariosBD.length - 1; indice >= 0; indice -= 1) {
+    if (comentariosBD[indice].postId === idPublicacion) {
+      comentariosBD.splice(indice, 1);
+    }
+  }
 };
 
 module.exports = {
@@ -70,5 +72,6 @@ module.exports = {
   crearComentario,
   actualizarComentario,
   eliminarComentario,
-  eliminarHiloComentario
+  eliminarHiloComentario,
+  eliminarComentariosPorPublicacion
 };

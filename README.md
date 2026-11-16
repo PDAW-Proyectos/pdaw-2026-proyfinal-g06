@@ -11,8 +11,11 @@ Proyecto del equipo **Grupo 06** para *7513 · Proyecto de Desarrollo de Aplicac
 | --- | --- |
 | **Problema** | Falta de espacios ágiles y centralizados donde jugadores puedan descubrir secretos o trucos de juegos específicos y debatir en comunidad manteniendo calificaciones colaborativas independientes. |
 | **Usuarios** | Jugadores interesados en descubrir secretos/guías (cazadores de logros) y aficionados que buscan debatir sobre tramas, mecánicas y puntuaciones. |
-| **Funcionalidades núcleo** | 1. Búsqueda y catálogo de videojuegos consumiendo la API de IGDB.<br>2. Sistema de calificación comunitaria (1 al 10) con recálculo dinámico de promedios.<br>3. Foros de discusión por juego con hilos y respuestas. |
-| **Reglas de negocio** | 1. Cada usuario autenticado puede emitir un único voto por juego (si vuelve a votar, se actualiza el valor anterior).<br>2. El recálculo del puntaje promedio es automático y se valida en el servidor que la nota esté en el rango de 1 a 10.<br>3. Solo usuarios registrados y autenticados pueden publicar hilos, comentarios o descubrimientos; las publicaciones no pueden tener títulos vacíos. |
+| **Funcionalidades núcleo** | 1. Búsqueda y catálogo de videojuegos consumiendo la API de IGDB.
+2. Sistema de calificación comunitaria de videojuegos (1 al 10) con recálculo dinámico de promedios.
+3. Foros de discusión por juego con hilos y respuestas.
+4. Calificación de publicaciones (1 al 5), con un voto por persona, promedio comunitario y ranking de las cinco mejor puntuadas. |
+| **Reglas de negocio** | 1. Cada usuario autenticado puede emitir un único voto por juego (si vuelve a votar, se actualiza el valor anterior).<br>2. El recálculo del puntaje promedio del juego es automático y se valida en el servidor que la nota esté en el rango de 1 a 10.<br>3. Cada usuario autenticado puede puntuar una publicación una sola vez con una nota entera de 1 a 5; su creador no puede calificarla.<br>4. Solo usuarios registrados y autenticados pueden publicar hilos, comentarios o descubrimientos; las publicaciones no pueden tener títulos vacíos. |
 | **API externa** | **IGDB Video Game Database API (Twitch)** — [Documentación oficial](https://api-docs.igdb.com/). Uso: consulta de fichas técnicas de juegos, portadas, descripciones, plataformas, metadatos y géneros. |
 
 ## Equipo y roles del sprint actual

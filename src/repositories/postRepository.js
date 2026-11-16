@@ -1,8 +1,10 @@
 const { randomUUID } = require('crypto');
 const { VotoPublicacion } = require('../models/votoPublicacion');
+const { CalificacionPublicacion } = require('../models/calificacionPublicacion');
 
 const publicacionesBD = [];
 const votosPublicacionesBD = [];
+const calificacionesPublicacionesBD = [];
 
 const calcularResumenVotos = (idPublicacion, idUsuario = null) => {
   const votos = votosPublicacionesBD.filter((voto) => voto.idPublicacion === idPublicacion);
@@ -20,12 +22,66 @@ const calcularResumenVotos = (idPublicacion, idUsuario = null) => {
   };
 };
 
+const obtenerCalificacionesPublicacion = (idPublicacion) => calificacionesPublicacionesBD.filter(
+  (calificacion) => calificacion.idPublicacion === idPublicacion
+);
+
+const calcularResumenCalificaciones = (idPublicacion, idUsuario = null) => {
+  const calificaciones = obtenerCalificacionesPublicacion(idPublicacion);
+  const sumaCalificaciones = calificaciones.reduce(
+    (total, calificacion) => total + calificacion.valor,
+    0
+  );
+  const miCalificacion = idUsuario
+    ? calificaciones.find((calificacion) => calificacion.idUsuario === String(idUsuario))
+    : null;
+
+  return {
+    promedioPuntuacion: calificaciones.length > 0
+      ? Number((sumaCalificaciones / calificaciones.length).toFixed(1))
+      : 0,
+    cantidadPuntuaciones: calificaciones.length,
+    miCalificacionPublicacion: miCalificacion ? miCalificacion.valor : null
+  };
+};
+
 const formatearPublicacion = (publicacion, idUsuario = null) => {
   if (!publicacion) return null;
   return {
     ...publicacion,
-    ...calcularResumenVotos(publicacion.id, idUsuario)
+    ...calcularResumenVotos(publicacion.id, idUsuario),
+    ...calcularResumenCalificaciones(publicacion.id, idUsuario)
   };
+};
+
+const obtenerPublicacionesMejorPuntuadas = async (limite = 5, idUsuario = null) => {
+  const limiteSeguro = Math.max(1, Math.floor(Number(limite) || 5));
+  const resumenes = new Map();
+
+  calificacionesPublicacionesBD.forEach((calificacion) => {
+    const resumen = resumenes.get(calificacion.idPublicacion) || { suma: 0, cantidad: 0 };
+    resumen.suma += calificacion.valor;
+    resumen.cantidad += 1;
+    resumenes.set(calificacion.idPublicacion, resumen);
+  });
+
+  return publicacionesBD
+    .map((publicacion) => {
+      const resumen = resumenes.get(publicacion.id) || { suma: 0, cantidad: 0 };
+      return {
+        publicacion: formatearPublicacion(publicacion, idUsuario),
+        promedio: resumen.cantidad ? resumen.suma / resumen.cantidad : 0,
+        cantidadPuntuaciones: resumen.cantidad
+      };
+    })
+    .filter((item) => item.cantidadPuntuaciones > 0)
+    .sort((a, b) =>
+      b.promedio - a.promedio
+      || b.cantidadPuntuaciones - a.cantidadPuntuaciones
+      || Date.parse(b.publicacion.createdAt) - Date.parse(a.publicacion.createdAt)
+    )
+    .slice(0, limiteSeguro)
+    .map((item) => item.publicacion);
 };
 
 const crearPublicacion = async (datosPublicacion) => {
@@ -79,6 +135,30 @@ const registrarVotoPublicacion = async (idPublicacion, idUsuario, valor) => {
   return formatearPublicacion(publicacion, idUsuario);
 };
 
+const registrarCalificacionPublicacion = async (idPublicacion, idUsuario, valor) => {
+  const publicacion = publicacionesBD.find((item) => item.id === idPublicacion) || null;
+  if (!publicacion) return null;
+
+  const yaCalifico = calificacionesPublicacionesBD.some(
+    (calificacion) =>
+      calificacion.idPublicacion === idPublicacion &&
+      calificacion.idUsuario === String(idUsuario)
+  );
+  if (yaCalifico) {
+    const error = new Error('Ya calificaste esta publicación');
+    error.statusCode = 409;
+    error.status = 409;
+    throw error;
+  }
+
+  calificacionesPublicacionesBD.push(new CalificacionPublicacion({
+    idUsuario: String(idUsuario),
+    idPublicacion,
+    valor
+  }));
+  return formatearPublicacion(publicacion, idUsuario);
+};
+
 const obtenerPublicaciones = async (pagina = 1, limite = 10, juego = '', idUsuario = null) => {
   const publicacionesFiltradas = juego
     ? publicacionesBD.filter((publicacion) =>
@@ -103,5 +183,7 @@ module.exports = {
   buscarPublicacionPorId,
   actualizarPublicacion,
   registrarVotoPublicacion,
+  registrarCalificacionPublicacion,
+  obtenerPublicacionesMejorPuntuadas,
   obtenerPublicaciones
 };

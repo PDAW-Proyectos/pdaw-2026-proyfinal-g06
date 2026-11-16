@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     elementoModalAutenticacion.addEventListener('show.bs.modal', mostrarFormularioLogin);
 
     const contenedorPublicaciones = document.getElementById('contenedor-publicaciones') || document.getElementById('posts-container');
+    const contenedorPublicacionesDestacadas = document.getElementById('contenedor-publicaciones-destacadas');
     const plantillaPublicacion = document.getElementById('plantilla-publicacion') || document.getElementById('post-template');
     const botonCrearPublicacion = document.getElementById('boton-crear-publicacion') || document.getElementById('create-post-btn');
     const formularioCrearPublicacion = document.getElementById('formulario-crear-publicacion') || document.getElementById('create-post-form');
@@ -344,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const enlacePublicacion = clon.querySelector('.publicacion-enlace');
                 const imagenPortada = clon.querySelector('.publicacion-portada');
                 const contenedorVotos = clon.querySelector('[data-contenedor-votos]');
+                const promedioPuntuacion = clon.querySelector('.promedio-puntuacion-publicacion');
                 const juego = publicacion.game || publicacion.juego || '';
                 const portada = publicacion.imagenJuego || (publicacion.datosJuego && publicacion.datosJuego.imagen);
 
@@ -363,6 +365,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const puntajeInicial = publicacion.puntajeVotos ?? publicacion.votes ?? 0;
                     const miVotoInicial = publicacion.miVoto ?? publicacion.userVote ?? 0;
                     actualizarEstadoVisualVoto(contenedorVotos, puntajeInicial, miVotoInicial);
+                }
+                if (promedioPuntuacion) {
+                    const promedio = Number(publicacion.promedioPuntuacion) || 0;
+                    const cantidad = Number(publicacion.cantidadPuntuaciones) || 0;
+                    promedioPuntuacion.textContent = cantidad > 0 ? promedio.toFixed(1) : '—';
+                    promedioPuntuacion.parentElement.title = cantidad > 0
+                        ? `Promedio: ${promedio.toFixed(1)} / 5 (${cantidad} ${cantidad === 1 ? 'puntuación' : 'puntuaciones'})`
+                        : 'Sin puntuaciones';
                 }
 
                 const fechaFormateada = new Date(publicacion.createdAt).toLocaleDateString('es-ES', {
@@ -388,6 +398,71 @@ document.addEventListener('DOMContentLoaded', () => {
             alertaError.className = 'alert alert-danger';
             alertaError.textContent = 'Error al cargar las publicaciones.';
             contenedorPublicaciones.replaceChildren(alertaError);
+        }
+    }
+
+    async function cargarPublicacionesDestacadas() {
+        try {
+            const respuesta = await fetch('/api/posts/mejores-puntuadas');
+            const resultado = await respuesta.json();
+            if (!respuesta.ok) {
+                throw new Error(resultado.error || 'Error al cargar las publicaciones mejor puntuadas.');
+            }
+
+            const publicaciones = Array.isArray(resultado.data) ? resultado.data : [];
+            if (publicaciones.length === 0) {
+                const aviso = document.createElement('p');
+                aviso.className = 'text-muted fs-sm mb-3';
+                aviso.textContent = 'Todavía no hay publicaciones.';
+                contenedorPublicacionesDestacadas.replaceChildren(aviso);
+                return;
+            }
+
+            const elementos = publicaciones.map((publicacion) => {
+                const enlace = document.createElement('a');
+                enlace.className = 'd-flex justify-content-between align-items-center gap-3 text-decoration-none text-body border-bottom py-2';
+                enlace.href = `/post.html?id=${encodeURIComponent(publicacion.id)}`;
+
+                const detalles = document.createElement('span');
+                detalles.className = 'min-w-0';
+                const titulo = document.createElement('span');
+                titulo.className = 'd-block fw-bold fs-sm text-truncate';
+                titulo.textContent = publicacion.title || publicacion.titulo || 'Publicación sin título';
+                const autor = publicacion.author || publicacion.autor || {};
+                const juego = publicacion.game || publicacion.juego || '';
+                const metadatos = document.createElement('span');
+                metadatos.className = 'd-block text-muted fs-xs text-truncate';
+                metadatos.textContent = `${juego} · ${autor.name || autor.nombre || 'Usuario'}`;
+                detalles.append(titulo, metadatos);
+
+                const puntuacion = document.createElement('span');
+                puntuacion.className = 'text-end flex-shrink-0';
+                const promedio = document.createElement('span');
+                promedio.className = 'd-block text-warning fw-bold fs-sm';
+                promedio.textContent = Number(publicacion.promedioPuntuacion) > 0
+                    ? `${Number(publicacion.promedioPuntuacion).toFixed(1)} / 5`
+                    : 'Sin calificar';
+                const cantidad = Number(publicacion.cantidadPuntuaciones) || 0;
+                const votos = document.createElement('span');
+                votos.className = 'd-block text-muted fs-xs';
+                votos.textContent = `${cantidad} ${cantidad === 1 ? 'voto' : 'votos'}`;
+                puntuacion.append(promedio, votos);
+
+                enlace.setAttribute(
+                    'aria-label',
+                    `${titulo.textContent}, ${promedio.textContent}, ${votos.textContent}`
+                );
+                enlace.append(detalles, puntuacion);
+                return enlace;
+            });
+
+            contenedorPublicacionesDestacadas.replaceChildren(...elementos);
+        } catch (error) {
+            console.error('Error al cargar las publicaciones mejor puntuadas:', error);
+            const aviso = document.createElement('p');
+            aviso.className = 'text-danger fs-sm mb-3';
+            aviso.textContent = 'No se pudieron cargar las publicaciones mejor puntuadas.';
+            contenedorPublicacionesDestacadas.replaceChildren(aviso);
         }
     }
 
@@ -420,6 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
             prepararNuevaPublicacion();
             modalCrearPublicacion.hide();
             await cargarPublicaciones();
+            await cargarPublicacionesDestacadas();
             if (juegoSeleccionadoModal) await cargarPublicacionesJuego(juegoSeleccionadoModal);
         } catch (error) {
             alertaErrorPublicacion.textContent = 'Error de conexión. Inténtalo de nuevo.';
@@ -430,6 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     cargarPublicaciones();
+    cargarPublicacionesDestacadas();
 
     const formularioBuscarJuego = document.getElementById('formulario-buscar-juego');
     const campoBuscarJuego = document.getElementById('campo-buscar-juego');

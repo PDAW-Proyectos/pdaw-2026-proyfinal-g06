@@ -44,6 +44,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const botonVotoArribaDetalle = document.getElementById('boton-voto-arriba-detalle');
     const botonVotoAbajoDetalle = document.getElementById('boton-voto-abajo-detalle');
     const puntajeVotosDetalle = document.getElementById('puntaje-votos-detalle');
+    const promedioCalificacion = document.getElementById('promedio-calificacion-publicacion');
+    const estrellasCalificacion = document.getElementById('estrellas-calificacion-publicacion');
+    const estadoCalificacion = document.getElementById('estado-calificacion-publicacion');
     const formularioComentario = document.getElementById('formulario-comentario');
     const campoComentario = document.getElementById('campo-comentario');
     const botonEnviarComentario = document.getElementById('boton-enviar-comentario');
@@ -110,9 +113,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function actualizarCalificacionPublicacion(publicacion) {
+        const cantidad = Number(publicacion.cantidadPuntuaciones) || 0;
+        const promedio = Number(publicacion.promedioPuntuacion) || 0;
+        const miCalificacion = publicacion.miCalificacionPublicacion;
+        const yaCalifico = miCalificacion !== null && miCalificacion !== undefined;
+        const autor = publicacion.author || publicacion.autor || {};
+        const esAutor = usuarioActual && String(usuarioActual.id) === String(autor.id);
+
+        promedioCalificacion.textContent = cantidad > 0
+            ? `${promedio.toFixed(1)} / 5 · ${cantidad} ${cantidad === 1 ? 'puntuación' : 'puntuaciones'}`
+            : 'Sin puntuaciones';
+
+        const botones = estrellasCalificacion.querySelectorAll('[data-calificacion-publicacion]');
+        botones.forEach((boton) => {
+            const valor = Number(boton.dataset.calificacionPublicacion);
+            const seleccionada = yaCalifico && valor <= Number(miCalificacion);
+            boton.disabled = Boolean(esAutor || yaCalifico);
+            boton.classList.toggle('text-warning', seleccionada);
+            boton.classList.toggle('text-muted', !seleccionada);
+            const icono = boton.querySelector('i');
+            icono.classList.toggle('bi-star-fill', seleccionada);
+            icono.classList.toggle('bi-star', !seleccionada);
+        });
+
+        if (esAutor) {
+            estadoCalificacion.textContent = 'No puedes puntuar tu propia publicación.';
+        } else if (yaCalifico) {
+            estadoCalificacion.textContent = `Ya puntuaste esta publicación con ${miCalificacion} de 5.`;
+        } else if (!usuarioActual) {
+            estadoCalificacion.textContent = 'Inicia sesión para puntuar esta publicación una sola vez.';
+        } else {
+            estadoCalificacion.textContent = 'Selecciona de 1 a 5 estrellas. Solo puedes puntuar una vez.';
+        }
+    }
+
     function actualizarPerfilUsuario(usuario) {
         usuarioActual = usuario;
         actualizarFormularioComentarios();
+        if (publicacionActual) actualizarCalificacionPublicacion(publicacionActual);
         if (!usuario) {
             botonAbrirAutenticacion.classList.remove('d-none');
             perfilUsuario.classList.add('d-none');
@@ -249,6 +288,67 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+
+    estrellasCalificacion.addEventListener('click', async (evento) => {
+        const boton = evento.target.closest('[data-calificacion-publicacion]');
+        if (!boton || !idPublicacion) return;
+
+        if (!usuarioActual) {
+            mostrarFormularioLogin();
+            modalAutenticacion.show();
+            return;
+        }
+
+        const botones = estrellasCalificacion.querySelectorAll('[data-calificacion-publicacion]');
+        botones.forEach((elemento) => { elemento.disabled = true; });
+        estadoCalificacion.textContent = 'Guardando tu puntuación...';
+
+        try {
+            const respuesta = await fetch(`/api/posts/${encodeURIComponent(idPublicacion)}/calificacion`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ valor: Number(boton.dataset.calificacionPublicacion) })
+            });
+            const tipoContenido = respuesta.headers.get('content-type') || '';
+            if (!tipoContenido.includes('application/json')) {
+                throw new Error(
+                    `El servidor respondió HTTP ${respuesta.status} sin JSON. Reinicia el servidor para cargar la ruta de calificación.`
+                );
+            }
+            const resultado = await respuesta.json();
+
+            if (respuesta.status === 401) {
+                mostrarFormularioLogin();
+                modalAutenticacion.show();
+                estadoCalificacion.textContent = 'Inicia sesión para puntuar esta publicación una sola vez.';
+                return;
+            }
+            if (!respuesta.ok) {
+                estadoCalificacion.textContent = resultado.error || 'No se pudo guardar la puntuación.';
+                if (respuesta.status === 409) await recargarPublicacionActual();
+                return;
+            }
+
+            publicacionActual = resultado.post;
+            actualizarCalificacionPublicacion(publicacionActual);
+        } catch (error) {
+            console.error('Error al calificar la publicación:', error);
+            estadoCalificacion.textContent = error instanceof TypeError
+                ? 'No se pudo conectar con el servidor. Inténtalo de nuevo.'
+                : error.message || 'No se pudo guardar la puntuación.';
+        } finally {
+            const autor = publicacionActual && (publicacionActual.author || publicacionActual.autor || {});
+            const esAutor = usuarioActual && autor
+                && String(usuarioActual.id) === String(autor.id);
+            const miCalificacion = publicacionActual
+                ? publicacionActual.miCalificacionPublicacion
+                : null;
+            const yaCalifico = miCalificacion !== null && miCalificacion !== undefined;
+            botones.forEach((elemento) => {
+                elemento.disabled = Boolean(esAutor || yaCalifico);
+            });
+        }
+    });
 
     function mostrarAlertaEdicion(mensaje) {
         alertaEdicion.textContent = mensaje;
@@ -666,6 +766,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             publicacion.puntajeVotos ?? publicacion.votes ?? 0,
             publicacion.miVoto ?? publicacion.userVote ?? 0
         );
+        actualizarCalificacionPublicacion(publicacion);
 
         const imagenPortada = document.getElementById('publicacion-portada');
         if (imagenJuego) {

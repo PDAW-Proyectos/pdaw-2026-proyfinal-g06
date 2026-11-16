@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const juegosAMostrar = campoBuscarJuego && campoBuscarJuego.value.trim()
             ? juegos
-            : juegos.slice(0, 3);
+            : juegos.slice(0, 8);
 
         const tarjetas = juegosAMostrar.map((juego) => {
             const tarjeta = document.createElement('button');

@@ -62,26 +62,26 @@
                     <form id="login-form">
                         <div class="mb-3">
                             <label for="login-email" class="form-label">Correo electrónico</label>
-                            <input id="login-email" name="email" class="form-control" type="email" autocomplete="email" required>
+                            <input id="login-email" name="email" class="form-control" type="email" autocomplete="email">
                         </div>
                         <div class="mb-3">
                             <label for="login-password" class="form-label">Contraseña</label>
-                            <input id="login-password" name="password" class="form-control" type="password" autocomplete="current-password" required>
+                            <input id="login-password" name="password" class="form-control" type="password" autocomplete="current-password">
                         </div>
                         <button class="btn btn-primary w-100" type="submit">Iniciar sesión</button>
                     </form>
                     <form id="register-form" class="d-none">
                         <div class="mb-3">
                             <label for="register-name" class="form-label">Nombre visible</label>
-                            <input id="register-name" name="name" class="form-control" type="text" autocomplete="name" required>
+                            <input id="register-name" name="name" class="form-control" type="text" autocomplete="name">
                         </div>
                         <div class="mb-3">
                             <label for="register-email" class="form-label">Correo electrónico</label>
-                            <input id="register-email" name="email" class="form-control" type="email" autocomplete="email" required>
+                            <input id="register-email" name="email" class="form-control" type="email" autocomplete="email">
                         </div>
                         <div class="mb-3">
                             <label for="register-password" class="form-label">Contraseña</label>
-                            <input id="register-password" name="password" class="form-control" type="password" autocomplete="new-password" minlength="8" required aria-describedby="password-help">
+                            <input id="register-password" name="password" class="form-control" type="password" autocomplete="new-password" minlength="8" aria-describedby="password-help">
                             <div id="password-help" class="form-text">Debe tener al menos 8 caracteres.</div>
                         </div>
                         <button class="btn btn-primary w-100" type="submit">Crear cuenta</button>
@@ -158,6 +158,26 @@
                     </div>
                 </div>
             </section>
+
+            <section id="seccion-comentarios" class="mt-5" aria-labelledby="titulo-comentarios">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <h2 id="titulo-comentarios" class="fs-4 fw-bold mb-0">Comentarios</h2>
+                    <span id="cantidad-comentarios" class="badge rounded-pill text-bg-secondary">0</span>
+                </div>
+                <div id="alerta-comentarios" class="alert alert-danger d-none" role="alert" aria-live="polite"></div>
+                <form id="formulario-comentario" class="card bg-body-tertiary border-0 rounded-4 mb-4" novalidate>
+                    <div class="card-body">
+                        <label for="campo-comentario" class="form-label fw-medium">Deja tu comentario</label>
+                        <textarea id="campo-comentario" name="content" class="form-control mb-3" rows="3" maxlength="2000" placeholder="¿Qué opinas de esta publicación?"></textarea>
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+                            <span id="aviso-iniciar-sesion-comentarios" class="text-muted fs-sm">Inicia sesión para participar.</span>
+                            <button id="boton-login-comentarios" type="button" class="btn btn-link btn-sm p-0 d-none" data-bs-toggle="modal" data-bs-target="#auth-modal">Iniciar sesión</button>
+                            <button id="boton-enviar-comentario" type="submit" class="btn btn-primary btn-sm">Comentar</button>
+                        </div>
+                    </div>
+                </form>
+                <div id="lista-comentarios" aria-live="polite"></div>
+            </section>
         </article>
     </main>
 
@@ -173,12 +193,12 @@
                     <form id="formulario-crear-publicacion">
                         <div class="mb-3">
                             <label class="form-label" for="campo-juego-publicacion">Juego</label>
-                            <input type="text" id="campo-juego-publicacion" name="game" list="lista-sugerencias-juegos" class="form-control" required>
+                            <input type="text" id="campo-juego-publicacion" name="game" list="lista-sugerencias-juegos" class="form-control">
                             <datalist id="lista-sugerencias-juegos"></datalist>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="campo-categoria-publicacion">Categoría</label>
-                            <select id="campo-categoria-publicacion" name="category" class="form-select" required>
+                            <select id="campo-categoria-publicacion" name="category" class="form-select">
                                 <option value="Informativa">Informativa</option>
                                 <option value="Review o reseña">Review o reseña</option>
                                 <option value="Crítica">Crítica</option>
@@ -187,11 +207,11 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="campo-titulo-publicacion">Título</label>
-                            <input type="text" id="campo-titulo-publicacion" name="title" class="form-control" required>
+                            <input type="text" id="campo-titulo-publicacion" name="title" class="form-control">
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="campo-contenido-publicacion">Contenido</label>
-                            <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5" required></textarea>
+                            <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5"></textarea>
                         </div>
                         <button id="boton-enviar-publicacion" type="submit" class="btn btn-primary w-100">Guardar cambios</button>
                     </form>

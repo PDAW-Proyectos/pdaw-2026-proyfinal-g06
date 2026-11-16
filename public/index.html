@@ -66,26 +66,26 @@
                     <form id="login-form">
                         <div class="mb-3">
                             <label for="login-email" class="form-label">Correo electrónico</label>
-                            <input id="login-email" name="email" class="form-control" type="email" autocomplete="email" required>
+                            <input id="login-email" name="email" class="form-control" type="email" autocomplete="email">
                         </div>
                         <div class="mb-3">
                             <label for="login-password" class="form-label">Contraseña</label>
-                            <input id="login-password" name="password" class="form-control" type="password" autocomplete="current-password" required>
+                            <input id="login-password" name="password" class="form-control" type="password" autocomplete="current-password">
                         </div>
                         <button class="btn btn-primary w-100" type="submit">Iniciar sesión</button>
                     </form>
                     <form id="register-form" class="d-none">
                         <div class="mb-3">
                             <label for="register-name" class="form-label">Nombre visible</label>
-                            <input id="register-name" name="name" class="form-control" type="text" autocomplete="name" required>
+                            <input id="register-name" name="name" class="form-control" type="text" autocomplete="name">
                         </div>
                         <div class="mb-3">
                             <label for="register-email" class="form-label">Correo electrónico</label>
-                            <input id="register-email" name="email" class="form-control" type="email" autocomplete="email" required>
+                            <input id="register-email" name="email" class="form-control" type="email" autocomplete="email">
                         </div>
                         <div class="mb-3">
                             <label for="register-password" class="form-label">Contraseña</label>
-                            <input id="register-password" name="password" class="form-control" type="password" autocomplete="new-password" minlength="8" required aria-describedby="password-help">
+                            <input id="register-password" name="password" class="form-control" type="password" autocomplete="new-password" minlength="8" aria-describedby="password-help">
                             <div id="password-help" class="form-text">Debe tener al menos 8 caracteres.</div>
                         </div>
                         <button class="btn btn-primary w-100" type="submit">Crear cuenta</button>
@@ -101,14 +101,11 @@
 
     <div class="container-fluid px-4 px-lg-5 my-5">
 
-        <header class="d-flex justify-content-between align-items-end mb-5">
+        <header class="mb-5">
             <div>
                 <span class="text-primary fw-bold text-uppercase fs-xs">Tu punto de encuentro</span>
                 <h1 class="display-4 fw-bold text-body-emphasis mt-2 mb-3">El juego continúa aquí.</h1>
                 <p class="text-muted fs-5 mb-0">Descubre tu próximo mundo. Comparte el que ya es tuyo.</p>
-            </div>
-            <div class="text-muted fs-sm d-flex align-items-center">
-                <span class="status-dot bg-secondary rounded-circle me-2"></span> 1.248 jugadores en línea
             </div>
         </header>
 
@@ -240,7 +237,7 @@
                                             <p id="puntaje-comunidad-modal-juego" class="text-muted mb-2"></p>
                                             <form id="formulario-puntuar-juego" class="d-flex align-items-center gap-2 flex-wrap">
                                                 <label for="campo-nota-juego" class="form-label fs-sm mb-0">Tu nota (1 a 10):</label>
-                                                <select id="campo-nota-juego" name="nota" class="form-select form-select-sm w-auto" required>
+                                                <select id="campo-nota-juego" name="nota" class="form-select form-select-sm w-auto">
                                                     <option value="10">10</option>
                                                     <option value="9">9</option>
                                                     <option value="8">8</option>
@@ -284,12 +281,12 @@
                                 <form id="formulario-crear-publicacion">
                                     <div class="mb-3">
                                         <label class="form-label" for="campo-juego-publicacion">Juego</label>
-                                        <input type="text" id="campo-juego-publicacion" name="game" list="lista-sugerencias-juegos" class="form-control" placeholder="Ej. Elden Ring" required>
+                                        <input type="text" id="campo-juego-publicacion" name="game" list="lista-sugerencias-juegos" class="form-control" placeholder="Ej. Elden Ring">
                                         <datalist id="lista-sugerencias-juegos"></datalist>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="campo-categoria-publicacion">Categoría</label>
-                                        <select id="campo-categoria-publicacion" name="category" class="form-select" required>
+                                        <select id="campo-categoria-publicacion" name="category" class="form-select">
                                             <option value="">Selecciona una categoría...</option>
                                             <option value="Informativa">Informativa</option>
                                             <option value="Review o reseña">Review o reseña</option>
@@ -299,11 +296,11 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="campo-titulo-publicacion">Título</label>
-                                        <input type="text" id="campo-titulo-publicacion" name="title" class="form-control" placeholder="Sé claro y descriptivo..." required>
+                                        <input type="text" id="campo-titulo-publicacion" name="title" class="form-control" placeholder="Sé claro y descriptivo...">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="campo-contenido-publicacion">Contenido</label>
-                                        <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5" placeholder="Comparte tu experiencia..." required></textarea>
+                                        <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5" placeholder="Comparte tu experiencia..."></textarea>
                                     </div>
                                     <button id="boton-enviar-publicacion" type="submit" class="btn btn-primary w-100">Publicar</button>
                                 </form>

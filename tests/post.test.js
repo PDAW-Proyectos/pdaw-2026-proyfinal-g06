@@ -29,10 +29,14 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.match(paginaDetalleHtml, /id="theme-toggle"/);
   assert.match(paginaDetalleHtml, /id="publicacion-portada"/);
   assert.match(paginaDetalleHtml, /id="modal-crear-publicacion"/);
+  assert.match(paginaDetalleHtml, /id="formulario-comentario"/);
+  assert.match(paginaDetalleHtml, /id="lista-comentarios"/);
 
   respuesta = await solicitud('/index.html');
   assert.equal(respuesta.status, 200);
-  assert.match(await respuesta.text(), /class="publicacion-portada post-cover/);
+  const paginaInicioHtml = await respuesta.text();
+  assert.match(paginaInicioHtml, /class="publicacion-portada post-cover/);
+  assert.doesNotMatch(paginaInicioHtml, /jugadores en línea/);
 
   respuesta = await solicitud('/api/posts');
   assert.equal(respuesta.status, 200);
@@ -106,6 +110,25 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.equal('email' in publicacionCreada.post.author, false);
   const idPublicacion = publicacionCreada.post.id;
 
+  respuesta = await solicitud(`/api/posts/${idPublicacion}/comments`);
+  assert.equal(respuesta.status, 200);
+  assert.deepEqual((await respuesta.json()).comments, []);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/comments`, { content: 'Sin iniciar sesión' });
+  assert.equal(respuesta.status, 401);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/comments`, { content: '   ' }, cookieLogin);
+  assert.equal(respuesta.status, 400);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/comments`, {
+    content: '¿Qué tal está este juego?'
+  }, cookieLogin);
+  assert.equal(respuesta.status, 201);
+  const comentarioPrincipal = (await respuesta.json()).comment;
+  assert.equal(comentarioPrincipal.author.name, 'GamerUno');
+  assert.equal(comentarioPrincipal.parentId, null);
+  assert.equal('email' in comentarioPrincipal.author, false);
+
   respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -141,6 +164,100 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   });
   assert.equal(respuestaSegundoInicio.status, 200);
   const cookieSegundoUsuario = respuestaSegundoInicio.headers.get('set-cookie').split(';')[0];
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/comments`, {
+    content: 'Está muy bueno.',
+    parentId: comentarioPrincipal.id
+  }, cookieSegundoUsuario);
+  assert.equal(respuesta.status, 201);
+  const respuestaComentario = (await respuesta.json()).comment;
+  assert.equal(respuestaComentario.author.name, 'GamerDos');
+  assert.equal(respuestaComentario.parentId, comentarioPrincipal.id);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/comments`, {
+    content: 'Agrego otra idea a mi comentario.',
+    parentId: comentarioPrincipal.id
+  }, cookieLogin);
+  assert.equal(respuesta.status, 201);
+  const respuestaDelAutor = (await respuesta.json()).comment;
+  assert.equal(respuestaDelAutor.author.name, 'GamerUno');
+  assert.equal(respuestaDelAutor.parentId, comentarioPrincipal.id);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/comments`, {
+    content: '¡Coincido!',
+    parentId: respuestaComentario.id
+  }, cookieLogin);
+  assert.equal(respuesta.status, 201);
+  const respuestaAnidada = (await respuesta.json()).comment;
+  assert.equal(respuestaAnidada.parentId, respuestaComentario.id);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}/comments`);
+  assert.equal(respuesta.status, 200);
+  const comentariosCargados = (await respuesta.json()).comments;
+  assert.equal(comentariosCargados.length, 4);
+  assert.equal(comentariosCargados[1].parentId, comentarioPrincipal.id);
+  assert.equal(comentariosCargados[2].parentId, comentarioPrincipal.id);
+  assert.equal(comentariosCargados[3].parentId, respuestaComentario.id);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/comments`, {
+    content: 'Respuesta inválida',
+    parentId: 'comentario-inexistente'
+  }, cookieLogin);
+  assert.equal(respuesta.status, 404);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}/comments/${comentarioPrincipal.id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: cookieSegundoUsuario
+    },
+    body: JSON.stringify({ content: 'Edición de otra persona' })
+  });
+  assert.equal(respuesta.status, 403);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}/comments/${comentarioPrincipal.id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: cookieLogin
+    },
+    body: JSON.stringify({ content: 'Comentario editado por su autor' })
+  });
+  assert.equal(respuesta.status, 200);
+  assert.equal((await respuesta.json()).comment.content, 'Comentario editado por su autor');
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}/comments/${comentarioPrincipal.id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: cookieLogin
+    },
+    body: JSON.stringify({ content: '  ' })
+  });
+  assert.equal(respuesta.status, 400);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}/comments/${comentarioPrincipal.id}`, {
+    method: 'DELETE',
+    headers: { Cookie: cookieSegundoUsuario }
+  });
+  assert.equal(respuesta.status, 403);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}/comments/${comentarioPrincipal.id}`, {
+    method: 'DELETE'
+  });
+  assert.equal(respuesta.status, 401);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}/comments/${comentarioPrincipal.id}`, {
+    method: 'DELETE',
+    headers: { Cookie: cookieLogin }
+  });
+  assert.equal(respuesta.status, 200);
+  assert.equal((await respuesta.json()).comment.deleted, true);
+
+  respuesta = await solicitud(`/api/posts/${idPublicacion}/comments`);
+  assert.equal(respuesta.status, 200);
+  const comentariosRestantes = (await respuesta.json()).comments;
+  assert.deepEqual(comentariosRestantes, []);
 
   respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
     method: 'PATCH',

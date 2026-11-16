@@ -49,12 +49,15 @@ body {
     border-color: var(--bs-border-color);
 }
 .game-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
     gap: 1.25rem;
+    overflow-x: hidden;
 }
 .game-card {
-    width: 100%;
+    flex: 0 1 210px;
+    min-width: 0;
     padding: 0;
     border: 0;
     background: transparent;
@@ -91,6 +94,12 @@ body {
     object-fit: cover;
 }
 .game-detail-information { min-width: 0; }
+.comment-thread {
+    margin-left: 1.25rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--bs-border-color);
+}
+.comment-content { white-space: pre-wrap; overflow-wrap: anywhere; }
 .post-cover {
     flex: 0 0 72px;
     width: 72px;
@@ -99,9 +108,10 @@ body {
 }
 
 @media (max-width: 575.98px) {
-    .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }
-    .game-img { height: 210px; }
+    .game-grid { justify-content: flex-start; gap: 0.9rem; }
+    .game-img { height: auto; aspect-ratio: 7 / 9; }
     .game-detail-image { width: 120px; height: 170px; }
+    .comment-thread { margin-left: 0.5rem; padding-left: 0.75rem; }
 }
 
 .avatar-game {

@@ -88,37 +88,19 @@ const votarPublicacion = async (req, res) => {
   }
 };
 
-const calificarPublicacion = async (req, res) => {
-  const cuerpo = req.body || {};
-  const valor = cuerpo.valor !== undefined ? cuerpo.valor : cuerpo.puntuacion;
-
-  try {
-    const publicacion = await servicioPublicaciones.calificarPublicacion(
-      req.params.id,
-      valor,
-      req.session.userId
-    );
-    res.status(201).json({
-      message: 'Calificación registrada correctamente',
-      post: publicacion,
-      promedioPuntuacion: publicacion.promedioPuntuacion,
-      cantidadPuntuaciones: publicacion.cantidadPuntuaciones,
-      miCalificacionPublicacion: publicacion.miCalificacionPublicacion
-    });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({
-      error: error.message || 'Error al calificar la publicación'
-    });
-  }
-};
-
 const obtenerPublicaciones = async (req, res) => {
-  const { page, pagina, game } = req.query;
+  const { page, pagina, game, orden, sort } = req.query;
   const numeroPagina = pagina || page;
+  const criterioOrden = orden || sort || 'recientes';
   const idUsuario = req.session ? req.session.userId : null;
 
   try {
-    const publicaciones = await servicioPublicaciones.obtenerPublicaciones(numeroPagina, game, idUsuario);
+    const publicaciones = await servicioPublicaciones.obtenerPublicaciones(
+      numeroPagina,
+      game,
+      idUsuario,
+      criterioOrden
+    );
     res.status(200).json(publicaciones);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener las publicaciones' });
@@ -132,7 +114,6 @@ const obtenerPublicacionesMejorPuntuadas = async (req, res) => {
     const publicaciones = await servicioPublicaciones.obtenerPublicacionesMejorPuntuadas(idUsuario);
     res.status(200).json({ data: publicaciones });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Error al obtener las publicaciones mejor puntuadas' });
   }
 };
@@ -155,7 +136,6 @@ module.exports = {
   actualizarPublicacion,
   eliminarPublicacion,
   votarPublicacion,
-  calificarPublicacion,
   obtenerPublicaciones,
   obtenerPublicacionesMejorPuntuadas,
   obtenerPublicacionPorId

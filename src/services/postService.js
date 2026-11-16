@@ -134,30 +134,15 @@ const votarPublicacion = async (id, valorVoto, idUsuario) => {
   return await repositorioPublicaciones.registrarVotoPublicacion(id, idUsuario, valorNormalizado);
 };
 
-const calificarPublicacion = async (id, valor, idUsuario) => {
-  if (!idUsuario) {
-    throw crearErrorPublicacion('Se requiere iniciar sesión para realizar esta acción', 401);
-  }
-
-  const publicacion = await repositorioPublicaciones.buscarPublicacionPorId(id, idUsuario);
-  if (!publicacion) {
-    throw crearErrorPublicacion('Publicación no encontrada', 404);
-  }
-  if (publicacion.author && String(publicacion.author.id) === String(idUsuario)) {
-    throw crearErrorPublicacion('No puedes puntuar tu propia publicación', 403);
-  }
-
-  return await repositorioPublicaciones.registrarCalificacionPublicacion(id, idUsuario, valor);
-};
-
-const obtenerPublicaciones = async (pagina, juego = '', idUsuario = null) => {
+const obtenerPublicaciones = async (pagina, juego = '', idUsuario = null, orden = 'recientes') => {
   const paginaActual = Math.max(1, parseInt(pagina, 10) || 1);
   const juegoFiltrado = typeof juego === 'string' ? juego.trim() : '';
   return await repositorioPublicaciones.obtenerPublicaciones(
     paginaActual,
     LIMITE_POR_PAGINA,
     juegoFiltrado,
-    idUsuario
+    idUsuario,
+    orden
   );
 };
 
@@ -178,7 +163,6 @@ module.exports = {
   actualizarPublicacion,
   eliminarPublicacion,
   votarPublicacion,
-  calificarPublicacion,
   obtenerPublicacionPorId,
   obtenerPublicaciones,
   obtenerPublicacionesMejorPuntuadas,

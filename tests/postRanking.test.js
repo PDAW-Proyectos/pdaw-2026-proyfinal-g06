@@ -2,51 +2,46 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const repositorioPublicaciones = require('../src/repositories/postRepository');
 
-test('ordena las cinco publicaciones por promedio, cantidad de votos y fecha', async () => {
-  const sinPuntuacion = await repositorioPublicaciones.crearPublicacion({
-    title: 'Sin puntuación',
+test('ordena las publicaciones destacadas por puntaje de votos, cantidad de votos y fecha', async () => {
+  const sinVotos = await repositorioPublicaciones.crearPublicacion({
+    title: 'Sin votos',
     game: 'Juego',
-    author: { id: 'autor-sin-puntuacion', name: 'Autor' }
+    author: { id: 'autor-sin-votos', name: 'Autor' }
   });
   assert.deepEqual(await repositorioPublicaciones.obtenerPublicacionesMejorPuntuadas(), []);
 
-  const publicar = async (titulo, puntuaciones) => {
+  const publicarConVotos = async (titulo, votos) => {
     const publicacion = await repositorioPublicaciones.crearPublicacion({
       title: titulo,
       game: 'Juego',
       author: { id: `autor-${titulo}`, name: 'Autor' }
     });
 
-    for (let indice = 0; indice < puntuaciones.length; indice += 1) {
-      await repositorioPublicaciones.registrarCalificacionPublicacion(
+    for (let indice = 0; indice < votos.length; indice += 1) {
+      await repositorioPublicaciones.registrarVotoPublicacion(
         publicacion.id,
         `usuario-${titulo}-${indice}`,
-        puntuaciones[indice]
+        votos[indice]
       );
     }
 
     return publicacion;
   };
 
-  const empateAnterior = await publicar('Empate anterior', [4, 4]);
+  const empateAnterior = await publicarConVotos('Empate anterior', [1, 1]);
   await new Promise((resolver) => setTimeout(resolver, 10));
-  const empateReciente = await publicar('Empate reciente', [4, 4]);
-  const empateConMenosVotos = await publicar('Empate con menos votos', [4]);
-  const mejorPromedioConUnVoto = await publicar('Mejor promedio con un voto', [5]);
-  const mejorPromedioConMasVotos = await publicar('Mejor promedio con más votos', [5, 5]);
-  await publicar('Puesto seis', [3]);
+  const empateReciente = await publicarConVotos('Empate reciente', [1, 1]);
+  const unVotoPositivo = await publicarConVotos('Un voto positivo', [1]);
+  const tresVotosPositivos = await publicarConVotos('Tres votos positivos', [1, 1, 1]);
 
-  const publicaciones = await repositorioPublicaciones.obtenerPublicacionesMejorPuntuadas();
+  const destacadas = await repositorioPublicaciones.obtenerPublicacionesMejorPuntuadas(5);
 
-  assert.equal(publicaciones.length, 5);
-  assert.deepEqual(publicaciones.map((publicacion) => publicacion.id), [
-    mejorPromedioConMasVotos.id,
-    mejorPromedioConUnVoto.id,
+  assert.equal(destacadas.length, 4);
+  assert.deepEqual(destacadas.map((publicacion) => publicacion.id), [
+    tresVotosPositivos.id,
     empateReciente.id,
     empateAnterior.id,
-    empateConMenosVotos.id
+    unVotoPositivo.id
   ]);
-  const todasLasPuntuadas = await repositorioPublicaciones.obtenerPublicacionesMejorPuntuadas(10);
-  assert.equal(todasLasPuntuadas.length, 6);
-  assert.equal(todasLasPuntuadas.some((publicacion) => publicacion.id === sinPuntuacion.id), false);
+  assert.equal(destacadas.some((publicacion) => publicacion.id === sinVotos.id), false);
 });

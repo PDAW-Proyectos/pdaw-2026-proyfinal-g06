@@ -89,9 +89,10 @@ const votarPublicacion = async (req, res) => {
 };
 
 const obtenerPublicaciones = async (req, res) => {
-  const { page, pagina, game, orden, sort } = req.query;
+  const { page, pagina, game, orden, sort, categoria, category } = req.query;
   const numeroPagina = pagina || page;
   const criterioOrden = orden || sort || 'recientes';
+  const filtroCategoria = categoria || category || '';
   const idUsuario = req.session ? req.session.userId : null;
 
   try {
@@ -99,7 +100,8 @@ const obtenerPublicaciones = async (req, res) => {
       numeroPagina,
       game,
       idUsuario,
-      criterioOrden
+      criterioOrden,
+      filtroCategoria
     );
     res.status(200).json(publicaciones);
   } catch (error) {

@@ -3,7 +3,13 @@ const repositorioComentarios = require('../repositories/commentRepository');
 const repositorioUsuarios = require('../repositories/userRepository');
 const adaptadorIgdb = require('../utils/adaptadorIgdb');
 
-const CATEGORIAS_VALIDAS = ['Informativa', 'Review o reseña', 'Crítica', 'Bug o problema técnico'];
+const CATEGORIAS_VALIDAS = [
+  'Informativa',
+  'Review o reseña',
+  'Crítica',
+  'Bug o problema técnico',
+  'Descubrimiento o secreto'
+];
 const LIMITE_POR_PAGINA = 10;
 
 const crearErrorPublicacion = (mensaje, codigoEstado) => {
@@ -134,15 +140,23 @@ const votarPublicacion = async (id, valorVoto, idUsuario) => {
   return await repositorioPublicaciones.registrarVotoPublicacion(id, idUsuario, valorNormalizado);
 };
 
-const obtenerPublicaciones = async (pagina, juego = '', idUsuario = null, orden = 'recientes') => {
+const obtenerPublicaciones = async (
+  pagina,
+  juego = '',
+  idUsuario = null,
+  orden = 'recientes',
+  categoria = ''
+) => {
   const paginaActual = Math.max(1, parseInt(pagina, 10) || 1);
   const juegoFiltrado = typeof juego === 'string' ? juego.trim() : '';
+  const categoriaFiltrada = typeof categoria === 'string' ? categoria.trim() : '';
   return await repositorioPublicaciones.obtenerPublicaciones(
     paginaActual,
     LIMITE_POR_PAGINA,
     juegoFiltrado,
     idUsuario,
-    orden
+    orden,
+    categoriaFiltrada
   );
 };
 

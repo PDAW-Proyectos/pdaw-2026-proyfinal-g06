@@ -125,13 +125,20 @@ const obtenerPublicaciones = async (
   limite = 10,
   juego = '',
   idUsuario = null,
-  orden = 'recientes'
+  orden = 'recientes',
+  categoria = ''
 ) => {
-  const publicacionesFiltradas = juego
+  const publicacionesPorJuego = juego
     ? publicacionesBD.filter((publicacion) =>
       (publicacion.game || publicacion.juego || '').toLowerCase() === juego.trim().toLowerCase()
     )
     : publicacionesBD;
+
+  const publicacionesFiltradas = categoria
+    ? publicacionesPorJuego.filter((publicacion) =>
+      (publicacion.category || publicacion.categoria || '').toLowerCase() === categoria.trim().toLowerCase()
+    )
+    : publicacionesPorJuego;
 
   const publicacionesFormateadas = publicacionesFiltradas.map((publicacion) =>
     formatearPublicacion(publicacion, idUsuario)

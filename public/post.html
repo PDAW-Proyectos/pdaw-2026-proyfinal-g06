@@ -18,20 +18,9 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium text-muted">
-                    <li class="nav-item me-4 position-relative">
-                        <a class="nav-link text-primary fw-bold" href="index.html">Home</a>
-                        <span class="active-dot bg-primary rounded-circle position-absolute"></span>
-                    </li>
-                    <li class="nav-item me-4"><a class="nav-link" href="index.html#formulario-buscar-juego">Buscar videojuego</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.html#contenedor-publicaciones">Tendencias</a></li>
-                </ul>
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 ms-auto">
                     <button id="theme-toggle" class="btn btn-link text-body p-0 text-decoration-none" type="button" aria-label="Cambiar tema">
                         <i class="bi bi-moon fs-5"></i>
-                    </button>
-                    <button class="btn btn-link text-body p-0 text-decoration-none" type="button" aria-label="Notificaciones">
-                        <i class="bi bi-bell fs-5"></i>
                     </button>
                     <div class="border-start ps-3 ms-2 d-flex align-items-center gap-2">
                         <button id="auth-trigger" class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#auth-modal">
@@ -58,7 +47,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="auth-message" class="alert d-none" role="alert" aria-live="polite"></div>
                     <form id="login-form">
                         <div class="mb-3">
                             <label for="login-email" class="form-label">Correo electrónico</label>
@@ -101,78 +89,85 @@
         </p>
 
         <article id="detalle-publicacion" class="d-none">
-            <section class="d-flex flex-column flex-md-row gap-4 align-items-start">
-                <img id="publicacion-portada" class="game-detail-image rounded d-none" alt="">
-                <div class="flex-grow-1 w-100">
-                    <div class="mb-3 fs-sm fw-medium">
-                        <span id="publicacion-juego" class="text-primary"></span>
-                        <span class="text-muted">/ <span id="publicacion-categoria"></span></span>
+            <section class="card border border-opacity-25 shadow-sm rounded-4 p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div class="fs-sm fw-medium">
+                        <span id="publicacion-juego" class="badge rounded-pill text-bg-primary me-1"></span>
+                        <span id="publicacion-categoria" class="badge rounded-pill bg-body-tertiary text-body border"></span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                        <h1 id="publicacion-titulo" class="fw-bold mb-0"></h1>
-                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                            <button id="boton-editar-publicacion" class="btn btn-outline-primary btn-sm d-none" type="button">
-                                <i class="bi bi-pencil-square me-1"></i> Editar
-                            </button>
-                            <button id="boton-eliminar-publicacion" class="btn btn-outline-danger btn-sm d-none" type="button">
-                                <i class="bi bi-trash me-1"></i> Eliminar
-                            </button>
-                        </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="boton-editar-publicacion" class="btn btn-outline-primary btn-sm d-none" type="button">
+                            <i class="bi bi-pencil-square me-1"></i> Editar
+                        </button>
+                        <button id="boton-eliminar-publicacion" class="btn btn-outline-danger btn-sm d-none" type="button">
+                            <i class="bi bi-trash me-1"></i> Eliminar
+                        </button>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center text-muted fs-sm mb-4 border-bottom pb-3">
-                        <div class="d-flex align-items-center">
-                            <div id="publicacion-avatar" class="avatar bg-body-tertiary fw-bold rounded-circle d-flex justify-content-center align-items-center me-2"></div>
-                            <span id="publicacion-autor" class="fw-medium text-body me-2"></span>
-                            <span id="publicacion-fecha"></span>
-                        </div>
-                        <div class="d-flex align-items-center gap-1" id="contenedor-votos-detalle">
-                            <button type="button" id="boton-voto-arriba-detalle" class="btn btn-sm btn-link text-decoration-none p-1 text-muted" data-accion-voto="1" aria-label="Votar positivamente">
-                                <i class="bi bi-arrow-up"></i>
-                            </button>
-                            <span id="puntaje-votos-detalle" class="fw-medium text-body">0</span>
-                            <button type="button" id="boton-voto-abajo-detalle" class="btn btn-sm btn-link text-decoration-none p-1 text-muted" data-accion-voto="-1" aria-label="Votar negativamente">
-                                <i class="bi bi-arrow-down"></i>
-                            </button>
-                        </div>
+                </div>
+
+                <h1 id="publicacion-titulo" class="fw-bold fs-2 mb-3"></h1>
+
+                <div class="d-flex justify-content-between align-items-center text-muted fs-sm pb-3 mb-4 border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div id="publicacion-avatar" class="avatar bg-body-tertiary fw-bold rounded-circle d-flex justify-content-center align-items-center me-2"></div>
+                        <span id="publicacion-autor" class="fw-medium text-body me-2"></span>
+                        <span id="publicacion-fecha"></span>
                     </div>
-                    <section class="mb-4 p-3 rounded-4 bg-body-tertiary" aria-labelledby="titulo-calificacion-publicacion">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <h2 id="titulo-calificacion-publicacion" class="fs-6 fw-bold mb-0">Puntuar este videojuego</h2>
-                            <span id="promedio-calificacion-publicacion" class="text-muted fs-sm">Sin puntuaciones de la comunidad</span>
-                        </div>
-                        <div id="estrellas-calificacion-publicacion" class="d-flex align-items-center flex-wrap gap-1 mt-2" role="group" aria-label="Puntuar videojuego del 1 al 5">
-                            <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="1" aria-label="Puntuar juego con 1 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                            <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="2" aria-label="Puntuar juego con 2 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                            <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="3" aria-label="Puntuar juego con 3 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                            <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="4" aria-label="Puntuar juego con 4 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                            <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="5" aria-label="Puntuar juego con 5 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                        </div>
-                        <p id="estado-calificacion-publicacion" class="text-muted fs-xs mt-1 mb-0" aria-live="polite"></p>
-                    </section>
-                    <h2 class="fs-5 fw-bold">Contenido</h2>
-                    <div id="publicacion-contenido" class="fs-6" style="white-space: pre-wrap;"></div>
+                    <div class="d-flex align-items-center gap-1 bg-body-tertiary px-2 py-1 rounded-pill border" id="contenedor-votos-detalle">
+                        <button type="button" id="boton-voto-arriba-detalle" class="btn btn-sm btn-link text-decoration-none p-1 text-muted" data-accion-voto="1" aria-label="Votar positivamente">
+                            <i class="bi bi-arrow-up"></i>
+                        </button>
+                        <span id="puntaje-votos-detalle" class="fw-bold text-body px-1">0</span>
+                        <button type="button" id="boton-voto-abajo-detalle" class="btn btn-sm btn-link text-decoration-none p-1 text-muted" data-accion-voto="-1" aria-label="Votar negativamente">
+                            <i class="bi bi-arrow-down"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-3 p-md-4 rounded-3 bg-body-tertiary border border-opacity-10">
+                    <div class="text-uppercase text-muted fw-bold fs-xs mb-2">Contenido de la publicación</div>
+                    <div id="publicacion-contenido" class="fs-5 lh-base text-body-emphasis" style="white-space: pre-wrap;"></div>
                 </div>
             </section>
 
-            <section id="informacion-juego" class="card bg-body-tertiary border-0 rounded-4 mt-5 d-none">
+            <section id="informacion-juego" class="card bg-body-tertiary border-0 rounded-4 mt-4">
                 <div class="card-body p-4">
-                    <h2 class="fs-5 fw-bold mb-4">Información del juego</h2>
-                    <div class="mb-3">
-                        <h3 class="fs-sm fw-bold mb-1">Descripción</h3>
-                        <p id="juego-descripcion" class="text-muted mb-0"></p>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <h3 class="fs-sm fw-bold mb-1">Géneros</h3>
-                            <p id="juego-generos" class="text-muted mb-0"></p>
-                        </div>
-                        <div class="col-md-4">
-                            <h3 class="fs-sm fw-bold mb-1">Plataformas</h3>
-                            <p id="juego-plataformas" class="text-muted mb-0"></p>
-                        </div>
-                        <div class="col-md-4">
-                            <h3 class="fs-sm fw-bold mb-1">Puntaje de IGDB</h3>
-                            <p id="juego-puntaje" class="text-muted mb-0"></p>
+                    <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
+                        <img id="publicacion-portada" class="game-detail-image rounded-3 d-none" alt="">
+                        <div class="flex-grow-1 w-100">
+                            <h2 class="fs-5 fw-bold mb-3">Ficha del videojuego</h2>
+                            <div class="mb-3">
+                                <h3 class="fs-sm fw-bold mb-1">Descripción</h3>
+                                <p id="juego-descripcion" class="text-muted fs-sm mb-0"></p>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <h3 class="fs-sm fw-bold mb-1">Géneros</h3>
+                                    <p id="juego-generos" class="text-muted fs-sm mb-0"></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h3 class="fs-sm fw-bold mb-1">Plataformas</h3>
+                                    <p id="juego-plataformas" class="text-muted fs-sm mb-0"></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h3 class="fs-sm fw-bold mb-1">Puntaje de IGDB</h3>
+                                    <p id="juego-puntaje" class="text-muted fs-sm mb-0"></p>
+                                </div>
+                            </div>
+                            <div class="pt-3 border-top">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <h3 id="titulo-calificacion-publicacion" class="fs-6 fw-bold mb-0">Puntuar este videojuego</h3>
+                                    <span id="promedio-calificacion-publicacion" class="text-muted fs-sm">Sin puntuaciones de la comunidad</span>
+                                </div>
+                                <div id="estrellas-calificacion-publicacion" class="d-flex align-items-center flex-wrap gap-1 mt-2" role="group" aria-label="Puntuar videojuego del 1 al 5">
+                                    <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="1" aria-label="Puntuar juego con 1 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                    <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="2" aria-label="Puntuar juego con 2 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                    <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="3" aria-label="Puntuar juego con 3 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                    <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="4" aria-label="Puntuar juego con 4 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                    <button type="button" class="btn btn-link p-0 text-muted" data-calificacion-publicacion="5" aria-label="Puntuar juego con 5 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
+                                </div>
+                                <p id="estado-calificacion-publicacion" class="text-muted fs-xs mt-1 mb-0" aria-live="polite"></p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -183,7 +178,6 @@
                     <h2 id="titulo-comentarios" class="fs-4 fw-bold mb-0">Comentarios</h2>
                     <span id="cantidad-comentarios" class="badge rounded-pill text-bg-secondary">0</span>
                 </div>
-                <div id="alerta-comentarios" class="alert alert-danger d-none" role="alert" aria-live="polite"></div>
                 <form id="formulario-comentario" class="card bg-body-tertiary border-0 rounded-4 mb-4" novalidate>
                     <div class="card-body">
                         <label for="campo-comentario" class="form-label fw-medium">Deja tu comentario</label>
@@ -208,7 +202,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="alerta-error-publicacion" class="alert alert-danger d-none fs-sm" role="alert" aria-live="polite"></div>
                     <form id="formulario-crear-publicacion">
                         <div class="mb-3">
                             <label class="form-label" for="campo-categoria-publicacion">Categoría</label>
@@ -217,6 +210,7 @@
                                 <option value="Review o reseña">Review o reseña</option>
                                 <option value="Crítica">Crítica</option>
                                 <option value="Bug o problema técnico">Bug o problema técnico</option>
+                                <option value="Descubrimiento o secreto">Descubrimiento o secreto</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -233,6 +227,8 @@
             </div>
         </div>
     </div>
+
+    <div id="contenedor-toasts" class="toast-container position-fixed bottom-0 end-0 p-3 contenedor-toasts" aria-live="polite" aria-atomic="true"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/post.js"></script>

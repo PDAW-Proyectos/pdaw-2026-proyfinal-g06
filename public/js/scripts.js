@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const grupoJuegoPublicacion = document.getElementById('grupo-juego-publicacion');
     const campoJuegoPublicacion = document.getElementById('campo-juego-publicacion');
     const selectorOrdenPublicaciones = document.getElementById('selector-orden-publicaciones');
+    const selectorCategoriaPublicaciones = document.getElementById('selector-categoria-publicaciones');
     const contenedorPublicacionesDestacadas = document.getElementById('contenedor-publicaciones-destacadas');
 
     let estaUsuarioAutenticado = false;
@@ -349,8 +350,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function cargarPublicaciones(pagina = 1) {
         const orden = selectorOrdenPublicaciones ? selectorOrdenPublicaciones.value : 'recientes';
+        const categoria = selectorCategoriaPublicaciones ? selectorCategoriaPublicaciones.value : '';
+        const parametros = new URLSearchParams({ page: String(pagina), orden });
+        if (categoria) parametros.set('categoria', categoria);
         try {
-            const respuesta = await fetch(`/api/posts?page=${pagina}&orden=${encodeURIComponent(orden)}`);
+            const respuesta = await fetch(`/api/posts?${parametros.toString()}`);
             if (!respuesta.ok) throw new Error('Error al cargar publicaciones');
             const resultado = await respuesta.json();
 
@@ -474,6 +478,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (selectorOrdenPublicaciones) {
         selectorOrdenPublicaciones.addEventListener('change', () => {
+            cargarPublicaciones(1);
+        });
+    }
+
+    if (selectorCategoriaPublicaciones) {
+        selectorCategoriaPublicaciones.addEventListener('change', () => {
             cargarPublicaciones(1);
         });
     }

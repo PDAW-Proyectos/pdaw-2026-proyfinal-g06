@@ -1,22 +1,33 @@
-const usuariosDB = [];
+const { Usuario } = require('../models/usuario');
+const { obtenerColeccion, guardarColeccion } = require('../utils/almacenamientoJson');
+
+const usuariosDB = obtenerColeccion('usuarios').map((datos) => Usuario.fromJSON(datos));
+
+const sincronizarUsuarios = () => {
+  guardarColeccion('usuarios', usuariosDB.map((usuario) => usuario.toJSON()));
+};
 
 const buscarUsuarioPorEmail = async (email) => {
-  return usuariosDB.find((usuario) => usuario.email === email.toLowerCase());
+  const encontrado = usuariosDB.find((usuario) => usuario.email === email.toLowerCase());
+  return encontrado ? encontrado.toJSON() : undefined;
 };
 
 const buscarUsuarioPorId = async (id) => {
-  return usuariosDB.find((usuario) => usuario.id === id);
+  const encontrado = usuariosDB.find((usuario) => usuario.id === id);
+  return encontrado ? encontrado.toJSON() : undefined;
 };
 
-const crearUsuario = async (usuario) => {
-  if (usuariosDB.some((usuarioGuardado) => usuarioGuardado.email === usuario.email)) {
+const crearUsuario = async (datosUsuario) => {
+  const nuevoUsuario = new Usuario(datosUsuario);
+  if (usuariosDB.some((usuarioGuardado) => usuarioGuardado.email === nuevoUsuario.email)) {
     const error = new Error('El correo electrónico ya está registrado');
     error.statusCode = 409;
     throw error;
   }
 
-  usuariosDB.push(usuario);
-  return usuario;
+  usuariosDB.push(nuevoUsuario);
+  sincronizarUsuarios();
+  return nuevoUsuario.toJSON();
 };
 
 module.exports = { buscarUsuarioPorEmail, buscarUsuarioPorId, crearUsuario };

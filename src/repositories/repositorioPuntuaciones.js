@@ -1,6 +1,13 @@
 const { Puntuacion } = require('../models/puntuacion');
+const { obtenerColeccion, guardarColeccion } = require('../utils/almacenamientoJson');
 
-const puntuacionesBD = [];
+const puntuacionesBD = obtenerColeccion('puntuaciones').map((datos) =>
+  Puntuacion.fromJSON(datos)
+);
+
+const sincronizarPuntuaciones = () => {
+  guardarColeccion('puntuaciones', puntuacionesBD.map((item) => item.toJSON()));
+};
 
 const normalizarNombreJuego = (juego) => String(juego || '').trim().toLowerCase();
 
@@ -17,11 +24,13 @@ const guardarPuntuacion = async ({ idUsuario, juego, nota }) => {
   const existente = await buscarPuntuacionPorUsuarioYJuego(idUsuario, juego);
   if (existente) {
     existente.actualizarNota(nota);
+    sincronizarPuntuaciones();
     return existente;
   }
 
   const nuevaPuntuacion = new Puntuacion({ idUsuario, juego, nota });
   puntuacionesBD.push(nuevaPuntuacion);
+  sincronizarPuntuaciones();
   return nuevaPuntuacion;
 };
 
@@ -35,6 +44,7 @@ const obtenerPuntuacionesPorJuego = async (juego) => {
 
 const limpiarPuntuaciones = () => {
   puntuacionesBD.length = 0;
+  sincronizarPuntuaciones();
 };
 
 module.exports = {

@@ -1,8 +1,18 @@
-const { randomUUID } = require('crypto');
+const { Publicacion } = require('../models/publicacion');
 const { VotoPublicacion } = require('../models/votoPublicacion');
+const { obtenerColeccion, guardarColeccion } = require('../utils/almacenamientoJson');
 
-const publicacionesBD = [];
-const votosPublicacionesBD = [];
+const publicacionesBD = obtenerColeccion('publicaciones').map((datos) =>
+  Publicacion.fromJSON(datos)
+);
+const votosPublicacionesBD = obtenerColeccion('votosPublicaciones').map((datos) =>
+  VotoPublicacion.fromJSON(datos)
+);
+
+const sincronizarPublicaciones = () => {
+  guardarColeccion('publicaciones', publicacionesBD.map((item) => item.toJSON()));
+  guardarColeccion('votosPublicaciones', votosPublicacionesBD.map((item) => item.toJSON()));
+};
 
 const calcularResumenVotos = (idPublicacion, idUsuario = null) => {
   const votos = votosPublicacionesBD.filter((voto) => voto.idPublicacion === idPublicacion);
@@ -24,9 +34,10 @@ const calcularResumenVotos = (idPublicacion, idUsuario = null) => {
 
 const formatearPublicacion = (publicacion, idUsuario = null) => {
   if (!publicacion) return null;
+  const base = typeof publicacion.toJSON === 'function' ? publicacion.toJSON() : { ...publicacion };
   return {
-    ...publicacion,
-    ...calcularResumenVotos(publicacion.id, idUsuario)
+    ...base,
+    ...calcularResumenVotos(base.id, idUsuario)
   };
 };
 
@@ -47,13 +58,9 @@ const ordenarPublicacionesInmutable = (publicaciones, orden = 'recientes') => {
 };
 
 const crearPublicacion = async (datosPublicacion) => {
-  const publicacion = {
-    id: randomUUID(),
-    ...datosPublicacion,
-    createdAt: new Date().toISOString()
-  };
-
+  const publicacion = new Publicacion(datosPublicacion);
   publicacionesBD.unshift(publicacion);
+  sincronizarPublicaciones();
   return formatearPublicacion(publicacion, datosPublicacion.author && datosPublicacion.author.id);
 };
 
@@ -66,7 +73,8 @@ const actualizarPublicacion = async (id, datosPublicacion, idUsuario = null) => 
   const publicacion = publicacionesBD.find((item) => item.id === id) || null;
   if (!publicacion) return null;
 
-  Object.assign(publicacion, datosPublicacion);
+  publicacion.actualizar(datosPublicacion);
+  sincronizarPublicaciones();
   return formatearPublicacion(publicacion, idUsuario);
 };
 
@@ -80,6 +88,7 @@ const eliminarPublicacion = async (id, idUsuario = null) => {
       votosPublicacionesBD.splice(i, 1);
     }
   }
+  sincronizarPublicaciones();
   return formatearPublicacion(eliminada, idUsuario);
 };
 
@@ -107,6 +116,7 @@ const registrarVotoPublicacion = async (idPublicacion, idUsuario, valor) => {
     votosPublicacionesBD.push(nuevoVoto);
   }
 
+  sincronizarPublicaciones();
   return formatearPublicacion(publicacion, idUsuario);
 };
 

@@ -1,6 +1,13 @@
 const { Comentario } = require('../models/comentario');
+const { obtenerColeccion, guardarColeccion } = require('../utils/almacenamientoJson');
 
-const comentariosBD = [];
+const comentariosBD = obtenerColeccion('comentarios').map((datos) =>
+  Comentario.fromJSON(datos)
+);
+
+const sincronizarComentarios = () => {
+  guardarColeccion('comentarios', comentariosBD.map((item) => item.toJSON()));
+};
 
 const obtenerComentariosPorPublicacion = async (idPublicacion) => comentariosBD
   .filter((comentario) => comentario.postId === idPublicacion)
@@ -14,6 +21,7 @@ const buscarComentarioPorId = async (id) => {
 const crearComentario = async (datosComentario) => {
   const comentario = new Comentario(datosComentario);
   comentariosBD.push(comentario);
+  sincronizarComentarios();
   return comentario.toJSON();
 };
 
@@ -22,6 +30,7 @@ const actualizarComentario = async (id, contenido) => {
   if (!comentario || comentario.deleted) return null;
 
   comentario.actualizarContenido(contenido);
+  sincronizarComentarios();
   return comentario.toJSON();
 };
 
@@ -30,6 +39,7 @@ const eliminarComentario = async (id) => {
   if (!comentario || comentario.deleted) return null;
 
   comentario.marcarEliminado();
+  sincronizarComentarios();
   return comentario.toJSON();
 };
 
@@ -55,6 +65,7 @@ const eliminarHiloComentario = async (id) => {
       comentariosBD.splice(indice, 1);
     }
   }
+  sincronizarComentarios();
   return { ...respaldo, content: '', deleted: true };
 };
 
@@ -64,6 +75,7 @@ const eliminarComentariosPorPublicacion = async (idPublicacion) => {
       comentariosBD.splice(indice, 1);
     }
   }
+  sincronizarComentarios();
 };
 
 module.exports = {

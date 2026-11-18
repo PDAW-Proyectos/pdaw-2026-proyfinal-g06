@@ -362,6 +362,23 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   const destacadas = await respuesta.json();
   assert.equal(destacadas.data[0].id, idPublicacion);
 
+  respuesta = await enviarPost('/api/posts', {
+    title: 'Atajo oculto en el castillo',
+    category: 'Descubrimiento o secreto',
+    content: 'Saltando desde el balcón se accede al cofre oculto.',
+    game: 'Elden Ring'
+  }, cookieLogin);
+  assert.equal(respuesta.status, 201);
+  const descubrimientoCreado = await respuesta.json();
+  assert.equal(descubrimientoCreado.post.category, 'Descubrimiento o secreto');
+  assert.equal(descubrimientoCreado.post.author.name, 'GamerUno');
+
+  respuesta = await solicitud('/api/posts?categoria=Descubrimiento%20o%20secreto');
+  assert.equal(respuesta.status, 200);
+  const descubrimientosFiltrados = await respuesta.json();
+  assert.equal(descubrimientosFiltrados.total, 1);
+  assert.equal(descubrimientosFiltrados.data[0].id, descubrimientoCreado.post.id);
+
   respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
     method: 'DELETE',
     headers: { Cookie: cookieSegundoUsuario }

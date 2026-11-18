@@ -123,3 +123,15 @@ body {
 body, .bg-body, .bg-body-tertiary, .card, .border-bottom, .border-top {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
+
+.contenedor-toasts {
+    z-index: 1095;
+}
+
+.toast-respawn {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}

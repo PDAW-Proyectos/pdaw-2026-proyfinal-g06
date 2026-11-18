@@ -63,14 +63,108 @@ document.addEventListener('DOMContentLoaded', async () => {
     let idComentarioEnRespuesta = null;
     let idComentarioEnEdicion = null;
 
+    const contenedorToasts = document.getElementById('contenedor-toasts');
+
+    function mostrarToast(mensaje, tipo = 'danger') {
+        if (!contenedorToasts || !mensaje) return;
+        const elementoToast = document.createElement('div');
+        elementoToast.className = 'toast toast-respawn align-items-center border';
+        elementoToast.setAttribute('role', 'status');
+        elementoToast.setAttribute('aria-live', 'polite');
+        elementoToast.setAttribute('aria-atomic', 'true');
+
+        const cuerpo = document.createElement('div');
+        cuerpo.className = 'd-flex align-items-center p-3 gap-2';
+
+        const iconoEstado = document.createElement('i');
+        if (tipo === 'success') {
+            iconoEstado.className = 'bi bi-check-circle-fill text-primary fs-5';
+        } else if (tipo === 'warning') {
+            iconoEstado.className = 'bi bi-exclamation-circle-fill text-warning fs-5';
+        } else {
+            iconoEstado.className = 'bi bi-exclamation-triangle-fill text-danger fs-5';
+        }
+
+        const texto = document.createElement('div');
+        texto.className = 'toast-body p-0 fs-sm fw-medium flex-grow-1';
+        texto.textContent = mensaje;
+
+        const botonCerrar = document.createElement('button');
+        botonCerrar.type = 'button';
+        botonCerrar.className = 'btn-close ms-2';
+        botonCerrar.setAttribute('data-bs-dismiss', 'toast');
+        botonCerrar.setAttribute('aria-label', 'Cerrar');
+
+        cuerpo.append(iconoEstado, texto, botonCerrar);
+        elementoToast.appendChild(cuerpo);
+        contenedorToasts.appendChild(elementoToast);
+
+        const instancia = bootstrap.Toast.getOrCreateInstance(elementoToast, { delay: 3500 });
+        elementoToast.addEventListener('hidden.bs.toast', () => elementoToast.remove(), { once: true });
+        instancia.show();
+    }
+
+    function confirmarConToast(mensaje) {
+        return new Promise((resolver) => {
+            if (!contenedorToasts) {
+                resolver(true);
+                return;
+            }
+            let resuelto = false;
+            const finalizar = (valor) => {
+                if (resuelto) return;
+                resuelto = true;
+                resolver(valor);
+            };
+
+            const elementoToast = document.createElement('div');
+            elementoToast.className = 'toast toast-respawn border p-3';
+            elementoToast.setAttribute('role', 'alert');
+
+            const texto = document.createElement('p');
+            texto.className = 'fs-sm fw-medium mb-3';
+            texto.textContent = mensaje;
+
+            const acciones = document.createElement('div');
+            acciones.className = 'd-flex justify-content-end gap-2';
+
+            const botonCancelar = document.createElement('button');
+            botonCancelar.type = 'button';
+            botonCancelar.className = 'btn btn-outline-secondary btn-sm';
+            botonCancelar.textContent = 'Cancelar';
+
+            const botonConfirmar = document.createElement('button');
+            botonConfirmar.type = 'button';
+            botonConfirmar.className = 'btn btn-danger btn-sm';
+            botonConfirmar.textContent = 'Eliminar';
+
+            acciones.append(botonCancelar, botonConfirmar);
+            elementoToast.append(texto, acciones);
+            contenedorToasts.appendChild(elementoToast);
+
+            const instancia = bootstrap.Toast.getOrCreateInstance(elementoToast, { autohide: false });
+            botonCancelar.addEventListener('click', () => {
+                finalizar(false);
+                instancia.hide();
+            });
+            botonConfirmar.addEventListener('click', () => {
+                finalizar(true);
+                instancia.hide();
+            });
+            elementoToast.addEventListener('hidden.bs.toast', () => {
+                finalizar(false);
+                elementoToast.remove();
+            }, { once: true });
+            instancia.show();
+        });
+    }
+
     function mostrarMensajeAutenticacion(mensaje, tipo = 'danger') {
-        mensajeAutenticacion.textContent = mensaje;
-        mensajeAutenticacion.className = `alert alert-${tipo}`;
+        mostrarToast(mensaje, tipo);
     }
 
     function limpiarMensajeAutenticacion() {
-        mensajeAutenticacion.textContent = '';
-        mensajeAutenticacion.className = 'alert d-none';
+        return;
     }
 
     function mostrarFormularioLogin() {
@@ -355,8 +449,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function mostrarAlertaEdicion(mensaje) {
-        alertaEdicion.textContent = mensaje;
-        alertaEdicion.classList.remove('d-none');
+        mostrarToast(mensaje, 'danger');
     }
 
     function actualizarFormularioComentarios() {
@@ -368,13 +461,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function mostrarErrorComentarios(mensaje) {
-        alertaComentarios.textContent = mensaje;
-        alertaComentarios.classList.remove('d-none');
+        mostrarToast(mensaje, 'danger');
     }
 
     function ocultarErrorComentarios() {
-        alertaComentarios.textContent = '';
-        alertaComentarios.classList.add('d-none');
+        return;
     }
 
     async function leerRespuestaComentarios(respuesta) {
@@ -641,7 +732,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const mensajeConfirmacion = esComentarioPrincipal
             ? '¿Eliminar este comentario y todo el hilo? También se eliminarán todas sus respuestas.'
             : '¿Eliminar este comentario? Se ocultará el texto, pero se conservarán sus respuestas.';
-        if (!window.confirm(mensajeConfirmacion)) return;
+        if (!(await confirmarConToast(mensajeConfirmacion))) return;
 
         ocultarErrorComentarios();
         try {
@@ -788,8 +879,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const puntaje = typeof datosJuego.puntaje === 'number' && datosJuego.puntaje > 0
             ? `${datosJuego.puntaje} / 10`
             : '';
-        const hayInformacionJuego = Boolean(datosJuego.descripcion || generos || plataformas || puntaje);
-        informacionJuego.classList.toggle('d-none', !hayInformacionJuego);
+        if (informacionJuego) {
+            informacionJuego.classList.remove('d-none');
+        }
         document.getElementById('juego-descripcion').textContent = datosJuego.descripcion || 'Sin descripción disponible.';
         document.getElementById('juego-generos').textContent = generos || 'Sin datos disponibles.';
         document.getElementById('juego-plataformas').textContent = plataformas || 'Sin datos disponibles.';
@@ -805,22 +897,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         formularioEditar.elements.content.value = publicacionActual.content || publicacionActual.contenido || '';
         document.getElementById('titulo-modal-crear-publicacion').textContent = 'Editar publicación';
         botonGuardarEdicion.textContent = 'Guardar cambios';
-        alertaEdicion.classList.add('d-none');
         modalEditar.show();
     });
 
     if (botonEliminarPublicacion) {
         botonEliminarPublicacion.addEventListener('click', async () => {
-            if (!idPublicacion || !window.confirm('¿Eliminar esta publicación de forma definitiva?')) return;
+            if (!idPublicacion || !(await confirmarConToast('¿Eliminar esta publicación de forma definitiva?'))) return;
             botonEliminarPublicacion.disabled = true;
             try {
                 const respuesta = await fetch(`/api/posts/${encodeURIComponent(idPublicacion)}`, {
                     method: 'DELETE'
                 });
-                if (!respuesta.ok) return;
+                if (!respuesta.ok) {
+                    mostrarToast('No se pudo eliminar la publicación.', 'danger');
+                    return;
+                }
                 window.location.href = '/';
             } catch (error) {
-                return;
+                mostrarToast('Error de conexión al eliminar la publicación.', 'danger');
             } finally {
                 botonEliminarPublicacion.disabled = false;
             }
@@ -832,7 +926,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!formularioEditar.reportValidity()) return;
 
         botonGuardarEdicion.disabled = true;
-        alertaEdicion.classList.add('d-none');
         try {
             const respuesta = await fetch(`/api/posts/${encodeURIComponent(idPublicacion)}`, {
                 method: 'PATCH',
@@ -848,6 +941,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             publicacionActual = resultado.post;
             mostrarPublicacion(publicacionActual);
             modalEditar.hide();
+            mostrarToast('Publicación actualizada.', 'success');
         } catch (error) {
             mostrarAlertaEdicion('Error de conexión. Inténtalo de nuevo.');
         } finally {

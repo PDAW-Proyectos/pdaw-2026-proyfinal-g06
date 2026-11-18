@@ -49,14 +49,108 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const contenedorToasts = document.getElementById('contenedor-toasts');
+
+    function mostrarToast(mensaje, tipo = 'danger') {
+        if (!contenedorToasts || !mensaje) return;
+        const elementoToast = document.createElement('div');
+        elementoToast.className = 'toast toast-respawn align-items-center border';
+        elementoToast.setAttribute('role', 'status');
+        elementoToast.setAttribute('aria-live', 'polite');
+        elementoToast.setAttribute('aria-atomic', 'true');
+
+        const cuerpo = document.createElement('div');
+        cuerpo.className = 'd-flex align-items-center p-3 gap-2';
+
+        const iconoEstado = document.createElement('i');
+        if (tipo === 'success') {
+            iconoEstado.className = 'bi bi-check-circle-fill text-primary fs-5';
+        } else if (tipo === 'warning') {
+            iconoEstado.className = 'bi bi-exclamation-circle-fill text-warning fs-5';
+        } else {
+            iconoEstado.className = 'bi bi-exclamation-triangle-fill text-danger fs-5';
+        }
+
+        const texto = document.createElement('div');
+        texto.className = 'toast-body p-0 fs-sm fw-medium flex-grow-1';
+        texto.textContent = mensaje;
+
+        const botonCerrar = document.createElement('button');
+        botonCerrar.type = 'button';
+        botonCerrar.className = 'btn-close ms-2';
+        botonCerrar.setAttribute('data-bs-dismiss', 'toast');
+        botonCerrar.setAttribute('aria-label', 'Cerrar');
+
+        cuerpo.append(iconoEstado, texto, botonCerrar);
+        elementoToast.appendChild(cuerpo);
+        contenedorToasts.appendChild(elementoToast);
+
+        const instancia = bootstrap.Toast.getOrCreateInstance(elementoToast, { delay: 3500 });
+        elementoToast.addEventListener('hidden.bs.toast', () => elementoToast.remove(), { once: true });
+        instancia.show();
+    }
+
+    function confirmarConToast(mensaje) {
+        return new Promise((resolver) => {
+            if (!contenedorToasts) {
+                resolver(true);
+                return;
+            }
+            let resuelto = false;
+            const finalizar = (valor) => {
+                if (resuelto) return;
+                resuelto = true;
+                resolver(valor);
+            };
+
+            const elementoToast = document.createElement('div');
+            elementoToast.className = 'toast toast-respawn border p-3';
+            elementoToast.setAttribute('role', 'alert');
+
+            const texto = document.createElement('p');
+            texto.className = 'fs-sm fw-medium mb-3';
+            texto.textContent = mensaje;
+
+            const acciones = document.createElement('div');
+            acciones.className = 'd-flex justify-content-end gap-2';
+
+            const botonCancelar = document.createElement('button');
+            botonCancelar.type = 'button';
+            botonCancelar.className = 'btn btn-outline-secondary btn-sm';
+            botonCancelar.textContent = 'Cancelar';
+
+            const botonConfirmar = document.createElement('button');
+            botonConfirmar.type = 'button';
+            botonConfirmar.className = 'btn btn-danger btn-sm';
+            botonConfirmar.textContent = 'Eliminar';
+
+            acciones.append(botonCancelar, botonConfirmar);
+            elementoToast.append(texto, acciones);
+            contenedorToasts.appendChild(elementoToast);
+
+            const instancia = bootstrap.Toast.getOrCreateInstance(elementoToast, { autohide: false });
+            botonCancelar.addEventListener('click', () => {
+                finalizar(false);
+                instancia.hide();
+            });
+            botonConfirmar.addEventListener('click', () => {
+                finalizar(true);
+                instancia.hide();
+            });
+            elementoToast.addEventListener('hidden.bs.toast', () => {
+                finalizar(false);
+                elementoToast.remove();
+            }, { once: true });
+            instancia.show();
+        });
+    }
+
     function mostrarMensajeAutenticacion(mensaje, tipo = 'danger') {
-        mensajeAutenticacion.textContent = mensaje;
-        mensajeAutenticacion.className = `alert alert-${tipo}`;
+        mostrarToast(mensaje, tipo);
     }
 
     function limpiarMensajeAutenticacion() {
-        mensajeAutenticacion.textContent = '';
-        mensajeAutenticacion.className = 'alert d-none';
+        return;
     }
 
     function mostrarFormularioLogin() {
@@ -184,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const grupoJuegoPublicacion = document.getElementById('grupo-juego-publicacion');
     const campoJuegoPublicacion = document.getElementById('campo-juego-publicacion');
     const selectorOrdenPublicaciones = document.getElementById('selector-orden-publicaciones');
+    const selectorCategoriaPublicaciones = document.getElementById('selector-categoria-publicaciones');
     const contenedorPublicacionesDestacadas = document.getElementById('contenedor-publicaciones-destacadas');
 
     let estaUsuarioAutenticado = false;
@@ -210,8 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     elementoModalCrearPublicacion.addEventListener('show.bs.modal', () => {
-        alertaErrorPublicacion.classList.add('d-none');
-        alertaErrorPublicacion.textContent = '';
+        if (alertaErrorPublicacion) {
+            alertaErrorPublicacion.classList.add('d-none');
+            alertaErrorPublicacion.textContent = '';
+        }
     });
 
     function prepararNuevaPublicacion() {
@@ -242,17 +339,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function eliminarPublicacionPropia(publicacion) {
-        if (!window.confirm('¿Eliminar esta publicación de forma definitiva?')) return;
+        if (!(await confirmarConToast('¿Eliminar esta publicación de forma definitiva?'))) return;
         try {
             const respuesta = await fetch(`/api/posts/${encodeURIComponent(publicacion.id)}`, {
                 method: 'DELETE'
             });
-            if (!respuesta.ok) return;
+            if (!respuesta.ok) {
+                mostrarToast('No se pudo eliminar la publicación.', 'danger');
+                return;
+            }
+            mostrarToast('Publicación eliminada.', 'success');
             await cargarPublicaciones();
             await cargarPublicacionesDestacadas();
             if (juegoSeleccionadoModal) await cargarPublicacionesJuego(juegoSeleccionadoModal);
         } catch (error) {
-            return;
+            mostrarToast('Error de conexión al eliminar la publicación.', 'danger');
         }
     }
 
@@ -349,8 +450,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function cargarPublicaciones(pagina = 1) {
         const orden = selectorOrdenPublicaciones ? selectorOrdenPublicaciones.value : 'recientes';
+        const categoria = selectorCategoriaPublicaciones ? selectorCategoriaPublicaciones.value : '';
+        const parametros = new URLSearchParams({ page: String(pagina), orden });
+        if (categoria) parametros.set('categoria', categoria);
         try {
-            const respuesta = await fetch(`/api/posts?page=${pagina}&orden=${encodeURIComponent(orden)}`);
+            const respuesta = await fetch(`/api/posts?${parametros.toString()}`);
             if (!respuesta.ok) throw new Error('Error al cargar publicaciones');
             const resultado = await respuesta.json();
 
@@ -369,6 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const elementoJuego = clon.querySelector('.publicacion-juego, .post-game');
                 const elementoCategoria = clon.querySelector('.publicacion-categoria, .post-category');
                 const elementoTitulo = clon.querySelector('.publicacion-titulo, .post-title');
+                const elementoResumen = clon.querySelector('.publicacion-resumen');
                 const elementoMetadatos = clon.querySelector('.publicacion-metadatos, .post-meta');
                 const enlacePublicacion = clon.querySelector('.publicacion-enlace');
                 const imagenPortada = clon.querySelector('.publicacion-portada');
@@ -379,6 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (elementoJuego) elementoJuego.textContent = juego;
                 if (elementoCategoria) elementoCategoria.textContent = publicacion.category || publicacion.categoria || '';
                 if (elementoTitulo) elementoTitulo.textContent = publicacion.title || publicacion.titulo || '';
+                if (elementoResumen) elementoResumen.textContent = publicacion.content || publicacion.contenido || '';
                 if (enlacePublicacion) enlacePublicacion.href = `/post.html?id=${encodeURIComponent(publicacion.id)}`;
                 if (imagenPortada && portada) {
                     imagenPortada.src = portada;
@@ -413,10 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             contenedorPublicaciones.replaceChildren(...nodosPublicaciones);
         } catch (error) {
-            const alertaError = document.createElement('div');
-            alertaError.className = 'alert alert-danger';
-            alertaError.textContent = 'Error al cargar las publicaciones.';
-            contenedorPublicaciones.replaceChildren(alertaError);
+            mostrarToast('Error al cargar las publicaciones.', 'danger');
         }
     }
 
@@ -478,11 +581,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (selectorCategoriaPublicaciones) {
+        selectorCategoriaPublicaciones.addEventListener('change', () => {
+            cargarPublicaciones(1);
+        });
+    }
+
     formularioCrearPublicacion.addEventListener('submit', async (evento) => {
         evento.preventDefault();
         const botonEnvio = formularioCrearPublicacion.querySelector('button[type="submit"]');
         botonEnvio.disabled = true;
-        alertaErrorPublicacion.classList.add('d-none');
 
         try {
             const editando = Boolean(publicacionEnEdicion);
@@ -498,20 +606,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const resultado = await respuesta.json();
 
             if (!respuesta.ok) {
-                alertaErrorPublicacion.textContent = resultado.error
-                    || (editando ? 'Error al actualizar la publicación.' : 'Error al publicar.');
-                alertaErrorPublicacion.classList.remove('d-none');
+                mostrarToast(
+                    resultado.error || (editando ? 'Error al actualizar la publicación.' : 'Error al publicar.'),
+                    'danger'
+                );
                 return;
             }
 
             prepararNuevaPublicacion();
             modalCrearPublicacion.hide();
+            mostrarToast(editando ? 'Publicación actualizada.' : 'Publicación creada.', 'success');
             await cargarPublicaciones();
             await cargarPublicacionesDestacadas();
             if (juegoSeleccionadoModal) await cargarPublicacionesJuego(juegoSeleccionadoModal);
         } catch (error) {
-            alertaErrorPublicacion.textContent = 'Error de conexión. Inténtalo de nuevo.';
-            alertaErrorPublicacion.classList.remove('d-none');
+            mostrarToast('Error de conexión. Inténtalo de nuevo.', 'danger');
         } finally {
             botonEnvio.disabled = false;
         }
@@ -810,10 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!respuesta.ok) {
                 contenedorJuegos.replaceChildren();
-                if (mensajeJuegos) {
-                    mensajeJuegos.textContent = resultado.error || 'Juego no encontrado';
-                    mensajeJuegos.classList.remove('d-none');
-                }
+                mostrarToast(resultado.error || 'Juego no encontrado', 'warning');
                 return;
             }
 
@@ -822,10 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
             actualizarSugerenciasJuegos(juegos);
         } catch (error) {
             if (error.name === 'AbortError') return;
-            if (mensajeJuegos) {
-                mensajeJuegos.textContent = 'Error al consultar videojuegos.';
-                mensajeJuegos.classList.remove('d-none');
-            }
+            mostrarToast('Error al consultar videojuegos.', 'danger');
         }
     }
 
@@ -839,9 +942,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             await cargarJuegos(termino);
-            if (contenedorJuegos && !contenedorJuegos.children.length && mensajeJuegos && mensajeJuegos.classList.contains('d-none')) {
-                mensajeJuegos.textContent = 'No se encontraron juegos. Probá con otro nombre.';
-                mensajeJuegos.classList.remove('d-none');
+            if (contenedorJuegos && !contenedorJuegos.children.length) {
+                mostrarToast('No se encontraron juegos. Probá con otro nombre.', 'warning');
             }
         });
     }

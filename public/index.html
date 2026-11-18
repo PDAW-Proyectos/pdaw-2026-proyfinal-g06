@@ -21,21 +21,9 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium text-muted">
-                    <li class="nav-item me-4 position-relative">
-                        <a class="nav-link text-primary fw-bold" href="#">Home</a>
-                        <span class="active-dot bg-primary rounded-circle position-absolute"></span>
-                    </li>
-                    <li class="nav-item me-4"><a class="nav-link" href="#">Buscar videojuego</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Tendencias</a></li>
-                </ul>
-
-                <div class="d-flex align-items-center gap-3">
-                    <button id="theme-toggle" class="btn btn-link text-body p-0 text-decoration-none">
+                <div class="d-flex align-items-center gap-3 ms-auto">
+                    <button id="theme-toggle" class="btn btn-link text-body p-0 text-decoration-none" type="button" aria-label="Cambiar tema">
                         <i class="bi bi-moon fs-5"></i>
-                    </button>
-                    <button class="btn btn-link text-body p-0 text-decoration-none">
-                        <i class="bi bi-bell fs-5"></i>
                     </button>
                     <div class="border-start ps-3 ms-2 d-flex align-items-center gap-2">
                         <button id="auth-trigger" class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#auth-modal">
@@ -62,7 +50,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="auth-message" class="alert d-none" role="alert" aria-live="polite"></div>
                     <form id="login-form">
                         <div class="mb-3">
                             <label for="login-email" class="form-label">Correo electrónico</label>
@@ -118,43 +105,7 @@
                 </form>
             </div>
 
-            <div id="mensaje-juegos" class="alert alert-warning d-none" role="alert"></div>
-
-            <div id="contenedor-juegos" class="game-grid d-none" aria-live="polite">
-                <div class="col-md-4">
-                    <div class="game-card">
-                        <img src="https://i.blogs.es/ea0624/elden-ring-new-header-mobile/1366_2000.jpeg" alt="Elden Ring" class="img-fluid rounded-3 mb-3 game-img">
-                        <span class="text-primary fw-bold fs-xs">Selección de la comunidad</span>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <h4 class="fw-bold mb-0">Elden Ring</h4>
-                            <i class="bi bi-arrow-up-right fs-5"></i>
-                        </div>
-                        <p class="text-muted fs-sm mt-1">RPG · Mundo abierto · 24,8 mil miembros</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="game-card">
-                        <img src="https://m.media-amazon.com/images/M/MV5BMGIyYmJmZDgtOWQ1Ny00NDFiLTk2OTgtM2Q2ZWQ4OWIxZjg3XkEyXkFqcGc@._V1_.jpg" alt="Hollow Knight" class="img-fluid rounded-3 mb-3 game-img">
-                        <span class="text-primary fw-bold fs-xs">Para quienes exploran</span>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <h4 class="fw-bold mb-0">Hollow Knight</h4>
-                            <i class="bi bi-arrow-up-right fs-5"></i>
-                        </div>
-                        <p class="text-muted fs-sm mt-1">Metroidvania · Aventura · 18,2 mil miembros</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="game-card">
-                        <img src="https://m.media-amazon.com/images/M/MV5BYmU1MzVkYjMtNmI2Ny00NWQzLWE5MjQtZTIzNzgzMGY3ODEyXkEyXkFqcGc@._V1_.jpg" alt="Hades II" class="img-fluid rounded-3 mb-3 game-img">
-                        <span class="text-primary fw-bold fs-xs">En boca de todos</span>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <h4 class="fw-bold mb-0">Hades II</h4>
-                            <i class="bi bi-arrow-up-right fs-5"></i>
-                        </div>
-                        <p class="text-muted fs-sm mt-1">Roguelike · Acción · 12,6 mil miembros</p>
-                    </div>
-                </div>
-            </div>
+            <div id="contenedor-juegos" class="game-grid d-none" aria-live="polite"></div>
         </section>
 
         <div class="row gx-5">
@@ -165,7 +116,15 @@
                         <h3 class="fs-4 fw-medium mb-1">Conversaciones para ti</h3>
                         <p class="text-muted fs-sm mb-0">Por tu interés en los RPG, la exploración y las buenas historias.</p>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <select id="selector-categoria-publicaciones" class="form-select form-select-sm w-auto" aria-label="Filtrar por categoría">
+                            <option value="">Todas las categorías</option>
+                            <option value="Descubrimiento o secreto">Descubrimiento o secreto</option>
+                            <option value="Informativa">Informativa</option>
+                            <option value="Review o reseña">Review o reseña</option>
+                            <option value="Crítica">Crítica</option>
+                            <option value="Bug o problema técnico">Bug o problema técnico</option>
+                        </select>
                         <select id="selector-orden-publicaciones" class="form-select form-select-sm w-auto" aria-label="Ordenar publicaciones">
                             <option value="recientes">Más recientes</option>
                             <option value="votados">Más votados</option>
@@ -189,15 +148,12 @@
                                 <span class="text-muted">/ <span class="publicacion-categoria post-category"></span></span>
                             </div>
                             <a class="publicacion-enlace text-decoration-none text-body-emphasis" href="#">
-                                <h5 class="fw-bold mb-2 publicacion-titulo post-title"></h5>
+                                <h5 class="fw-bold mb-1 publicacion-titulo post-title"></h5>
                             </a>
-                            <div class="text-muted fs-sm publicacion-metadatos post-meta"></div>
+                            <p class="text-body-secondary fs-sm mb-2 text-truncate publicacion-resumen"></p>
+                            <div class="text-muted fs-xs publicacion-metadatos post-meta"></div>
                         </div>
                         <div class="d-flex align-items-center text-center ms-3">
-                            <div class="me-4">
-                                <div class="fw-bold fs-5">0</div>
-                                <div class="text-muted fs-xs">respuestas</div>
-                            </div>
                             <div class="d-flex align-items-center gap-1" data-contenedor-votos>
                                 <button type="button" class="btn btn-sm btn-link text-decoration-none p-1 text-muted boton-voto-arriba" data-accion-voto="1" aria-label="Votar positivamente">
                                     <i class="bi bi-arrow-up"></i>
@@ -255,9 +211,9 @@
                                 <h6 class="fw-bold mb-3">Publicaciones de este juego</h6>
                                 <div id="estado-publicaciones-juego" class="text-muted mb-3" role="status" aria-live="polite"></div>
                                 <div id="publicaciones-del-juego" class="d-grid gap-3"></div>
-                                <div id="sin-publicaciones-juego" class="alert alert-info d-none mt-3" role="status">
+                                <p id="sin-publicaciones-juego" class="text-muted fs-sm d-none mt-3 mb-2" role="status">
                                     Todavía no hay publicaciones sobre este juego.
-                                </div>
+                                </p>
                                 <button id="boton-primera-publicacion" type="button" class="btn btn-primary w-100 d-none">
                                     Crear primera publicación
                                 </button>
@@ -274,7 +230,6 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                             </div>
                             <div class="modal-body">
-                                <div id="alerta-error-publicacion" class="alert alert-danger d-none fs-sm" role="alert" aria-live="polite"></div>
                                 <form id="formulario-crear-publicacion">
                                     <div id="grupo-juego-publicacion" class="mb-3">
                                         <label class="form-label" for="campo-juego-publicacion">Juego</label>
@@ -289,6 +244,7 @@
                                             <option value="Review o reseña">Review o reseña</option>
                                             <option value="Crítica">Crítica</option>
                                             <option value="Bug o problema técnico">Bug o problema técnico</option>
+                                            <option value="Descubrimiento o secreto">Descubrimiento o secreto</option>
                                         </select>
                                     </div>
                                     <div class="mb-3">
@@ -305,10 +261,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-4">
-                    <a href="#" class="text-primary text-decoration-none fw-medium">Explorar todos los debates <i class="bi bi-arrow-right"></i></a>
-                </div>
             </div>
 
             <div class="col-lg-4 mt-5 mt-lg-0">
@@ -316,18 +268,8 @@
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-4">Publicaciones más votadas</h5>
                         <div id="contenedor-publicaciones-destacadas" aria-live="polite">
-                            <p class="text-muted fs-sm mb-3" role="status">Cargando publicaciones...</p>
+                            <p class="text-muted fs-sm mb-0" role="status">Cargando publicaciones...</p>
                         </div>
-                        <a href="#contenedor-publicaciones" class="text-primary text-decoration-none fw-medium fs-sm">Ver todas las publicaciones</a>
-                    </div>
-                </div>
-
-                <div class="card border-0 bg-body-tertiary rounded-4">
-                    <div class="card-body p-4">
-                        <div class="text-muted fs-xs fw-bold mb-2">BUENAS PARTIDAS, BUENAS CHARLAS</div>
-                        <h4 class="fw-bold mb-3">Hay sitio para tu forma de jugar.</h4>
-                        <p class="text-muted fs-sm mb-4">Pregunta sin miedo, comparte sin spoilers y respeta a quien está al otro lado.</p>
-                        <a href="#" class="text-primary text-decoration-none fw-medium fs-sm">Conoce nuestras normas <i class="bi bi-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
@@ -338,12 +280,9 @@
         <div class="text-muted fs-sm">
             respawn. © 2026 · El siguiente punto de encuentro.
         </div>
-        <div class="d-flex gap-4 fs-sm">
-            <a href="#" class="text-muted text-decoration-none">Normas de la comunidad</a>
-            <a href="#" class="text-muted text-decoration-none">Privacidad</a>
-            <a href="#" class="text-muted text-decoration-none">Ayuda</a>
-        </div>
     </footer>
+
+    <div id="contenedor-toasts" class="toast-container position-fixed bottom-0 end-0 p-3 contenedor-toasts" aria-live="polite" aria-atomic="true"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/scripts.js"></script>

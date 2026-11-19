@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const campoJuegoPublicacion = document.getElementById('campo-juego-publicacion');
     const selectorOrdenPublicaciones = document.getElementById('selector-orden-publicaciones');
     const selectorCategoriaPublicaciones = document.getElementById('selector-categoria-publicaciones');
-    const contenedorPublicacionesDestacadas = document.getElementById('contenedor-publicaciones-destacadas');
+    const contenedorJuegosMejorValorados = document.getElementById('contenedor-juegos-mejor-valorados');
 
     let estaUsuarioAutenticado = false;
     let idUsuarioActual = null;
@@ -350,7 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             mostrarToast('Publicación eliminada.', 'success');
             await cargarPublicaciones();
-            await cargarPublicacionesDestacadas();
             if (juegoSeleccionadoModal) await cargarPublicacionesJuego(juegoSeleccionadoModal);
         } catch (error) {
             mostrarToast('Error de conexión al eliminar la publicación.', 'danger');
@@ -428,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!respuesta.ok) return;
             const resultado = await respuesta.json();
             actualizarEstadoVisualVoto(contenedorVotos, resultado.puntajeVotos, resultado.miVoto);
-            cargarPublicacionesDestacadas();
             if (selectorOrdenPublicaciones && selectorOrdenPublicaciones.value === 'votados') {
                 cargarPublicaciones();
             }
@@ -523,55 +521,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function cargarPublicacionesDestacadas() {
-        if (!contenedorPublicacionesDestacadas) return;
+    async function cargarJuegosMejorValorados() {
+        if (!contenedorJuegosMejorValorados) return;
 
         try {
-            const respuesta = await fetch('/api/posts/mejores-puntuadas');
-            if (!respuesta.ok) throw new Error('Error al cargar publicaciones destacadas');
+            const respuesta = await fetch('/api/juegos/mejores-puntuados');
+            if (!respuesta.ok) throw new Error('Error al cargar los juegos mejor valorados');
             const resultado = await respuesta.json();
-            const publicaciones = Array.isArray(resultado.data) ? resultado.data.slice(0, 5) : [];
+            const juegos = Array.isArray(resultado.datos) ? resultado.datos.slice(0, 5) : [];
 
-            if (!publicaciones.length) {
+            if (!juegos.length) {
                 const aviso = document.createElement('p');
                 aviso.className = 'text-muted fs-sm mb-3';
-                aviso.textContent = 'Aún no hay publicaciones destacadas.';
-                contenedorPublicacionesDestacadas.replaceChildren(aviso);
+                aviso.textContent = 'Aún no hay juegos puntuados.';
+                contenedorJuegosMejorValorados.replaceChildren(aviso);
                 return;
             }
 
-            const elementos = publicaciones.map((publicacion) => {
-                const enlace = document.createElement('a');
-                enlace.href = `/post.html?id=${encodeURIComponent(publicacion.id)}`;
-                enlace.className = 'd-flex justify-content-between align-items-start gap-3 text-decoration-none text-body mb-3';
+            const elementos = juegos.map((juego) => {
+                const elemento = document.createElement('div');
+                elemento.className = 'best-rated-game d-flex justify-content-between align-items-start gap-3 mb-3';
 
                 const detalles = document.createElement('div');
-                detalles.className = 'min-w-0';
-                const titulo = document.createElement('div');
-                titulo.className = 'fw-bold fs-sm text-truncate';
-                titulo.textContent = publicacion.title || publicacion.titulo || 'Sin título';
-                const metadatos = document.createElement('div');
-                metadatos.className = 'text-muted fs-xs text-truncate';
-                const autor = publicacion.author || publicacion.autor || {};
-                const juego = publicacion.game || publicacion.juego || 'Juego';
-                metadatos.textContent = `${juego} · ${autor.name || autor.nombre || 'Usuario'}`;
-                detalles.append(titulo, metadatos);
+                detalles.className = 'flex-grow-1 min-w-0';
+                const nombre = document.createElement('button');
+                nombre.type = 'button';
+                nombre.className = 'btn btn-link d-block w-100 p-0 text-body text-decoration-none fw-bold fs-sm text-start text-truncate';
+                nombre.textContent = juego.juego;
+                nombre.addEventListener('click', () => abrirJuegoDesdeRanking(juego));
+                detalles.append(nombre);
 
                 const puntaje = document.createElement('span');
                 puntaje.className = 'badge rounded-pill text-bg-light flex-shrink-0';
-                const valorVotos = Number(publicacion.puntajeVotos ?? publicacion.votes ?? 0);
-                puntaje.textContent = `${valorVotos > 0 ? `+${valorVotos}` : valorVotos} votos`;
+                const promedio = Number(juego.promedio) || 0;
+                const cantidadVotos = Number(juego.cantidadVotos) || 0;
+                puntaje.textContent = `${promedio.toFixed(1)} / 5 · ${cantidadVotos} ${cantidadVotos === 1 ? 'voto' : 'votos'}`;
 
-                enlace.append(detalles, puntaje);
-                return enlace;
+                elemento.append(detalles, puntaje);
+                return elemento;
             });
 
-            contenedorPublicacionesDestacadas.replaceChildren(...elementos);
+            contenedorJuegosMejorValorados.replaceChildren(...elementos);
         } catch (error) {
             const aviso = document.createElement('p');
             aviso.className = 'text-danger fs-sm mb-3';
-            aviso.textContent = 'No se pudieron cargar las publicaciones destacadas.';
-            contenedorPublicacionesDestacadas.replaceChildren(aviso);
+            aviso.textContent = 'No se pudieron cargar los juegos mejor valorados.';
+            contenedorJuegosMejorValorados.replaceChildren(aviso);
         }
     }
 
@@ -617,7 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
             modalCrearPublicacion.hide();
             mostrarToast(editando ? 'Publicación actualizada.' : 'Publicación creada.', 'success');
             await cargarPublicaciones();
-            await cargarPublicacionesDestacadas();
             if (juegoSeleccionadoModal) await cargarPublicacionesJuego(juegoSeleccionadoModal);
         } catch (error) {
             mostrarToast('Error de conexión. Inténtalo de nuevo.', 'danger');
@@ -627,7 +621,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     cargarPublicaciones();
-    cargarPublicacionesDestacadas();
+    cargarJuegosMejorValorados();
+    window.addEventListener('pageshow', (evento) => {
+        if (evento.persisted) cargarJuegosMejorValorados();
+    });
 
     const formularioBuscarJuego = document.getElementById('formulario-buscar-juego');
     const campoBuscarJuego = document.getElementById('campo-buscar-juego');
@@ -846,6 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     juegoSeleccionadoModal.cantidadVotos = resultado.datos.cantidadVotos;
                     juegoSeleccionadoModal.miPuntuacion = resultado.datos.miPuntuacion;
                     actualizarVistaPuntuacionComunidad(resultado.datos);
+                    await cargarJuegosMejorValorados();
                     if (mensajePuntuacionJuego) {
                         mensajePuntuacionJuego.textContent = `Puntuaste este juego con ${notaElegida} / 5.`;
                     }
@@ -880,6 +878,24 @@ document.addEventListener('DOMContentLoaded', () => {
         modalJuego.show();
         cargarPuntuacionJuegoModal(juego);
         cargarPublicacionesJuego(juego);
+    }
+
+    async function abrirJuegoDesdeRanking(juegoValorado) {
+        try {
+            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(juegoValorado.juego)}`);
+            const resultado = await respuesta.json();
+            if (!respuesta.ok) throw new Error(resultado.error || 'No se pudo abrir el juego.');
+
+            const juegoEncontrado = (resultado.datos || []).find((juego) =>
+                String(juego.titulo || '').trim().toLocaleLowerCase()
+                    === String(juegoValorado.juego).trim().toLocaleLowerCase()
+            );
+            if (!juegoEncontrado) throw new Error('No se encontró la ficha del juego.');
+
+            abrirModalJuego(juegoEncontrado);
+        } catch (error) {
+            mostrarToast(error.message || 'No se pudo abrir el juego.', 'danger');
+        }
     }
 
     botonPrimeraPublicacion.addEventListener('click', () => {

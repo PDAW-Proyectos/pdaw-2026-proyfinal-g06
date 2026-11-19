@@ -42,6 +42,17 @@ const obtenerPuntuacionJuego = async (peticion, respuesta) => {
   }
 };
 
+const obtenerJuegosMejorPuntuados = async (peticion, respuesta) => {
+  try {
+    const juegos = await servicioPuntuaciones.obtenerJuegosMejorPuntuados(5);
+    respuesta.status(200).json({ datos: juegos });
+  } catch (error) {
+    respuesta.status(500).json({
+      error: error.message || 'Error al obtener los juegos mejor valorados'
+    });
+  }
+};
+
 const puntuarJuego = async (peticion, respuesta) => {
   const cuerpo = peticion.body || {};
   const juego = cuerpo.juego !== undefined ? cuerpo.juego : cuerpo.game;
@@ -65,5 +76,6 @@ module.exports = {
   buscarJuegos,
   obtenerJuegoPorId,
   obtenerPuntuacionJuego,
-  puntuarJuego
+  puntuarJuego,
+  obtenerJuegosMejorPuntuados
 };

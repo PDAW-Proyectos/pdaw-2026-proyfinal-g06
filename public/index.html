@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="light">
+<html lang="es" data-bs-theme="light" class="index-document">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,15 +8,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="index-page">
 
     <nav class="navbar navbar-expand-lg bg-body border-bottom py-3">
-        <div class="container-fluid px-4 px-lg-5">
+        <div class="container-fluid px-3 px-sm-4 px-lg-5">
             <a class="navbar-brand fw-bold text-body-emphasis d-flex align-items-center" href="#">
                 <i class="bi bi-asterisk text-primary fs-4 me-2"></i> respawn.
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Abrir menú">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -86,21 +86,21 @@
         </div>
     </div>
 
-    <div class="container-fluid px-4 px-lg-5 my-5">
+    <div class="container-fluid px-3 px-sm-4 px-lg-5 my-5">
 
         <header class="mb-5">
             <div>
                 <span class="text-primary fw-bold text-uppercase fs-xs">Tu punto de encuentro</span>
-                <h1 class="display-4 fw-bold text-body-emphasis mt-2 mb-3">El juego continúa aquí.</h1>
+                <h1 class="display-4 hero-title fw-bold text-body-emphasis mt-2 mb-3">El juego continúa aquí.</h1>
                 <p class="text-muted fs-5 mb-0">Descubre tu próximo mundo. Comparte el que ya es tuyo.</p>
             </div>
         </header>
 
         <section class="mb-5 pb-4 border-bottom">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4">
                 <h3 class="fs-4 fw-medium mb-0">Juegos recomendados</h3>
-                <form id="formulario-buscar-juego" class="d-flex gap-2">
-                    <input type="search" id="campo-buscar-juego" class="form-control form-control-sm" placeholder="Buscar videojuego...">
+                <form id="formulario-buscar-juego" class="game-search-form d-flex gap-2">
+                    <input type="search" id="campo-buscar-juego" class="form-control form-control-sm" placeholder="Buscar videojuego..." aria-label="Buscar videojuego">
                     <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
                 </form>
             </div>
@@ -108,15 +108,15 @@
             <div id="contenedor-juegos" class="game-grid d-none" aria-live="polite"></div>
         </section>
 
-        <div class="row gx-5">
+        <div class="row gx-3 gx-lg-5">
 
             <div class="col-lg-8">
-                <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+                <div class="conversation-header d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
                     <div>
                         <h3 class="fs-4 fw-medium mb-1">Conversaciones para ti</h3>
                         <p class="text-muted fs-sm mb-0">Por tu interés en los RPG, la exploración y las buenas historias.</p>
                     </div>
-                    <div class="d-flex align-items-center flex-wrap gap-2">
+                    <div class="publication-toolbar d-flex align-items-center flex-wrap gap-2">
                         <select id="selector-categoria-publicaciones" class="form-select form-select-sm w-auto" aria-label="Filtrar por categoría">
                             <option value="">Todas las categorías</option>
                             <option value="Descubrimiento o secreto">Descubrimiento o secreto</option>
@@ -153,7 +153,7 @@
                             <p class="text-body-secondary fs-sm mb-2 text-truncate publicacion-resumen"></p>
                             <div class="text-muted fs-xs publicacion-metadatos post-meta"></div>
                         </div>
-                        <div class="d-flex align-items-center text-center ms-3">
+                        <div class="publication-votes d-flex align-items-center text-center ms-3">
                             <div class="d-flex align-items-center gap-1" data-contenedor-votos>
                                 <button type="button" class="btn btn-sm btn-link text-decoration-none p-1 text-muted boton-voto-arriba" data-accion-voto="1" aria-label="Votar positivamente">
                                     <i class="bi bi-arrow-up"></i>
@@ -175,7 +175,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="d-flex gap-3 align-items-start mb-4">
+                                <div class="game-detail-layout d-flex gap-3 align-items-start mb-4">
                                     <img id="imagen-modal-juego" class="game-detail-image rounded d-none" alt="">
                                     <div class="game-detail-information">
                                         <div class="mb-3">
@@ -266,9 +266,9 @@
             <div class="col-lg-4 mt-5 mt-lg-0">
                 <div class="card border border-opacity-10 shadow-sm rounded-4 mb-4">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-4">Publicaciones más votadas</h5>
-                        <div id="contenedor-publicaciones-destacadas" aria-live="polite">
-                            <p class="text-muted fs-sm mb-0" role="status">Cargando publicaciones...</p>
+                        <h5 class="fw-bold mb-4">Juegos mejor valorados</h5>
+                        <div id="contenedor-juegos-mejor-valorados" aria-live="polite">
+                            <p class="text-muted fs-sm mb-0" role="status">Cargando juegos...</p>
                         </div>
                     </div>
                 </div>
@@ -276,7 +276,7 @@
         </div>
     </div>
 
-    <footer class="container-fluid px-4 px-lg-5 py-4 border-top mt-5 d-flex justify-content-between align-items-center">
+    <footer class="container-fluid px-3 px-sm-4 px-lg-5 py-4 border-top mt-5 d-flex justify-content-between align-items-center">
         <div class="text-muted fs-sm">
             respawn. © 2026 · El siguiente punto de encuentro.
         </div>

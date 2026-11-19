@@ -53,7 +53,12 @@ const registrarPuntuacion = async (juego, nota, idUsuario) => {
   return await obtenerResumenPuntuacion(nombreJuego, idUsuario);
 };
 
+const obtenerJuegosMejorPuntuados = async (limite = 5) => {
+  return repositorioPuntuaciones.obtenerJuegosMejorPuntuados(limite);
+};
+
 module.exports = {
   obtenerResumenPuntuacion,
-  registrarPuntuacion
+  registrarPuntuacion,
+  obtenerJuegosMejorPuntuados
 };

@@ -22,8 +22,8 @@ class Puntuacion {
       throw crearErrorValidacion('El nombre del videojuego es obligatorio');
     }
     const notaEntera = Number(nota);
-    if (!Number.isInteger(notaEntera) || notaEntera < 1 || notaEntera > 10) {
-      throw crearErrorValidacion('La puntuación debe ser un número entero entre 1 y 10');
+    if (!Number.isInteger(notaEntera) || notaEntera < 1 || notaEntera > 5) {
+      throw crearErrorValidacion('La puntuación debe ser un número entero entre 1 y 5');
     }
 
     this.#id = id;
@@ -55,8 +55,8 @@ class Puntuacion {
 
   actualizarNota(nuevaNota) {
     const notaEntera = Number(nuevaNota);
-    if (!Number.isInteger(notaEntera) || notaEntera < 1 || notaEntera > 10) {
-      throw crearErrorValidacion('La puntuación debe ser un número entero entre 1 y 10');
+    if (!Number.isInteger(notaEntera) || notaEntera < 1 || notaEntera > 5) {
+      throw crearErrorValidacion('La puntuación debe ser un número entero entre 1 y 5');
     }
     this.#nota = notaEntera;
     this.#fechaActualizacion = new Date().toISOString();

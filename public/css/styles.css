@@ -49,14 +49,12 @@ body {
     border-color: var(--bs-border-color);
 }
 .game-grid {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr));
     gap: 1.25rem;
-    overflow-x: hidden;
 }
 .game-card {
-    flex: 0 1 210px;
+    width: 100%;
     min-width: 0;
     padding: 0;
     border: 0;
@@ -94,6 +92,20 @@ body {
     object-fit: cover;
 }
 .game-detail-information { min-width: 0; }
+.hero-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.1;
+}
+.game-search-form { width: 100%; }
+.game-search-form input { min-width: 0; }
+.publication-toolbar { min-width: 0; }
+.publication-votes { flex: 0 0 auto; }
+.best-rated-game > .min-w-0 {
+    flex: 1 1 0;
+    overflow: hidden;
+}
+.best-rated-game .btn { min-width: 0; }
+.modal-title { overflow-wrap: anywhere; }
 .comment-thread {
     margin-left: 1.25rem;
     padding-left: 1rem;
@@ -107,11 +119,49 @@ body {
     object-fit: cover;
 }
 
+@media (min-width: 768px) {
+    .game-search-form { width: auto; }
+}
+
+@media (max-width: 767.98px) {
+    .conversation-header {
+        align-items: stretch !important;
+        flex-direction: column;
+    }
+    .publication-toolbar {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+    .publication-toolbar #selector-categoria-publicaciones {
+        grid-column: 1 / -1;
+    }
+    .publication-toolbar .form-select,
+    .publication-toolbar .btn {
+        width: 100% !important;
+    }
+}
+
 @media (max-width: 575.98px) {
-    .game-grid { justify-content: flex-start; gap: 0.9rem; }
+    .index-document { overflow-x: clip; }
+    .game-grid { gap: 0.9rem; }
     .game-img { height: auto; aspect-ratio: 7 / 9; }
-    .game-detail-image { width: 120px; height: 170px; }
+    .game-detail-layout { flex-direction: column; }
+    .game-detail-image {
+        width: 120px;
+        height: 170px;
+        align-self: center;
+    }
     .comment-thread { margin-left: 0.5rem; padding-left: 0.75rem; }
+    .publicacion { gap: 0.5rem; }
+    .publicacion .post-cover {
+        flex-basis: 56px;
+        width: 56px;
+        height: 74px;
+        margin-right: 0 !important;
+    }
+    .publication-votes { margin-left: 0 !important; }
+    .container-fluid.my-5 { margin-top: 2rem !important; margin-bottom: 2rem !important; }
 }
 
 .avatar-game {

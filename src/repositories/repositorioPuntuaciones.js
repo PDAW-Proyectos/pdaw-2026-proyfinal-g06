@@ -42,6 +42,38 @@ const obtenerPuntuacionesPorJuego = async (juego) => {
   );
 };
 
+const obtenerJuegosMejorPuntuados = async (limite = 5) => {
+  const puntuacionesPorJuego = new Map();
+
+  for (const puntuacion of puntuacionesBD) {
+    const clave = normalizarNombreJuego(puntuacion.juego);
+    if (!clave) continue;
+
+    const resumen = puntuacionesPorJuego.get(clave) || {
+      juego: puntuacion.juego,
+      sumaNotas: 0,
+      cantidadVotos: 0
+    };
+    resumen.sumaNotas += puntuacion.nota;
+    resumen.cantidadVotos += 1;
+    puntuacionesPorJuego.set(clave, resumen);
+  }
+
+  const limiteSeguro = Math.max(1, parseInt(limite, 10) || 5);
+  return [...puntuacionesPorJuego.values()]
+    .map((resumen) => ({
+      juego: resumen.juego,
+      promedio: Number((resumen.sumaNotas / resumen.cantidadVotos).toFixed(1)),
+      cantidadVotos: resumen.cantidadVotos
+    }))
+    .sort((a, b) =>
+      b.promedio - a.promedio
+      || b.cantidadVotos - a.cantidadVotos
+      || a.juego.localeCompare(b.juego)
+    )
+    .slice(0, limiteSeguro);
+};
+
 const limpiarPuntuaciones = () => {
   puntuacionesBD.length = 0;
   sincronizarPuntuaciones();
@@ -51,5 +83,6 @@ module.exports = {
   buscarPuntuacionPorUsuarioYJuego,
   guardarPuntuacion,
   obtenerPuntuacionesPorJuego,
+  obtenerJuegosMejorPuntuados,
   limpiarPuntuaciones
 };

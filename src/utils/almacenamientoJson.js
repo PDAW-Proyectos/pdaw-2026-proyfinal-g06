@@ -10,6 +10,7 @@ const crearEstadoInicial = () => ({
   usuarios: [],
   publicaciones: [],
   votosPublicaciones: [],
+  reportesPublicaciones: [],
   comentarios: [],
   puntuaciones: [],
   sesiones: {}

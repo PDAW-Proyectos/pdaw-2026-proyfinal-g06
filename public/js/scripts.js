@@ -470,6 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const elementoJuego = clon.querySelector('.publicacion-juego, .post-game');
                 const elementoCategoria = clon.querySelector('.publicacion-categoria, .post-category');
+                const elementoVerificacion = clon.querySelector('.publicacion-verificacion');
                 const elementoTitulo = clon.querySelector('.publicacion-titulo, .post-title');
                 const elementoResumen = clon.querySelector('.publicacion-resumen');
                 const elementoMetadatos = clon.querySelector('.publicacion-metadatos, .post-meta');
@@ -481,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (elementoJuego) elementoJuego.textContent = juego;
                 if (elementoCategoria) elementoCategoria.textContent = publicacion.category || publicacion.categoria || '';
+                if (elementoVerificacion) elementoVerificacion.classList.toggle('d-none', !publicacion.requiereRevision);
                 if (elementoTitulo) elementoTitulo.textContent = publicacion.title || publicacion.titulo || '';
                 if (elementoResumen) elementoResumen.textContent = publicacion.content || publicacion.contenido || '';
                 if (enlacePublicacion) enlacePublicacion.href = `/post.html?id=${encodeURIComponent(publicacion.id)}`;

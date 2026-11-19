@@ -94,8 +94,12 @@
                     <div class="fs-sm fw-medium">
                         <span id="publicacion-juego" class="badge rounded-pill text-bg-primary me-1"></span>
                         <span id="publicacion-categoria" class="badge rounded-pill bg-body-tertiary text-body border"></span>
+                        <span id="insignia-verificacion" class="badge rounded-pill text-bg-warning ms-1 d-none">En verificación</span>
                     </div>
                     <div class="d-flex align-items-center gap-2">
+                        <button id="boton-reportar-publicacion" class="btn btn-outline-secondary btn-sm" type="button">
+                            <i class="bi bi-flag me-1"></i> Reportar
+                        </button>
                         <button id="boton-editar-publicacion" class="btn btn-outline-primary btn-sm d-none" type="button">
                             <i class="bi bi-pencil-square me-1"></i> Editar
                         </button>
@@ -222,6 +226,32 @@
                             <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5"></textarea>
                         </div>
                         <button id="boton-enviar-publicacion" type="submit" class="btn btn-primary w-100">Guardar cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-reportar-publicacion" tabindex="-1" aria-labelledby="titulo-modal-reportar" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titulo-modal-reportar">Reportar publicación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formulario-reportar-publicacion">
+                        <div class="mb-3">
+                            <label class="form-label" for="campo-motivo-reporte">Motivo del reporte</label>
+                            <select id="campo-motivo-reporte" name="motivo" class="form-select">
+                                <option value="">Selecciona un motivo...</option>
+                                <option value="Contenido ofensivo o irrespetuoso">Contenido ofensivo o irrespetuoso</option>
+                                <option value="Spam o publicidad">Spam o publicidad</option>
+                                <option value="Spoilers sin aviso">Spoilers sin aviso</option>
+                                <option value="Información falsa o fuera de tema">Información falsa o fuera de tema</option>
+                            </select>
+                        </div>
+                        <button id="boton-enviar-reporte" type="submit" class="btn btn-danger w-100">Enviar reporte</button>
                     </form>
                 </div>
             </div>

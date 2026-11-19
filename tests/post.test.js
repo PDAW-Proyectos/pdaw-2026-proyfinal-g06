@@ -388,6 +388,40 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.equal(descubrimientosFiltrados.total, 1);
   assert.equal(descubrimientosFiltrados.data[0].id, descubrimientoCreado.post.id);
 
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spam' });
+  assert.equal(respuesta.status, 401);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spam' }, cookieLogin);
+  assert.equal(respuesta.status, 201);
+  let reporteRes = await respuesta.json();
+  assert.equal(reporteRes.cantidadReportes, 1);
+  assert.equal(reporteRes.requiereRevision, false);
+  assert.equal(reporteRes.yaReportado, true);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spam' }, cookieLogin);
+  assert.equal(respuesta.status, 409);
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spoilers sin aviso' }, cookieSegundoUsuario);
+  assert.equal(respuesta.status, 201);
+  assert.equal((await respuesta.json()).requiereRevision, false);
+
+  await enviarPost('/api/auth/register', {
+    name: 'GamerTres',
+    email: 'gamer3@example.com',
+    password: 'password123'
+  });
+  const loginTres = await enviarPost('/api/auth/login', {
+    email: 'gamer3@example.com',
+    password: 'password123'
+  });
+  const cookieTercerUsuario = loginTres.headers.get('set-cookie').split(';')[0];
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Contenido ofensivo' }, cookieTercerUsuario);
+  assert.equal(respuesta.status, 201);
+  reporteRes = await respuesta.json();
+  assert.equal(reporteRes.cantidadReportes, 3);
+  assert.equal(reporteRes.requiereRevision, true);
+
   respuesta = await solicitud(`/api/posts/${idPublicacion}`, {
     method: 'DELETE',
     headers: { Cookie: cookieSegundoUsuario }

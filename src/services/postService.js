@@ -140,6 +140,19 @@ const votarPublicacion = async (id, valorVoto, idUsuario) => {
   return await repositorioPublicaciones.registrarVotoPublicacion(id, idUsuario, valorNormalizado);
 };
 
+const reportarPublicacion = async (id, motivo, idUsuario) => {
+  if (!idUsuario) {
+    throw crearErrorPublicacion('Se requiere iniciar sesión para realizar esta acción', 401);
+  }
+
+  const publicacionExistente = await repositorioPublicaciones.buscarPublicacionPorId(id, idUsuario);
+  if (!publicacionExistente) {
+    throw crearErrorPublicacion('Publicación no encontrada', 404);
+  }
+
+  return await repositorioPublicaciones.registrarReportePublicacion(id, idUsuario, motivo);
+};
+
 const obtenerPublicaciones = async (
   pagina,
   juego = '',
@@ -177,6 +190,7 @@ module.exports = {
   actualizarPublicacion,
   eliminarPublicacion,
   votarPublicacion,
+  reportarPublicacion,
   obtenerPublicacionPorId,
   obtenerPublicaciones,
   obtenerPublicacionesMejorPuntuadas,

@@ -37,6 +37,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const detallePublicacion = document.getElementById('detalle-publicacion');
     const botonEditar = document.getElementById('boton-editar-publicacion');
     const botonEliminarPublicacion = document.getElementById('boton-eliminar-publicacion');
+    const botonReportarPublicacion = document.getElementById('boton-reportar-publicacion');
+    const insigniaVerificacion = document.getElementById('insignia-verificacion');
+    const elementoModalReportar = document.getElementById('modal-reportar-publicacion');
+    const modalReportar = elementoModalReportar ? bootstrap.Modal.getOrCreateInstance(elementoModalReportar) : null;
+    const formularioReportar = document.getElementById('formulario-reportar-publicacion');
+    const campoMotivoReporte = document.getElementById('campo-motivo-reporte');
+    const botonEnviarReporte = document.getElementById('boton-enviar-reporte');
     const formularioEditar = document.getElementById('formulario-crear-publicacion');
     const botonGuardarEdicion = document.getElementById('boton-enviar-publicacion');
     const alertaEdicion = document.getElementById('alerta-error-publicacion');
@@ -183,6 +190,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         textoAlternarAutenticacion.textContent = '¿Ya tienes cuenta?';
         botonAlternarAutenticacion.textContent = 'Inicia sesión';
         limpiarMensajeAutenticacion();
+    }
+
+    function actualizarEstadoReportes(publicacion) {
+        if (!publicacion) return;
+        if (insigniaVerificacion) {
+            insigniaVerificacion.classList.toggle('d-none', !publicacion.requiereRevision);
+        }
+        if (botonReportarPublicacion) {
+            const yaReportado = Boolean(publicacion.yaReportado);
+            botonReportarPublicacion.disabled = yaReportado;
+            botonReportarPublicacion.textContent = yaReportado ? 'Reportado' : 'Reportar';
+        }
     }
 
     function actualizarBotonEdicion() {
@@ -888,7 +907,58 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('juego-puntaje').textContent = puntaje || 'Sin puntaje disponible.';
         document.title = `${titulo || 'Publicación'} - respawn.`;
         actualizarBotonEdicion();
+        actualizarEstadoReportes(publicacion);
         cargarPuntuacionJuegoEnPost(juego);
+    }
+
+    if (botonReportarPublicacion && modalReportar && formularioReportar) {
+        botonReportarPublicacion.addEventListener('click', () => {
+            if (!usuarioActual) {
+                mostrarFormularioLogin();
+                modalAutenticacion.show();
+                return;
+            }
+            formularioReportar.reset();
+            modalReportar.show();
+        });
+
+        formularioReportar.addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            if (!idPublicacion) return;
+            const motivo = campoMotivoReporte ? campoMotivoReporte.value.trim() : '';
+            if (!motivo) {
+                mostrarToast('Selecciona un motivo para el reporte.', 'warning');
+                return;
+            }
+
+            if (botonEnviarReporte) botonEnviarReporte.disabled = true;
+            try {
+                const respuesta = await fetch(`/api/posts/${encodeURIComponent(idPublicacion)}/reportes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ motivo })
+                });
+                const resultado = await respuesta.json();
+                if (!respuesta.ok) {
+                    mostrarToast(resultado.error || 'No se pudo enviar el reporte.', 'danger');
+                    return;
+                }
+
+                publicacionActual = resultado.post;
+                actualizarEstadoReportes(publicacionActual);
+                modalReportar.hide();
+                mostrarToast(
+                    resultado.requiereRevision
+                        ? 'Reporte enviado. La publicación quedó en verificación.'
+                        : 'Reporte enviado correctamente.',
+                    'success'
+                );
+            } catch (error) {
+                mostrarToast('Error de conexión al enviar el reporte.', 'danger');
+            } finally {
+                if (botonEnviarReporte) botonEnviarReporte.disabled = false;
+            }
+        });
     }
 
     botonEditar.addEventListener('click', () => {

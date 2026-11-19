@@ -88,6 +88,30 @@ const votarPublicacion = async (req, res) => {
   }
 };
 
+const reportarPublicacion = async (req, res) => {
+  const cuerpo = req.body || {};
+  const motivo = cuerpo.motivo !== undefined ? cuerpo.motivo : cuerpo.reason;
+
+  try {
+    const publicacion = await servicioPublicaciones.reportarPublicacion(
+      req.params.id,
+      motivo,
+      req.session.userId
+    );
+    res.status(201).json({
+      message: 'Reporte registrado correctamente',
+      post: publicacion,
+      cantidadReportes: publicacion.cantidadReportes,
+      requiereRevision: publicacion.requiereRevision,
+      yaReportado: publicacion.yaReportado
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      error: error.message || 'Error al reportar la publicación'
+    });
+  }
+};
+
 const obtenerPublicaciones = async (req, res) => {
   const { page, pagina, game, orden, sort, categoria, category } = req.query;
   const numeroPagina = pagina || page;
@@ -138,6 +162,7 @@ module.exports = {
   actualizarPublicacion,
   eliminarPublicacion,
   votarPublicacion,
+  reportarPublicacion,
   obtenerPublicaciones,
   obtenerPublicacionesMejorPuntuadas,
   obtenerPublicacionPorId

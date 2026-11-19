@@ -1,5 +1,6 @@
 const { Publicacion } = require('../models/publicacion');
 const { VotoPublicacion } = require('../models/votoPublicacion');
+const { Reporte } = require('../models/reporte');
 const { obtenerColeccion, guardarColeccion } = require('../utils/almacenamientoJson');
 
 const publicacionesBD = obtenerColeccion('publicaciones').map((datos) =>
@@ -8,10 +9,14 @@ const publicacionesBD = obtenerColeccion('publicaciones').map((datos) =>
 const votosPublicacionesBD = obtenerColeccion('votosPublicaciones').map((datos) =>
   VotoPublicacion.fromJSON(datos)
 );
+const reportesPublicacionesBD = obtenerColeccion('reportesPublicaciones').map((datos) =>
+  Reporte.fromJSON(datos)
+);
 
 const sincronizarPublicaciones = () => {
   guardarColeccion('publicaciones', publicacionesBD.map((item) => item.toJSON()));
   guardarColeccion('votosPublicaciones', votosPublicacionesBD.map((item) => item.toJSON()));
+  guardarColeccion('reportesPublicaciones', reportesPublicacionesBD.map((item) => item.toJSON()));
 };
 
 const calcularResumenVotos = (idPublicacion, idUsuario = null) => {
@@ -32,12 +37,28 @@ const calcularResumenVotos = (idPublicacion, idUsuario = null) => {
   };
 };
 
+const calcularResumenReportes = (idPublicacion, idUsuario = null) => {
+  const reportes = reportesPublicacionesBD.filter(
+    (reporte) => reporte.idPublicacion === idPublicacion
+  );
+  const yaReportado = idUsuario
+    ? reportes.some((reporte) => reporte.idUsuario === String(idUsuario))
+    : false;
+
+  return {
+    cantidadReportes: reportes.length,
+    requiereRevision: reportes.length >= 3,
+    yaReportado
+  };
+};
+
 const formatearPublicacion = (publicacion, idUsuario = null) => {
   if (!publicacion) return null;
   const base = typeof publicacion.toJSON === 'function' ? publicacion.toJSON() : { ...publicacion };
   return {
     ...base,
-    ...calcularResumenVotos(base.id, idUsuario)
+    ...calcularResumenVotos(base.id, idUsuario),
+    ...calcularResumenReportes(base.id, idUsuario)
   };
 };
 
@@ -88,6 +109,11 @@ const eliminarPublicacion = async (id, idUsuario = null) => {
       votosPublicacionesBD.splice(i, 1);
     }
   }
+  for (let i = reportesPublicacionesBD.length - 1; i >= 0; i -= 1) {
+    if (reportesPublicacionesBD[i].idPublicacion === id) {
+      reportesPublicacionesBD.splice(i, 1);
+    }
+  }
   sincronizarPublicaciones();
   return formatearPublicacion(eliminada, idUsuario);
 };
@@ -116,6 +142,32 @@ const registrarVotoPublicacion = async (idPublicacion, idUsuario, valor) => {
     votosPublicacionesBD.push(nuevoVoto);
   }
 
+  sincronizarPublicaciones();
+  return formatearPublicacion(publicacion, idUsuario);
+};
+
+const registrarReportePublicacion = async (idPublicacion, idUsuario, motivo) => {
+  const publicacion = publicacionesBD.find((item) => item.id === idPublicacion) || null;
+  if (!publicacion) return null;
+
+  const yaReporto = reportesPublicacionesBD.some(
+    (reporte) =>
+      reporte.idPublicacion === idPublicacion &&
+      reporte.idUsuario === String(idUsuario)
+  );
+  if (yaReporto) {
+    const error = new Error('Ya reportaste esta publicación');
+    error.statusCode = 409;
+    error.status = 409;
+    throw error;
+  }
+
+  const nuevoReporte = new Reporte({
+    idUsuario: String(idUsuario),
+    idPublicacion,
+    motivo
+  });
+  reportesPublicacionesBD.push(nuevoReporte);
   sincronizarPublicaciones();
   return formatearPublicacion(publicacion, idUsuario);
 };
@@ -171,6 +223,7 @@ module.exports = {
   actualizarPublicacion,
   eliminarPublicacion,
   registrarVotoPublicacion,
+  registrarReportePublicacion,
   obtenerPublicaciones,
   obtenerPublicacionesMejorPuntuadas
 };

@@ -1,0 +1,56 @@
+@baseUrl = http://localhost:3000
+
+###
+GET {{baseUrl}}/api/salud
+
+###
+GET {{baseUrl}}/api/juegos?busqueda=Elden%20Ring
+
+###
+GET {{baseUrl}}/api/juegos/mejores-puntuados
+
+###
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "JugadorDemo",
+  "email": "demo@respawn.com",
+  "password": "password123"
+}
+
+###
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "demo@respawn.com",
+  "password": "password123"
+}
+
+###
+GET {{baseUrl}}/api/auth/me
+
+###
+POST {{baseUrl}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "Atajo secreto en Elden Ring",
+  "category": "Descubrimiento o secreto",
+  "content": "Saltando por la cornisa izquierda se evita la emboscada inicial.",
+  "game": "Elden Ring"
+}
+
+###
+GET {{baseUrl}}/api/posts?page=1&orden=recientes
+
+###
+POST {{baseUrl}}/api/juegos/puntuaciones
+Content-Type: application/json
+
+{
+  "juego": "Elden Ring",
+  "nota": 5
+}
+

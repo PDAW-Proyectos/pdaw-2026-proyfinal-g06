@@ -23,7 +23,13 @@ test('puntos de acceso para busqueda y puntuacion de videojuegos', async (t) => 
     body: JSON.stringify(cuerpo)
   });
 
-  let respuesta = await solicitud('/api/juegos');
+  let respuesta = await solicitud('/api/salud');
+  assert.equal(respuesta.status, 200);
+  const salud = await respuesta.json();
+  assert.equal(salud.estado, 'ok');
+  assert.equal(typeof salud.uptime, 'number');
+
+  respuesta = await solicitud('/api/juegos');
   assert.equal(respuesta.status, 200);
   const listaInicial = await respuesta.json();
   assert.ok(Array.isArray(listaInicial.datos));

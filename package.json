@@ -21,6 +21,9 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
   "bugs": {
     "url": "https://github.com/PDAW-Proyectos/pdaw-2026-proyfinal-g06/issues"
   },

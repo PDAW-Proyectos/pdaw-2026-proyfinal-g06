@@ -6,6 +6,7 @@ const { Comentario } = require('../src/models/comentario');
 const { Puntuacion } = require('../src/models/puntuacion');
 const { VotoPublicacion } = require('../src/models/votoPublicacion');
 const { Reporte } = require('../src/models/reporte');
+const { cargarConfiguracion } = require('../src/config');
 const {
   buscarJuegosEnIgdb,
   obtenerJuegoPorIdEnIgdb,
@@ -201,6 +202,18 @@ test('Reporte valida motivo obligatorio y serializa correctamente', () => {
   assert.throws(
     () => new Reporte({ idUsuario: '', idPublicacion: 'p1', motivo: 'Spam' }),
     { statusCode: 400 }
+  );
+});
+
+test('cargarConfiguracion valida SESSION_SECRET en produccion y congela el objeto', () => {
+  const dev = cargarConfiguracion({ NODE_ENV: 'development', PORT: '4000' });
+  assert.equal(dev.puerto, 4000);
+  assert.equal(dev.esProduccion, false);
+  assert.equal(Object.isFrozen(dev), true);
+
+  assert.throws(
+    () => cargarConfiguracion({ NODE_ENV: 'production' }),
+    /SESSION_SECRET/
   );
 });
 

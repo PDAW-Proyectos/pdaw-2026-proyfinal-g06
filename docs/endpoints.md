@@ -14,13 +14,13 @@ Documento de referencia para la API REST del proyecto Respawn (PDAW 2026 — Gru
 Gestión de registro, inicio de sesión, cierre de sesión y consulta de usuario actual mediante cookies de sesión (`express-session`).
 
 - `POST /api/auth/register`  
-  Registra un usuario nuevo validando nombre, formato de correo electrónico y contraseña mínima de 8 caracteres. Responde `201 Created`, `400 Bad Request` o `409 Conflict` si el correo ya existe.
+  Registra un usuario nuevo validando nombre, formato de correo electrónico y contraseña (entre 8 y 20 caracteres, al menos una mayúscula, un número y un carácter especial; si falta alguno, informa exactamente qué requisitos no cumple). Responde `201 Created`, `400 Bad Request` o `409 Conflict` si el correo ya existe.
 - `POST /api/auth/login`  
-  Verifica correo y contraseña con `bcryptjs`, guarda `userId` en sesión y devuelve `200 OK` con los datos públicos del usuario (o `401 Unauthorized` si las credenciales son incorrectas).
+  Verifica correo y contraseña con `bcryptjs`, guarda `userId` en sesión y devuelve `200 OK` con los datos públicos del usuario (`id`, `name`, `email`, `rol`) o `401 Unauthorized` si las credenciales son incorrectas.
 - `POST /api/auth/logout`  
   Destruye la sesión activa en el servidor y limpia la cookie. Responde `200 OK`.
 - `GET /api/auth/me`  
-  Consulta la sesión actual y devuelve `{ user }` (o `{ user: null }` si no hay sesión iniciada).
+  Consulta la sesión actual y devuelve `{ user }` (con `rol`) o `{ user: null }` si no hay sesión iniciada.
 
 ---
 
@@ -28,15 +28,19 @@ Gestión de registro, inicio de sesión, cierre de sesión y consulta de usuario
 Búsqueda de catálogo en IGDB a través de `adaptadorIgdb.js` y sistema de puntuación comunitaria de 1 a 5 estrellas.
 
 - `GET /api/juegos?busqueda=...`  
-  Busca videojuegos en IGDB (o en datos simulados de respaldo) y enriquece cada resultado con el promedio de la comunidad. Responde `200 OK` o `404 Not Found` si no hay coincidencias para el término buscado.
+  Busca videojuegos en IGDB (o en datos simulados de respaldo) y enriquece cada resultado con el promedio de la comunidad. Sin término de búsqueda, devuelve los 12 juegos con portada mejor valorados con más de 100 votos. Responde `200 OK` o `404 Not Found` si no hay coincidencias para el término buscado.
 - `GET /api/juegos/:id`  
   Obtiene la ficha de un videojuego por su identificador numérico. Responde `200 OK` o `404 Not Found`.
 - `GET /api/juegos/puntuaciones?juego=...`  
   Devuelve el promedio de estrellas (1 a 5), cantidad total de votos y la nota del usuario actual si está autenticado.
+- `GET /api/juegos/mis-puntuaciones` *(requiere sesión)*  
+  Devuelve todas las puntuaciones realizadas por el usuario autenticado.
 - `GET /api/juegos/mejores-puntuados`  
   Retorna el Top 5 de videojuegos ordenados por mejor promedio y mayor cantidad de votos.
 - `POST /api/juegos/puntuaciones` *(requiere sesión)*  
   Registra o actualiza la puntuación (entero de 1 a 5) de un usuario sobre un juego y recalcula el promedio. Responde `200 OK`, `400 Bad Request` o `401 Unauthorized`.
+- `DELETE /api/juegos/puntuaciones?juego=...` *(requiere sesión)*  
+  Elimina la puntuación del usuario actual sobre el juego indicado y devuelve el resumen actualizado. Responde `200 OK`, `400 Bad Request` o `401 Unauthorized`.
 
 ---
 
@@ -50,13 +54,13 @@ Gestión del foro de discusión, descubrimientos, votación por flechas y report
 - `POST /api/posts` *(requiere sesión)*  
   Crea una publicación nueva vinculada al usuario autenticado y asociada a un videojuego y una categoría válida (`Informativa`, `Review o reseña`, `Crítica`, `Bug o problema técnico` o `Descubrimiento o secreto`). Responde `201 Created`.
 - `PATCH /api/posts/:id` *(requiere sesión y ser autor)*  
-  Actualiza una publicación propia. Responde `200 OK`, `403 Forbidden` si pertenece a otro usuario o `404 Not Found`.
-- `DELETE /api/posts/:id` *(requiere sesión y ser autor)*  
-  Elimina definitivamente una publicación propia junto con sus comentarios, votos y reportes. Responde `200 OK` o `403 Forbidden`.
+  Actualiza una publicación propia. Responde `200 OK`, `403 Forbidden` si pertenece a otro usuario o si el usuario es `admin`, o `404 Not Found`.
+- `DELETE /api/posts/:id` *(requiere sesión y ser autor o administrador)*  
+  Elimina definitivamente una publicación propia (o cualquier publicación si el usuario tiene rol `admin`) junto con sus comentarios, votos y reportes. Responde `200 OK` o `403 Forbidden`.
 - `POST /api/posts/:id/voto` *(requiere sesión)*  
   Registra voto positivo (`1`) o negativo (`-1`); si el usuario repite el mismo voto, lo quita.
 - `POST /api/posts/:id/reportes` *(requiere sesión)*  
-  Registra un reporte con motivo obligatorio (máximo 1 por usuario por publicación; al llegar a 3 reportes marca `requiereRevision: true`). Responde `201 Created`, `400 Bad Request` o `409 Conflict`.
+  Registra un reporte con motivo obligatorio (máximo 1 por usuario por publicación; al llegar a 3 reportes marca `requiereRevision: true`). No permite reportar publicaciones propias ni ser utilizado por administradores (`403 Forbidden`). Responde `201 Created`, `400 Bad Request` o `409 Conflict`.
 
 ---
 
@@ -69,3 +73,15 @@ Gestión del foro de discusión, descubrimientos, votación por flechas y report
   Edita el texto de un comentario propio.
 - `DELETE /api/posts/:id/comments/:commentId` *(requiere sesión y ser autor)*  
   Elimina un comentario propio (si es raíz borra el hilo completo; si es una respuesta oculta el texto conservando el hilo).
+
+---
+
+## Administración (`adminRoutes.js`)
+Rutas protegidas por `requerirAdmin` (`401` sin sesión, `403` si el rol no es `'admin'`).
+
+- `GET /api/admin/usuarios`  
+  Lista los usuarios registrados (`id`, `name`, `email`, `rol`, `createdAt`).
+- `DELETE /api/admin/usuarios/:id`  
+  Elimina un usuario registrado por su identificador. Impide eliminar al propio administrador o a otros administradores (`400` / `403`).
+- `GET /api/admin/publicaciones-reportadas`  
+  Lista las publicaciones que alcanzaron 3 o más reportes (`requiereRevision: true`).

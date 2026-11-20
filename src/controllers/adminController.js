@@ -1,5 +1,6 @@
 const repositorioUsuarios = require('../repositories/userRepository');
 const repositorioPublicaciones = require('../repositories/postRepository');
+const repositorioComentarios = require('../repositories/commentRepository');
 
 const listarUsuarios = async (req, res) => {
   try {
@@ -25,6 +26,10 @@ const eliminarUsuario = async (req, res) => {
       return res.status(403).json({ error: 'No podés eliminar a otro administrador' });
     }
 
+    const idsPublicaciones = await repositorioPublicaciones.eliminarPublicacionesPorAutor(id);
+    for (const idPub of idsPublicaciones) {
+      await repositorioComentarios.eliminarComentariosPorPublicacion(idPub);
+    }
     const eliminado = await repositorioUsuarios.eliminarUsuarioPorId(id);
     return res.status(200).json({
       message: 'Usuario eliminado correctamente',

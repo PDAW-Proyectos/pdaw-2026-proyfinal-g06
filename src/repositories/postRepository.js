@@ -224,11 +224,38 @@ const obtenerPublicacionesReportadas = async (idUsuario = null) => {
   return ordenarPublicacionesInmutable(publicaciones, 'recientes');
 };
 
+const eliminarPublicacionesPorAutor = async (idUsuario) => {
+  const idsEliminados = [];
+  for (let i = publicacionesBD.length - 1; i >= 0; i -= 1) {
+    const autor = publicacionesBD[i].autor;
+    if (autor && String(autor.id) === String(idUsuario)) {
+      idsEliminados.push(publicacionesBD[i].id);
+      publicacionesBD.splice(i, 1);
+    }
+  }
+  if (idsEliminados.length > 0) {
+    const conjuntoIds = new Set(idsEliminados);
+    for (let i = votosPublicacionesBD.length - 1; i >= 0; i -= 1) {
+      if (conjuntoIds.has(votosPublicacionesBD[i].idPublicacion)) {
+        votosPublicacionesBD.splice(i, 1);
+      }
+    }
+    for (let i = reportesPublicacionesBD.length - 1; i >= 0; i -= 1) {
+      if (conjuntoIds.has(reportesPublicacionesBD[i].idPublicacion)) {
+        reportesPublicacionesBD.splice(i, 1);
+      }
+    }
+    sincronizarPublicaciones();
+  }
+  return idsEliminados;
+};
+
 module.exports = {
   crearPublicacion,
   buscarPublicacionPorId,
   actualizarPublicacion,
   eliminarPublicacion,
+  eliminarPublicacionesPorAutor,
   registrarVotoPublicacion,
   registrarReportePublicacion,
   obtenerPublicaciones,

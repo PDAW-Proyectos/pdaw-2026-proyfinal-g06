@@ -108,9 +108,21 @@ test('permisos y endpoints del perfil administrador', async (t) => {
   });
   assert.equal(eliminarAuto.status, 400);
 
+  const postUsuarioObjetivo = await enviarJson('/api/posts', 'POST', {
+    title: 'Post que debe borrarse con el usuario',
+    category: 'Informativa',
+    content: 'Este post debe desaparecer cuando el admin borra al usuario.',
+    game: 'Elden Ring'
+  }, cookiesUsuarios[3]);
+  assert.equal(postUsuarioObjetivo.status, 201);
+  const idPostUsuarioObjetivo = (await postUsuarioObjetivo.json()).post.id;
+
   const eliminarUsuario = await solicitud(`/api/admin/usuarios/${usuarioObjetivo.id}`, {
     method: 'DELETE',
     headers: { Cookie: cookieAdmin }
   });
   assert.equal(eliminarUsuario.status, 200);
+
+  const postTrasBorrarUsuario = await solicitud(`/api/posts/${idPostUsuarioObjetivo}`);
+  assert.equal(postTrasBorrarUsuario.status, 404);
 });

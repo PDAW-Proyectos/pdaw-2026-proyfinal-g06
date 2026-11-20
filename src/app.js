@@ -6,6 +6,7 @@ const { cargarConfiguracion } = require('./config');
 const rutasAutenticacion = require('./routes/authRoutes');
 const rutasPublicaciones = require('./routes/postRoutes');
 const rutasJuegos = require('./routes/rutasJuegos');
+const rutasAdmin = require('./routes/adminRoutes');
 const { obtenerSecretoSesion, AlmacenSesionesJson } = require('./utils/almacenamientoJson');
 
 const config = cargarConfiguracion();
@@ -44,5 +45,6 @@ app.use('/api/auth', rutasAutenticacion);
 app.use('/api/posts', rutasPublicaciones);
 app.use('/api/juegos', rutasJuegos);
 app.use('/api/games', rutasJuegos);
+app.use('/api/admin', rutasAdmin);
 
 module.exports = app;

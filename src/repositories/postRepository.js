@@ -217,6 +217,13 @@ const obtenerPublicacionesMejorPuntuadas = async (limite = 5, idUsuario = null) 
     .slice(0, limiteSeguro);
 };
 
+const obtenerPublicacionesReportadas = async (idUsuario = null) => {
+  const publicaciones = publicacionesBD
+    .map((publicacion) => formatearPublicacion(publicacion, idUsuario))
+    .filter((publicacion) => publicacion.requiereRevision);
+  return ordenarPublicacionesInmutable(publicaciones, 'recientes');
+};
+
 module.exports = {
   crearPublicacion,
   buscarPublicacionPorId,
@@ -225,5 +232,6 @@ module.exports = {
   registrarVotoPublicacion,
   registrarReportePublicacion,
   obtenerPublicaciones,
-  obtenerPublicacionesMejorPuntuadas
+  obtenerPublicacionesMejorPuntuadas,
+  obtenerPublicacionesReportadas
 };

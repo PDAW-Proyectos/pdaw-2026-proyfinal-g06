@@ -5,8 +5,10 @@ const { requerirAutenticacion } = require('../middlewares/authMiddleware');
 
 enrutador.get('/', controladorJuegos.buscarJuegos);
 enrutador.get('/puntuaciones', controladorJuegos.obtenerPuntuacionJuego);
+enrutador.get('/mis-puntuaciones', requerirAutenticacion, controladorJuegos.obtenerMisPuntuaciones);
 enrutador.get('/mejores-puntuados', controladorJuegos.obtenerJuegosMejorPuntuados);
 enrutador.post('/puntuaciones', requerirAutenticacion, controladorJuegos.puntuarJuego);
+enrutador.delete('/puntuaciones', requerirAutenticacion, controladorJuegos.eliminarPuntuacionJuego);
 enrutador.get('/:id', controladorJuegos.obtenerJuegoPorId);
 
 module.exports = enrutador;

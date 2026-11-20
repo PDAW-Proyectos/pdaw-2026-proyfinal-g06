@@ -53,11 +53,11 @@ test('puntos de acceso para busqueda y puntuacion de videojuegos', async (t) => 
   await enviarPost('/api/auth/register', {
     name: 'JugadorTest',
     email: 'jugadortest@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   const login = await enviarPost('/api/auth/login', {
     email: 'jugadortest@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   const cookie = login.headers.get('set-cookie').split(';')[0];
 
@@ -76,5 +76,21 @@ test('puntos de acceso para busqueda y puntuacion de videojuegos', async (t) => 
   const mejores = await respuesta.json();
   assert.equal(mejores.datos[0].juego, 'Elden Ring');
   assert.equal(mejores.datos[0].promedio, 5);
+
+  respuesta = await solicitud('/api/juegos/mis-puntuaciones', {
+    headers: { Cookie: cookie }
+  });
+  assert.equal(respuesta.status, 200);
+  const misPuntuaciones = await respuesta.json();
+  assert.ok(misPuntuaciones.datos.some((p) => p.juego === 'Elden Ring' && p.nota === 5));
+
+  respuesta = await solicitud('/api/juegos/puntuaciones?juego=Elden%20Ring', {
+    method: 'DELETE',
+    headers: { Cookie: cookie }
+  });
+  assert.equal(respuesta.status, 200);
+  const trasEliminar = await respuesta.json();
+  assert.equal(trasEliminar.datos.miPuntuacion, null);
+  assert.equal(trasEliminar.datos.cantidadVotos, 0);
 });
 

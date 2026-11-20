@@ -8,6 +8,25 @@ const crearErrorAutenticacion = (mensaje, codigoEstado) => {
   return error;
 };
 
+const validarContrasenaRegistro = (password) => {
+  if (typeof password !== 'string') {
+    throw crearErrorAutenticacion(
+      'La contraseña no cumple: mínimo 8 caracteres, máximo 20 caracteres, una mayúscula, un número, un carácter especial',
+      400
+    );
+  }
+  const faltantes = [];
+  if (password.length < 8) faltantes.push('mínimo 8 caracteres');
+  if (password.length > 20) faltantes.push('máximo 20 caracteres');
+  if (!/[A-Z]/.test(password)) faltantes.push('una mayúscula');
+  if (!/[0-9]/.test(password)) faltantes.push('un número');
+  if (!/[^A-Za-z0-9]/.test(password)) faltantes.push('un carácter especial');
+
+  if (faltantes.length > 0) {
+    throw crearErrorAutenticacion(`La contraseña no cumple: ${faltantes.join(', ')}`, 400);
+  }
+};
+
 const registrarUsuario = async (nombre, email, password) => {
   if (typeof nombre !== 'string' || !nombre.trim()) {
     throw crearErrorAutenticacion('El nombre visible es obligatorio', 400);
@@ -15,9 +34,7 @@ const registrarUsuario = async (nombre, email, password) => {
   if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     throw crearErrorAutenticacion('Introduce un correo electrónico válido', 400);
   }
-  if (typeof password !== 'string' || password.length < 8) {
-    throw crearErrorAutenticacion('La contraseña debe tener al menos 8 caracteres', 400);
-  }
+  validarContrasenaRegistro(password);
 
   const emailNormalizado = email.trim().toLowerCase();
   const usuarioExistente = await repositorioUsuarios.buscarUsuarioPorEmail(emailNormalizado);
@@ -56,7 +73,9 @@ const autenticarUsuario = async (email, password) => {
 
 const obtenerUsuarioPorId = async (id) => {
   const usuario = await repositorioUsuarios.buscarUsuarioPorId(id);
-  return usuario ? { id: usuario.id, name: usuario.name } : null;
+  return usuario
+    ? { id: usuario.id, name: usuario.name, email: usuario.email, rol: usuario.rol || 'usuario' }
+    : null;
 };
 
 module.exports = { registrarUsuario, autenticarUsuario, obtenerUsuarioPorId };

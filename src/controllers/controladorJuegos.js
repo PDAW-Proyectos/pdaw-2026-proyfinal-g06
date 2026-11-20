@@ -72,10 +72,43 @@ const puntuarJuego = async (peticion, respuesta) => {
   }
 };
 
+const eliminarPuntuacionJuego = async (peticion, respuesta) => {
+  const cuerpo = peticion.body || {};
+  const juego = peticion.query.juego || peticion.query.game || cuerpo.juego || cuerpo.game || '';
+  const idUsuario = peticion.session ? peticion.session.userId : null;
+
+  try {
+    const resumen = await servicioPuntuaciones.eliminarPuntuacion(juego, idUsuario);
+    respuesta.status(200).json({
+      message: 'Puntuación eliminada correctamente',
+      datos: resumen
+    });
+  } catch (error) {
+    respuesta.status(error.statusCode || 500).json({
+      error: error.message || 'Error al eliminar la puntuación'
+    });
+  }
+};
+
+const obtenerMisPuntuaciones = async (peticion, respuesta) => {
+  const idUsuario = peticion.session ? peticion.session.userId : null;
+
+  try {
+    const puntuaciones = await servicioPuntuaciones.obtenerPuntuacionesDeUsuario(idUsuario);
+    respuesta.status(200).json({ datos: puntuaciones });
+  } catch (error) {
+    respuesta.status(error.statusCode || 500).json({
+      error: error.message || 'Error al obtener tus puntuaciones'
+    });
+  }
+};
+
 module.exports = {
   buscarJuegos,
   obtenerJuegoPorId,
   obtenerPuntuacionJuego,
   puntuarJuego,
+  eliminarPuntuacionJuego,
+  obtenerMisPuntuaciones,
   obtenerJuegosMejorPuntuados
 };

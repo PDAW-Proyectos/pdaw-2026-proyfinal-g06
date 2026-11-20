@@ -234,8 +234,45 @@ document.addEventListener('DOMContentLoaded', () => {
         modalAutenticacion.hide();
     });
 
+    function obtenerFaltantesContrasena(contrasena) {
+        const valor = typeof contrasena === 'string' ? contrasena : '';
+        const faltantes = [];
+        if (valor.length < 8) faltantes.push('mínimo 8 caracteres');
+        if (valor.length > 20) faltantes.push('máximo 20 caracteres');
+        if (!/[A-Z]/.test(valor)) faltantes.push('una mayúscula');
+        if (!/[0-9]/.test(valor)) faltantes.push('un número');
+        if (!/[^A-Za-z0-9]/.test(valor)) faltantes.push('un carácter especial');
+        return faltantes;
+    }
+
+    const campoContrasenaRegistro = document.getElementById('register-password');
+    const ayudaContrasenaRegistro = document.getElementById('password-help');
+    if (campoContrasenaRegistro && ayudaContrasenaRegistro) {
+        campoContrasenaRegistro.addEventListener('input', () => {
+            const valor = campoContrasenaRegistro.value;
+            if (!valor) {
+                ayudaContrasenaRegistro.className = 'form-text';
+                ayudaContrasenaRegistro.textContent = 'Entre 8 y 20 caracteres, una mayúscula, un número y un carácter especial.';
+                return;
+            }
+            const faltantes = obtenerFaltantesContrasena(valor);
+            if (faltantes.length === 0) {
+                ayudaContrasenaRegistro.className = 'form-text text-success';
+                ayudaContrasenaRegistro.textContent = 'Contraseña válida.';
+            } else {
+                ayudaContrasenaRegistro.className = 'form-text text-danger';
+                ayudaContrasenaRegistro.textContent = `Falta: ${faltantes.join(', ')}.`;
+            }
+        });
+    }
+
     formularioRegistro.addEventListener('submit', async (evento) => {
         evento.preventDefault();
+        const faltantes = obtenerFaltantesContrasena(formularioRegistro.elements.password.value);
+        if (faltantes.length > 0) {
+            mostrarMensajeAutenticacion(`La contraseña no cumple: ${faltantes.join(', ')}`);
+            return;
+        }
         if (!formularioRegistro.reportValidity()) return;
 
         const resultado = await enviarPeticionAutenticacion('register', formularioRegistro);
@@ -283,18 +320,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let estaUsuarioAutenticado = false;
     let idUsuarioActual = null;
+    let rolUsuarioActual = null;
     let publicacionEnEdicion = null;
-    let juegoSeleccionadoModal = null;
 
     const actualizarPerfilUsuarioOriginal = actualizarPerfilUsuario;
     actualizarPerfilUsuario = (usuario) => {
         actualizarPerfilUsuarioOriginal(usuario);
         estaUsuarioAutenticado = Boolean(usuario);
         idUsuarioActual = usuario ? usuario.id : null;
+        rolUsuarioActual = usuario ? (usuario.rol || 'usuario') : null;
     };
 
     botonCrearPublicacion.addEventListener('click', () => {
-        juegoSeleccionadoModal = null;
         prepararNuevaPublicacion();
         if (estaUsuarioAutenticado) {
             modalCrearPublicacion.show();
@@ -311,9 +348,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function limpiarJuegoSeleccionado() {
+        if (vistaJuegoSeleccionado) {
+            vistaJuegoSeleccionado.classList.add('d-none');
+            vistaJuegoSeleccionado.classList.remove('d-flex');
+        }
+        if (imagenJuegoSeleccionado) {
+            imagenJuegoSeleccionado.src = '';
+            imagenJuegoSeleccionado.alt = '';
+            imagenJuegoSeleccionado.classList.remove('d-none');
+        }
+        if (tituloJuegoSeleccionado) tituloJuegoSeleccionado.textContent = '';
+        if (detalleJuegoSeleccionado) detalleJuegoSeleccionado.textContent = '';
+    }
+
+    function seleccionarJuegoPublicacion(juego) {
+        if (!juego) return;
+        if (campoJuegoPublicacion) {
+            campoJuegoPublicacion.value = juego.titulo || '';
+        }
+        if (desplegableJuegosPublicacion) {
+            desplegableJuegosPublicacion.classList.add('d-none');
+        }
+        if (!vistaJuegoSeleccionado) return;
+
+        if (imagenJuegoSeleccionado) {
+            if (juego.imagen) {
+                imagenJuegoSeleccionado.src = juego.imagen;
+                imagenJuegoSeleccionado.alt = juego.titulo || '';
+                imagenJuegoSeleccionado.classList.remove('d-none');
+            } else {
+                imagenJuegoSeleccionado.src = '';
+                imagenJuegoSeleccionado.alt = '';
+                imagenJuegoSeleccionado.classList.add('d-none');
+            }
+        }
+        if (tituloJuegoSeleccionado) {
+            tituloJuegoSeleccionado.textContent = juego.titulo || '';
+        }
+        if (detalleJuegoSeleccionado) {
+            const partes = [];
+            if (Array.isArray(juego.generos) && juego.generos.length > 0) {
+                partes.push(juego.generos.slice(0, 2).join(', '));
+            }
+            if (juego.puntaje) {
+                partes.push(`IGDB ${juego.puntaje}`);
+            }
+            detalleJuegoSeleccionado.textContent = partes.join(' · ') || 'Videojuego seleccionado';
+        }
+        vistaJuegoSeleccionado.classList.remove('d-none');
+        vistaJuegoSeleccionado.classList.add('d-flex');
+    }
+
     function prepararNuevaPublicacion() {
         publicacionEnEdicion = null;
         formularioCrearPublicacion.reset();
+        limpiarJuegoSeleccionado();
+        if (desplegableJuegosPublicacion) {
+            desplegableJuegosPublicacion.classList.add('d-none');
+            desplegableJuegosPublicacion.replaceChildren();
+        }
         grupoJuegoPublicacion.classList.remove('d-none');
         campoJuegoPublicacion.disabled = false;
         document.getElementById('titulo-modal-crear-publicacion').textContent = 'Crear nueva publicación';
@@ -350,7 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             mostrarToast('Publicación eliminada.', 'success');
             await cargarPublicaciones();
-            if (juegoSeleccionadoModal) await cargarPublicacionesJuego(juegoSeleccionadoModal);
         } catch (error) {
             mostrarToast('Error de conexión al eliminar la publicación.', 'danger');
         }
@@ -358,24 +451,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function crearAccionesPublicacion(publicacion, desdeModalJuego = false) {
         const autor = publicacion.author || publicacion.autor;
-        if (!idUsuarioActual || !autor || String(autor.id) !== String(idUsuarioActual)) return null;
+        const esAdmin = rolUsuarioActual === 'admin';
+        const esAutor = Boolean(idUsuarioActual && autor && String(autor.id) === String(idUsuarioActual));
+        if (!esAdmin && !esAutor) return null;
 
-        const acciones = document.createElement('div');
-        acciones.className = 'mt-2 d-flex gap-2';
-        const botonEditar = document.createElement('button');
-        botonEditar.type = 'button';
-        botonEditar.className = 'btn btn-outline-primary btn-sm';
-        botonEditar.textContent = 'Editar';
-        botonEditar.addEventListener('click', () => editarPublicacion(publicacion, desdeModalJuego));
+        const contenedor = document.createElement('div');
+        contenedor.className = 'dropdown';
 
+        const botonMenu = document.createElement('button');
+        botonMenu.type = 'button';
+        botonMenu.className = 'btn btn-sm btn-link text-muted text-decoration-none p-1 rounded-circle';
+        botonMenu.setAttribute('data-bs-toggle', 'dropdown');
+        botonMenu.setAttribute('aria-expanded', 'false');
+        botonMenu.setAttribute('aria-label', 'Opciones de publicación');
+        botonMenu.innerHTML = '<i class="bi bi-three-dots"></i>';
+
+        const menu = document.createElement('ul');
+        menu.className = 'dropdown-menu dropdown-menu-end shadow-sm';
+
+        if (!esAdmin && esAutor) {
+            const itemEditar = document.createElement('li');
+            const botonEditar = document.createElement('button');
+            botonEditar.type = 'button';
+            botonEditar.className = 'dropdown-item d-flex align-items-center gap-2';
+            botonEditar.innerHTML = '<i class="bi bi-pencil"></i><span>Editar</span>';
+            botonEditar.addEventListener('click', () => editarPublicacion(publicacion, desdeModalJuego));
+            itemEditar.appendChild(botonEditar);
+            menu.append(itemEditar);
+        }
+
+        const itemEliminar = document.createElement('li');
         const botonEliminar = document.createElement('button');
         botonEliminar.type = 'button';
-        botonEliminar.className = 'btn btn-outline-danger btn-sm';
-        botonEliminar.textContent = 'Eliminar';
+        botonEliminar.className = 'dropdown-item d-flex align-items-center gap-2 text-danger';
+        botonEliminar.innerHTML = '<i class="bi bi-trash"></i><span>Eliminar</span>';
         botonEliminar.addEventListener('click', () => eliminarPublicacionPropia(publicacion));
+        itemEliminar.appendChild(botonEliminar);
 
-        acciones.append(botonEditar, botonEliminar);
-        return acciones;
+        menu.append(itemEliminar);
+        contenedor.append(botonMenu, menu);
+        return contenedor;
     }
 
     function actualizarEstadoVisualVoto(contenedorVotos, puntajeVotos, miVoto) {
@@ -472,7 +587,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const elementoCategoria = clon.querySelector('.publicacion-categoria, .post-category');
                 const elementoVerificacion = clon.querySelector('.publicacion-verificacion');
                 const elementoTitulo = clon.querySelector('.publicacion-titulo, .post-title');
-                const elementoResumen = clon.querySelector('.publicacion-resumen');
                 const elementoMetadatos = clon.querySelector('.publicacion-metadatos, .post-meta');
                 const enlacePublicacion = clon.querySelector('.publicacion-enlace');
                 const imagenPortada = clon.querySelector('.publicacion-portada');
@@ -484,8 +598,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (elementoCategoria) elementoCategoria.textContent = publicacion.category || publicacion.categoria || '';
                 if (elementoVerificacion) elementoVerificacion.classList.toggle('d-none', !publicacion.requiereRevision);
                 if (elementoTitulo) elementoTitulo.textContent = publicacion.title || publicacion.titulo || '';
-                if (elementoResumen) elementoResumen.textContent = publicacion.content || publicacion.contenido || '';
-                if (enlacePublicacion) enlacePublicacion.href = `/post.html?id=${encodeURIComponent(publicacion.id)}`;
+                if (enlacePublicacion) {
+                    enlacePublicacion.href = `/juego.html?titulo=${encodeURIComponent(juego)}&postId=${encodeURIComponent(publicacion.id)}`;
+                }
                 if (imagenPortada && portada) {
                     imagenPortada.src = portada;
                     imagenPortada.alt = `Portada de ${juego}`;
@@ -512,7 +627,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     elementoMetadatos.textContent = `${nombreAutor} · ${fechaFormateada}`;
                 }
                 const acciones = crearAccionesPublicacion(publicacion);
-                if (acciones && elementoMetadatos) elementoMetadatos.parentElement.appendChild(acciones);
+                const contenedorAcciones = clon.querySelector('.acciones-publicacion');
+                if (acciones && contenedorAcciones) {
+                    contenedorAcciones.replaceWith(acciones);
+                } else if (contenedorAcciones && !acciones) {
+                    contenedorAcciones.remove();
+                } else if (acciones && elementoMetadatos) {
+                    elementoMetadatos.parentElement.appendChild(acciones);
+                }
 
                 return clon;
             });
@@ -542,19 +664,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const elementos = juegos.map((juego) => {
                 const elemento = document.createElement('div');
-                elemento.className = 'best-rated-game d-flex justify-content-between align-items-start gap-3 mb-3';
+                elemento.className = 'best-rated-game item-ranking-juego d-flex justify-content-between align-items-center gap-3';
 
                 const detalles = document.createElement('div');
                 detalles.className = 'flex-grow-1 min-w-0';
                 const nombre = document.createElement('button');
                 nombre.type = 'button';
-                nombre.className = 'btn btn-link d-block w-100 p-0 text-body text-decoration-none fw-bold fs-sm text-start text-truncate';
+                nombre.className = 'btn btn-link d-block w-100 p-0 text-body text-decoration-none fw-semibold fs-sm text-start text-truncate';
                 nombre.textContent = juego.juego;
                 nombre.addEventListener('click', () => abrirJuegoDesdeRanking(juego));
                 detalles.append(nombre);
 
                 const puntaje = document.createElement('span');
-                puntaje.className = 'badge rounded-pill text-bg-light flex-shrink-0';
+                puntaje.className = 'badge rounded-pill bg-body-tertiary text-body border flex-shrink-0';
                 const promedio = Number(juego.promedio) || 0;
                 const cantidadVotos = Number(juego.cantidadVotos) || 0;
                 puntaje.textContent = `${promedio.toFixed(1)} / 5 · ${cantidadVotos} ${cantidadVotos === 1 ? 'voto' : 'votos'}`;
@@ -614,7 +736,6 @@ document.addEventListener('DOMContentLoaded', () => {
             modalCrearPublicacion.hide();
             mostrarToast(editando ? 'Publicación actualizada.' : 'Publicación creada.', 'success');
             await cargarPublicaciones();
-            if (juegoSeleccionadoModal) await cargarPublicacionesJuego(juegoSeleccionadoModal);
         } catch (error) {
             mostrarToast('Error de conexión. Inténtalo de nuevo.', 'danger');
         } finally {
@@ -631,32 +752,91 @@ document.addEventListener('DOMContentLoaded', () => {
     const formularioBuscarJuego = document.getElementById('formulario-buscar-juego');
     const campoBuscarJuego = document.getElementById('campo-buscar-juego');
     const contenedorJuegos = document.getElementById('contenedor-juegos');
+    const botonJuegosAnterior = document.getElementById('boton-juegos-anterior');
+    const botonJuegosSiguiente = document.getElementById('boton-juegos-siguiente');
     const mensajeJuegos = document.getElementById('mensaje-juegos');
-    const listaSugerenciasJuegos = document.getElementById('lista-sugerencias-juegos');
-    const elementoModalJuego = document.getElementById('modal-juego');
-    const modalJuego = bootstrap.Modal.getOrCreateInstance(elementoModalJuego);
-    const tituloModalJuego = document.getElementById('titulo-modal-juego');
-    const imagenModalJuego = document.getElementById('imagen-modal-juego');
-    const descripcionModalJuego = document.getElementById('descripcion-modal-juego');
-    const generosModalJuego = document.getElementById('generos-modal-juego');
-    const plataformasModalJuego = document.getElementById('plataformas-modal-juego');
-    const puntajeModalJuego = document.getElementById('puntaje-modal-juego');
-    const puntajeComunidadModalJuego = document.getElementById('puntaje-comunidad-modal-juego');
-    const contenedorEstrellasJuego = document.getElementById('estrellas-nota-juego');
-    const mensajePuntuacionJuego = document.getElementById('mensaje-puntuacion-juego');
-    const estadoPublicacionesJuego = document.getElementById('estado-publicaciones-juego');
-    const publicacionesDelJuego = document.getElementById('publicaciones-del-juego');
-    const sinPublicacionesJuego = document.getElementById('sin-publicaciones-juego');
-    const botonPrimeraPublicacion = document.getElementById('boton-primera-publicacion');
+    const desplegableJuegosPublicacion = document.getElementById('desplegable-juegos-publicacion');
+    const vistaJuegoSeleccionado = document.getElementById('vista-juego-seleccionado');
+    const imagenJuegoSeleccionado = document.getElementById('imagen-juego-seleccionado');
+    const tituloJuegoSeleccionado = document.getElementById('titulo-juego-seleccionado');
+    const detalleJuegoSeleccionado = document.getElementById('detalle-juego-seleccionado');
+    const botonLimpiarJuego = document.getElementById('boton-limpiar-juego');
 
-    function actualizarSugerenciasJuegos(juegos) {
-        if (!listaSugerenciasJuegos) return;
-        const opciones = juegos.map((juego) => {
-            const opcion = document.createElement('option');
-            opcion.value = juego.titulo;
-            return opcion;
+    function actualizarSugerenciasJuegos(juegos, mostrarLista = false) {
+        if (!desplegableJuegosPublicacion) return;
+        const lista = Array.isArray(juegos) ? juegos.slice(0, 8) : [];
+
+        if (lista.length === 0) {
+            if (mostrarLista && campoJuegoPublicacion && campoJuegoPublicacion.value.trim()) {
+                const vacio = document.createElement('div');
+                vacio.className = 'px-3 py-2 small text-body-secondary';
+                vacio.textContent = 'No se encontraron juegos con ese nombre.';
+                desplegableJuegosPublicacion.replaceChildren(vacio);
+                desplegableJuegosPublicacion.classList.remove('d-none');
+            } else {
+                desplegableJuegosPublicacion.replaceChildren();
+                desplegableJuegosPublicacion.classList.add('d-none');
+            }
+            return;
+        }
+
+        const opciones = lista.map((juego) => {
+            const boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = 'opcion-juego-selector';
+
+            if (juego.imagen) {
+                const img = document.createElement('img');
+                img.src = juego.imagen;
+                img.alt = juego.titulo || '';
+                img.className = 'portada-mini-selector rounded-2';
+                img.loading = 'lazy';
+                boton.appendChild(img);
+            } else {
+                const icono = document.createElement('div');
+                icono.className = 'portada-mini-selector rounded-2 d-flex align-items-center justify-content-center bg-body-secondary text-body-secondary';
+                icono.innerHTML = '<i class="bi bi-controller"></i>';
+                boton.appendChild(icono);
+            }
+
+            const info = document.createElement('div');
+            info.className = 'min-w-0 flex-grow-1';
+
+            const titulo = document.createElement('div');
+            titulo.className = 'fw-semibold small text-truncate';
+            titulo.textContent = juego.titulo || '';
+            info.appendChild(titulo);
+
+            const subtitulo = document.createElement('div');
+            subtitulo.className = 'text-body-secondary text-truncate';
+            subtitulo.style.fontSize = '0.75rem';
+            subtitulo.textContent = Array.isArray(juego.generos) && juego.generos.length > 0
+                ? juego.generos.slice(0, 2).join(', ')
+                : 'Videojuego';
+            info.appendChild(subtitulo);
+
+            boton.appendChild(info);
+
+            if (juego.puntaje) {
+                const badge = document.createElement('span');
+                badge.className = 'badge text-bg-secondary rounded-pill flex-shrink-0';
+                badge.textContent = `${juego.puntaje}`;
+                boton.appendChild(badge);
+            }
+
+            boton.addEventListener('click', () => {
+                seleccionarJuegoPublicacion(juego);
+            });
+
+            return boton;
         });
-        listaSugerenciasJuegos.replaceChildren(...opciones);
+
+        desplegableJuegosPublicacion.replaceChildren(...opciones);
+        if (mostrarLista) {
+            desplegableJuegosPublicacion.classList.remove('d-none');
+        } else {
+            desplegableJuegosPublicacion.classList.add('d-none');
+        }
     }
 
     function renderizarJuegos(juegos) {
@@ -672,248 +852,79 @@ document.addEventListener('DOMContentLoaded', () => {
             tarjeta.type = 'button';
             tarjeta.className = 'game-card';
 
+            const marcoPortada = document.createElement('div');
+            marcoPortada.className = 'game-poster-wrap mb-2';
+
             if (juego.imagen) {
                 const imagen = document.createElement('img');
                 imagen.src = juego.imagen;
                 imagen.alt = juego.titulo;
-                imagen.className = 'game-img rounded-3 mb-2';
-                tarjeta.appendChild(imagen);
+                imagen.className = 'game-img';
+                marcoPortada.appendChild(imagen);
+            } else {
+                const iconoVacio = document.createElement('div');
+                iconoVacio.className = 'w-100 h-100 d-flex align-items-center justify-content-center text-muted fs-2';
+                const icono = document.createElement('i');
+                icono.className = 'bi bi-controller';
+                iconoVacio.appendChild(icono);
+                marcoPortada.appendChild(iconoVacio);
+            }
+
+            if (Number(juego.puntaje) > 0) {
+                const insigniaNota = document.createElement('span');
+                insigniaNota.className = 'game-score-badge';
+                insigniaNota.textContent = `${Number(juego.puntaje).toFixed(1)}`;
+                marcoPortada.appendChild(insigniaNota);
             }
 
             const titulo = document.createElement('h4');
-            titulo.className = 'game-title fw-bold mb-0';
+            titulo.className = 'game-title fw-bold mb-1';
             titulo.textContent = juego.titulo;
 
-            tarjeta.appendChild(titulo);
+            const genero = document.createElement('p');
+            genero.className = 'text-muted fs-xs text-truncate mb-0';
+            genero.textContent = Array.isArray(juego.generos) && juego.generos.length
+                ? juego.generos[0]
+                : 'Videojuego';
+
+            tarjeta.append(marcoPortada, titulo, genero);
             tarjeta.addEventListener('click', () => abrirModalJuego(juego));
             return tarjeta;
         });
 
         contenedorJuegos.replaceChildren(...tarjetas);
+        contenedorJuegos.scrollLeft = 0;
     }
 
-    async function cargarPublicacionesJuego(juego) {
-        publicacionesDelJuego.replaceChildren();
-        estadoPublicacionesJuego.textContent = 'Cargando publicaciones...';
-        sinPublicacionesJuego.classList.add('d-none');
-        botonPrimeraPublicacion.classList.add('d-none');
-
-        try {
-            const respuesta = await fetch(`/api/posts?game=${encodeURIComponent(juego.titulo)}`);
-            const resultado = await respuesta.json();
-            if (!juegoSeleccionadoModal || juegoSeleccionadoModal.titulo !== juego.titulo) return;
-            if (!respuesta.ok) throw new Error(resultado.error || 'No se pudieron cargar las publicaciones.');
-
-            const publicaciones = resultado.data || [];
-            estadoPublicacionesJuego.textContent = publicaciones.length
-                ? `${resultado.total} ${resultado.total === 1 ? 'publicación' : 'publicaciones'}`
-                : '';
-
-            const tarjetas = publicaciones.map((publicacion) => {
-                const tarjeta = document.createElement('article');
-                tarjeta.className = 'card';
-                const cuerpo = document.createElement('div');
-                cuerpo.className = 'card-body';
-                const titulo = document.createElement('h6');
-                titulo.className = 'card-title fw-bold';
-                const enlacePublicacion = document.createElement('a');
-                enlacePublicacion.href = `/post.html?id=${encodeURIComponent(publicacion.id)}`;
-                enlacePublicacion.target = '_blank';
-                enlacePublicacion.rel = 'noopener noreferrer';
-                enlacePublicacion.className = 'text-decoration-none text-body-emphasis';
-                enlacePublicacion.textContent = publicacion.title || publicacion.titulo || 'Sin título';
-                titulo.appendChild(enlacePublicacion);
-                const autor = document.createElement('p');
-                autor.className = 'text-muted fs-xs mb-2';
-                autor.textContent = `Por ${(publicacion.author && publicacion.author.name) || 'Usuario'} · ${publicacion.category || publicacion.categoria || ''}`;
-                const contenido = document.createElement('p');
-                contenido.className = 'card-text mb-0';
-                contenido.textContent = publicacion.content || publicacion.contenido || '';
-                cuerpo.append(titulo, autor, contenido);
-                const acciones = crearAccionesPublicacion(publicacion, true);
-                if (acciones) cuerpo.appendChild(acciones);
-                tarjeta.appendChild(cuerpo);
-                return tarjeta;
-            });
-
-            publicacionesDelJuego.replaceChildren(...tarjetas);
-
-            if (!publicaciones.length) {
-                sinPublicacionesJuego.classList.remove('d-none');
-                botonPrimeraPublicacion.classList.remove('d-none');
-            }
-        } catch (error) {
-            if (!juegoSeleccionadoModal || juegoSeleccionadoModal.titulo !== juego.titulo) return;
-            estadoPublicacionesJuego.textContent = error.message || 'No se pudieron cargar las publicaciones.';
-        }
-    }
-
-    function actualizarVistaPuntuacionComunidad(resumen) {
-        if (!puntajeComunidadModalJuego) return;
-        const promedio = Number(resumen && resumen.promedio) || 0;
-        const cantidadVotos = Number(resumen && resumen.cantidadVotos) || 0;
-        const miPuntuacion = resumen ? resumen.miPuntuacion : null;
-
-        if (cantidadVotos > 0) {
-            puntajeComunidadModalJuego.textContent = `${promedio} / 5 (${cantidadVotos} ${cantidadVotos === 1 ? 'voto' : 'votos'})`;
-        } else {
-            puntajeComunidadModalJuego.textContent = 'Sin votos de la comunidad aún';
-        }
-
-        if (contenedorEstrellasJuego) {
-            const botones = contenedorEstrellasJuego.querySelectorAll('[data-nota-juego]');
-            botones.forEach((boton) => {
-                const valor = Number(boton.dataset.notaJuego);
-                const activa = Boolean(miPuntuacion && valor <= Number(miPuntuacion));
-                boton.classList.toggle('text-warning', activa);
-                boton.classList.toggle('text-muted', !activa);
-                const iconoEstrella = boton.querySelector('i');
-                if (iconoEstrella) {
-                    iconoEstrella.classList.toggle('bi-star-fill', activa);
-                    iconoEstrella.classList.toggle('bi-star', !activa);
-                }
-            });
-        }
-    }
-
-    async function cargarPuntuacionJuegoModal(juego) {
-        if (!puntajeComunidadModalJuego) return;
-        if (mensajePuntuacionJuego) {
-            mensajePuntuacionJuego.textContent = '';
-        }
-        actualizarVistaPuntuacionComunidad({
-            promedio: juego.puntajeComunidad || 0,
-            cantidadVotos: juego.cantidadVotos || 0,
-            miPuntuacion: juego.miPuntuacion || null
+    if (botonJuegosAnterior && contenedorJuegos) {
+        botonJuegosAnterior.addEventListener('click', () => {
+            contenedorJuegos.scrollBy({ left: -370, behavior: 'smooth' });
         });
-
-        try {
-            const respuesta = await fetch(`/api/juegos/puntuaciones?juego=${encodeURIComponent(juego.titulo)}`);
-            if (!respuesta.ok) return;
-            const resultado = await respuesta.json();
-            if (!juegoSeleccionadoModal || juegoSeleccionadoModal.titulo !== juego.titulo) return;
-            if (resultado.datos) {
-                juego.puntajeComunidad = resultado.datos.promedio;
-                juego.cantidadVotos = resultado.datos.cantidadVotos;
-                juego.miPuntuacion = resultado.datos.miPuntuacion;
-                actualizarVistaPuntuacionComunidad(resultado.datos);
-            }
-        } catch (error) {
-            return;
-        }
     }
 
-    if (contenedorEstrellasJuego) {
-        contenedorEstrellasJuego.addEventListener('click', async (evento) => {
-            const botonEstrella = evento.target.closest('[data-nota-juego]');
-            if (!botonEstrella || !juegoSeleccionadoModal) return;
-
-            if (!estaUsuarioAutenticado) {
-                elementoModalJuego.addEventListener('hidden.bs.modal', () => {
-                    mostrarFormularioLogin();
-                    modalAutenticacion.show();
-                }, { once: true });
-                modalJuego.hide();
-                return;
-            }
-
-            const notaElegida = Number(botonEstrella.dataset.notaJuego);
-            const botones = contenedorEstrellasJuego.querySelectorAll('[data-nota-juego]');
-            botones.forEach((b) => { b.disabled = true; });
-            if (mensajePuntuacionJuego) mensajePuntuacionJuego.textContent = '';
-
-            try {
-                const respuesta = await fetch('/api/juegos/puntuaciones', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        juego: juegoSeleccionadoModal.titulo,
-                        nota: notaElegida
-                    })
-                });
-                const resultado = await respuesta.json();
-
-                if (!respuesta.ok) {
-                    if (mensajePuntuacionJuego) {
-                        mensajePuntuacionJuego.textContent = resultado.error || 'No se pudo registrar tu voto.';
-                    }
-                    return;
-                }
-
-                if (resultado.datos) {
-                    juegoSeleccionadoModal.puntajeComunidad = resultado.datos.promedio;
-                    juegoSeleccionadoModal.cantidadVotos = resultado.datos.cantidadVotos;
-                    juegoSeleccionadoModal.miPuntuacion = resultado.datos.miPuntuacion;
-                    actualizarVistaPuntuacionComunidad(resultado.datos);
-                    await cargarJuegosMejorValorados();
-                    if (mensajePuntuacionJuego) {
-                        mensajePuntuacionJuego.textContent = `Puntuaste este juego con ${notaElegida} / 5.`;
-                    }
-                }
-            } catch (error) {
-                if (mensajePuntuacionJuego) {
-                    mensajePuntuacionJuego.textContent = 'Error de conexión al guardar la puntuación.';
-                }
-            } finally {
-                botones.forEach((b) => { b.disabled = false; });
-            }
+    if (botonJuegosSiguiente && contenedorJuegos) {
+        botonJuegosSiguiente.addEventListener('click', () => {
+            contenedorJuegos.scrollBy({ left: 370, behavior: 'smooth' });
         });
     }
 
     function abrirModalJuego(juego) {
-        juegoSeleccionadoModal = juego;
-        tituloModalJuego.textContent = juego.titulo;
-        descripcionModalJuego.textContent = juego.descripcion || '';
-        generosModalJuego.textContent = Array.isArray(juego.generos) ? juego.generos.join(', ') : '';
-        plataformasModalJuego.textContent = Array.isArray(juego.plataformas) ? juego.plataformas.join(', ') : '';
-        puntajeModalJuego.textContent = juego.puntaje > 0
-            ? `${juego.puntaje} / 10`
-            : 'Sin puntaje disponible';
-        if (juego.imagen) {
-            imagenModalJuego.src = juego.imagen;
-            imagenModalJuego.alt = juego.titulo;
-            imagenModalJuego.classList.remove('d-none');
-        } else {
-            imagenModalJuego.removeAttribute('src');
-            imagenModalJuego.classList.add('d-none');
+        if (!juego || !juego.titulo) return;
+        try {
+            sessionStorage.setItem('juegoSeleccionado', JSON.stringify(juego));
+        } catch (error) {
         }
-        modalJuego.show();
-        cargarPuntuacionJuegoModal(juego);
-        cargarPublicacionesJuego(juego);
+        window.location.href = `/juego.html?titulo=${encodeURIComponent(juego.titulo)}`;
     }
 
     async function abrirJuegoDesdeRanking(juegoValorado) {
+        if (!juegoValorado || !juegoValorado.juego) return;
         try {
-            const respuesta = await fetch(`/api/juegos?busqueda=${encodeURIComponent(juegoValorado.juego)}`);
-            const resultado = await respuesta.json();
-            if (!respuesta.ok) throw new Error(resultado.error || 'No se pudo abrir el juego.');
-
-            const juegoEncontrado = (resultado.datos || []).find((juego) =>
-                String(juego.titulo || '').trim().toLocaleLowerCase()
-                    === String(juegoValorado.juego).trim().toLocaleLowerCase()
-            );
-            if (!juegoEncontrado) throw new Error('No se encontró la ficha del juego.');
-
-            abrirModalJuego(juegoEncontrado);
+            sessionStorage.removeItem('juegoSeleccionado');
         } catch (error) {
-            mostrarToast(error.message || 'No se pudo abrir el juego.', 'danger');
         }
+        window.location.href = `/juego.html?titulo=${encodeURIComponent(juegoValorado.juego)}`;
     }
-
-    botonPrimeraPublicacion.addEventListener('click', () => {
-        if (!juegoSeleccionadoModal) return;
-        prepararNuevaPublicacion();
-        campoJuegoPublicacion.value = juegoSeleccionadoModal.titulo;
-        elementoModalJuego.addEventListener('hidden.bs.modal', () => {
-            if (estaUsuarioAutenticado) {
-                modalCrearPublicacion.show();
-            } else {
-                mostrarFormularioLogin();
-                modalAutenticacion.show();
-            }
-        }, { once: true });
-        modalJuego.hide();
-    });
 
     let controladorBusquedaJuegos = null;
 
@@ -984,7 +995,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 controladorSugerencias.abort();
             }
             if (!texto) {
-                if (listaSugerenciasJuegos) listaSugerenciasJuegos.replaceChildren();
+                if (desplegableJuegosPublicacion) {
+                    desplegableJuegosPublicacion.replaceChildren();
+                    desplegableJuegosPublicacion.classList.add('d-none');
+                }
                 return;
             }
 
@@ -995,14 +1009,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (!respuesta.ok) return;
                 const resultado = await respuesta.json();
-                actualizarSugerenciasJuegos(resultado.datos || []);
+                actualizarSugerenciasJuegos(resultado.datos || [], true);
             } catch (error) {
                 if (error.name === 'AbortError') return;
             }
-        }, 250);
+        }, 220);
 
         campoJuegoPublicacion.addEventListener('input', () => {
+            limpiarJuegoSeleccionado();
             buscarSugerenciasConDemora(campoJuegoPublicacion.value.trim());
+        });
+
+        campoJuegoPublicacion.addEventListener('focus', () => {
+            const texto = campoJuegoPublicacion.value.trim();
+            if (texto && desplegableJuegosPublicacion && desplegableJuegosPublicacion.children.length > 0) {
+                desplegableJuegosPublicacion.classList.remove('d-none');
+            } else if (texto) {
+                buscarSugerenciasConDemora(texto);
+            }
+        });
+
+        campoJuegoPublicacion.addEventListener('keydown', (evento) => {
+            if (evento.key === 'Escape' && desplegableJuegosPublicacion) {
+                desplegableJuegosPublicacion.classList.add('d-none');
+            }
+        });
+
+        document.addEventListener('click', (evento) => {
+            if (!desplegableJuegosPublicacion) return;
+            if (!grupoJuegoPublicacion.contains(evento.target)) {
+                desplegableJuegosPublicacion.classList.add('d-none');
+            }
+        });
+    }
+
+    if (botonLimpiarJuego) {
+        botonLimpiarJuego.addEventListener('click', () => {
+            limpiarJuegoSeleccionado();
+            if (campoJuegoPublicacion) {
+                campoJuegoPublicacion.value = '';
+                campoJuegoPublicacion.focus();
+            }
+            if (desplegableJuegosPublicacion) {
+                desplegableJuegosPublicacion.replaceChildren();
+                desplegableJuegosPublicacion.classList.add('d-none');
+            }
         });
     }
 

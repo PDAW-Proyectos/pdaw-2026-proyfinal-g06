@@ -28,14 +28,14 @@ test('registration and session-backed authentication', async (t) => {
   respuesta = await enviarPost('/api/auth/register', {
     name: '   ',
     email: 'user@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   assert.equal(respuesta.status, 400);
 
   respuesta = await enviarPost('/api/auth/register', {
     name: 'Test User',
     email: 'not-an-email',
-    password: 'password123'
+    password: 'Password123!'
   });
   assert.equal(respuesta.status, 400);
 
@@ -49,7 +49,7 @@ test('registration and session-backed authentication', async (t) => {
   respuesta = await enviarPost('/api/auth/register', {
     name: 'Test User',
     email: 'USER@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   assert.equal(respuesta.status, 201);
   const registro = await respuesta.json();
@@ -60,7 +60,7 @@ test('registration and session-backed authentication', async (t) => {
   respuesta = await enviarPost('/api/auth/register', {
     name: 'Another User',
     email: 'user@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   assert.equal(respuesta.status, 409);
 
@@ -72,7 +72,7 @@ test('registration and session-backed authentication', async (t) => {
 
   respuesta = await enviarPost('/api/auth/login', {
     email: 'USER@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   assert.equal(respuesta.status, 200);
   const cookieRespuestaLogin = respuesta.headers.get('set-cookie');
@@ -86,7 +86,7 @@ test('registration and session-backed authentication', async (t) => {
 
   respuesta = await enviarPost('/api/auth/login', {
     email: 'user@example.com',
-    password: 'password123'
+    password: 'Password123!'
   }, cookieLogin);
   assert.equal(respuesta.status, 200);
   const cookieRegenerada = respuesta.headers.get('set-cookie').split(';')[0];
@@ -96,4 +96,24 @@ test('registration and session-backed authentication', async (t) => {
   assert.equal(respuesta.status, 200);
   respuesta = await solicitud('/api/auth/me', { headers: { Cookie: cookieRegenerada } });
   assert.equal((await respuesta.json()).user, null);
+
+  respuesta = await enviarPost('/api/auth/register', {
+    name: 'Sin Requisitos',
+    email: 'debil@example.com',
+    password: 'abcdefg'
+  });
+  assert.equal(respuesta.status, 400);
+  const errorCorto = (await respuesta.json()).error;
+  assert.match(errorCorto, /mínimo 8 caracteres/);
+  assert.match(errorCorto, /una mayúscula/);
+  assert.match(errorCorto, /un número/);
+  assert.match(errorCorto, /un carácter especial/);
+
+  respuesta = await enviarPost('/api/auth/register', {
+    name: 'Muy Larga',
+    email: 'larga@example.com',
+    password: 'Abcdefghijklmnopqrstuvwxyz1!'
+  });
+  assert.equal(respuesta.status, 400);
+  assert.match((await respuesta.json()).error, /máximo 20 caracteres/);
 });

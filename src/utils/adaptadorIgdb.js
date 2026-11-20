@@ -157,7 +157,7 @@ const consultarIgdbRemoto = async (termino, fetchImpl = fetch) => {
   const terminoLimpio = termino.replace(/"/g, '').trim();
   const consulta = terminoLimpio
     ? `search "${terminoLimpio}"; fields id,name,summary,cover.url,platforms.name,genres.name,rating; limit 10;`
-    : 'fields id,name,summary,cover.url,platforms.name,genres.name,rating; sort rating desc; limit 10;';
+    : 'fields id,name,summary,cover.url,platforms.name,genres.name,rating; where rating_count > 100 & rating != null & cover != null; sort rating desc; limit 12;';
 
   const respuesta = await fetchImpl(URL_API_IGDB, {
     method: 'POST',

@@ -12,6 +12,7 @@ class Usuario {
   nombre;
   correo;
   contrasenaHash;
+  rol;
   fechaCreacion;
 
   constructor({
@@ -22,6 +23,7 @@ class Usuario {
     correo,
     passwordHash,
     contrasenaHash,
+    rol = 'usuario',
     createdAt = new Date().toISOString(),
     fechaCreacion
   }) {
@@ -43,6 +45,7 @@ class Usuario {
     this.nombre = nombreFinal.trim();
     this.correo = correoFinal.trim().toLowerCase();
     this.contrasenaHash = hashFinal;
+    this.rol = rol === 'admin' ? 'admin' : 'usuario';
     this.fechaCreacion = fechaCreacion || createdAt;
   }
 
@@ -68,6 +71,7 @@ class Usuario {
       name: this.nombre,
       email: this.correo,
       passwordHash: this.contrasenaHash,
+      rol: this.rol,
       createdAt: this.fechaCreacion
     };
   }

@@ -70,6 +70,11 @@ const crearPublicacion = async (titulo, categoria, contenido, juego, idUsuario) 
 };
 
 const actualizarPublicacion = async (id, datos, idUsuario) => {
+  const usuario = idUsuario ? await repositorioUsuarios.buscarUsuarioPorId(idUsuario) : null;
+  if (usuario && usuario.rol === 'admin') {
+    throw crearErrorPublicacion('Los administradores no pueden editar publicaciones', 403);
+  }
+
   const publicacion = await repositorioPublicaciones.buscarPublicacionPorId(id, idUsuario);
   if (!publicacion) {
     throw crearErrorPublicacion('Publicación no encontrada', 404);
@@ -114,7 +119,9 @@ const eliminarPublicacion = async (id, idUsuario) => {
   if (!publicacion) {
     throw crearErrorPublicacion('Publicación no encontrada', 404);
   }
-  if (!publicacion.author || String(publicacion.author.id) !== String(idUsuario)) {
+  const usuario = idUsuario ? await repositorioUsuarios.buscarUsuarioPorId(idUsuario) : null;
+  const esAdmin = Boolean(usuario && usuario.rol === 'admin');
+  if (!esAdmin && (!publicacion.author || String(publicacion.author.id) !== String(idUsuario))) {
     throw crearErrorPublicacion('Solo puedes eliminar tus propias publicaciones', 403);
   }
 
@@ -143,6 +150,11 @@ const votarPublicacion = async (id, valorVoto, idUsuario) => {
 const reportarPublicacion = async (id, motivo, idUsuario) => {
   if (!idUsuario) {
     throw crearErrorPublicacion('Se requiere iniciar sesión para realizar esta acción', 401);
+  }
+
+  const usuario = await repositorioUsuarios.buscarUsuarioPorId(idUsuario);
+  if (usuario && usuario.rol === 'admin') {
+    throw crearErrorPublicacion('Los administradores no pueden reportar publicaciones', 403);
   }
 
   const publicacionExistente = await repositorioPublicaciones.buscarPublicacionPorId(id, idUsuario);

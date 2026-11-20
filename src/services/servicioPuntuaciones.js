@@ -53,6 +53,26 @@ const registrarPuntuacion = async (juego, nota, idUsuario) => {
   return await obtenerResumenPuntuacion(nombreJuego, idUsuario);
 };
 
+const eliminarPuntuacion = async (juego, idUsuario) => {
+  if (!idUsuario) {
+    throw crearErrorPuntuacion('Se requiere iniciar sesión para realizar esta acción', 401);
+  }
+  const nombreJuego = typeof juego === 'string' ? juego.trim() : '';
+  if (!nombreJuego) {
+    throw crearErrorPuntuacion('El nombre del videojuego es obligatorio', 400);
+  }
+
+  await repositorioPuntuaciones.eliminarPuntuacionPorUsuarioYJuego(String(idUsuario), nombreJuego);
+  return await obtenerResumenPuntuacion(nombreJuego, idUsuario);
+};
+
+const obtenerPuntuacionesDeUsuario = async (idUsuario) => {
+  if (!idUsuario) {
+    throw crearErrorPuntuacion('Se requiere iniciar sesión para realizar esta acción', 401);
+  }
+  return await repositorioPuntuaciones.obtenerPuntuacionesPorUsuario(String(idUsuario));
+};
+
 const obtenerJuegosMejorPuntuados = async (limite = 5) => {
   return repositorioPuntuaciones.obtenerJuegosMejorPuntuados(limite);
 };
@@ -60,5 +80,7 @@ const obtenerJuegosMejorPuntuados = async (limite = 5) => {
 module.exports = {
   obtenerResumenPuntuacion,
   registrarPuntuacion,
+  eliminarPuntuacion,
+  obtenerPuntuacionesDeUsuario,
   obtenerJuegosMejorPuntuados
 };

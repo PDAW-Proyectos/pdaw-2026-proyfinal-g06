@@ -35,7 +35,12 @@ const iniciarSesion = async (req, res) => {
       req.session.userId = usuario.id;
       res.status(200).json({
         message: 'Inicio de sesión exitoso',
-        user: { id: usuario.id, name: usuario.name }
+        user: {
+          id: usuario.id,
+          name: usuario.name,
+          email: usuario.email,
+          rol: usuario.rol || 'usuario'
+        }
       });
     });
   } catch (error) {

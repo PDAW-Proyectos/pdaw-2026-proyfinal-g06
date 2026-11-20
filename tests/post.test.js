@@ -21,17 +21,15 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
     body: JSON.stringify(cuerpo)
   });
 
-  let respuesta = await solicitud('/post.html');
+  let respuesta = await solicitud('/juego.html');
   assert.equal(respuesta.status, 200);
   assert.match(respuesta.headers.get('content-type'), /text\/html/);
-  const paginaDetalleHtml = await respuesta.text();
-  assert.match(paginaDetalleHtml, /id="boton-editar-publicacion"/);
-  assert.match(paginaDetalleHtml, /id="theme-toggle"/);
-  assert.match(paginaDetalleHtml, /id="publicacion-portada"/);
-  assert.match(paginaDetalleHtml, /id="modal-crear-publicacion"/);
-  assert.doesNotMatch(paginaDetalleHtml, /id="campo-juego-publicacion"/);
-  assert.match(paginaDetalleHtml, /id="formulario-comentario"/);
-  assert.match(paginaDetalleHtml, /id="lista-comentarios"/);
+  const paginaJuegoHtml = await respuesta.text();
+  assert.match(paginaJuegoHtml, /id="theme-toggle"/);
+  assert.match(paginaJuegoHtml, /id="juego-portada"/);
+  assert.match(paginaJuegoHtml, /id="modal-crear-publicacion"/);
+  assert.doesNotMatch(paginaJuegoHtml, /id="campo-juego-publicacion"/);
+  assert.match(paginaJuegoHtml, /id="lista-publicaciones-juego"/);
 
   respuesta = await solicitud('/index.html');
   assert.equal(respuesta.status, 200);
@@ -56,12 +54,12 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   await enviarPost('/api/auth/register', {
     name: 'GamerUno',
     email: 'gamer1@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
 
   const respuestaInicio = await enviarPost('/api/auth/login', {
     email: 'gamer1@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   assert.equal(respuestaInicio.status, 200);
   const cookieLogin = respuestaInicio.headers.get('set-cookie').split(';')[0];
@@ -158,11 +156,11 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   await enviarPost('/api/auth/register', {
     name: 'GamerDos',
     email: 'gamer2@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   const respuestaSegundoInicio = await enviarPost('/api/auth/login', {
     email: 'gamer2@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   assert.equal(respuestaSegundoInicio.status, 200);
   const cookieSegundoUsuario = respuestaSegundoInicio.headers.get('set-cookie').split(';')[0];
@@ -408,11 +406,11 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   await enviarPost('/api/auth/register', {
     name: 'GamerTres',
     email: 'gamer3@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   const loginTres = await enviarPost('/api/auth/login', {
     email: 'gamer3@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   const cookieTercerUsuario = loginTres.headers.get('set-cookie').split(';')[0];
 
@@ -425,11 +423,11 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   await enviarPost('/api/auth/register', {
     name: 'GamerCuatro',
     email: 'gamer4@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   const loginCuatro = await enviarPost('/api/auth/login', {
     email: 'gamer4@example.com',
-    password: 'password123'
+    password: 'Password123!'
   });
   const cookieCuartoUsuario = loginCuatro.headers.get('set-cookie').split(';')[0];
 

@@ -74,6 +74,26 @@ const obtenerJuegosMejorPuntuados = async (limite = 5) => {
     .slice(0, limiteSeguro);
 };
 
+const eliminarPuntuacionPorUsuarioYJuego = async (idUsuario, juego) => {
+  const juegoNormalizado = normalizarNombreJuego(juego);
+  const indice = puntuacionesBD.findIndex(
+    (puntuacion) =>
+      puntuacion.idUsuario === String(idUsuario) &&
+      normalizarNombreJuego(puntuacion.juego) === juegoNormalizado
+  );
+  if (indice === -1) return false;
+  puntuacionesBD.splice(indice, 1);
+  sincronizarPuntuaciones();
+  return true;
+};
+
+const obtenerPuntuacionesPorUsuario = async (idUsuario) => {
+  if (!idUsuario) return [];
+  return puntuacionesBD
+    .filter((puntuacion) => puntuacion.idUsuario === String(idUsuario))
+    .map((puntuacion) => puntuacion.toJSON());
+};
+
 const limpiarPuntuaciones = () => {
   puntuacionesBD.length = 0;
   sincronizarPuntuaciones();
@@ -82,7 +102,9 @@ const limpiarPuntuaciones = () => {
 module.exports = {
   buscarPuntuacionPorUsuarioYJuego,
   guardarPuntuacion,
+  eliminarPuntuacionPorUsuarioYJuego,
   obtenerPuntuacionesPorJuego,
+  obtenerPuntuacionesPorUsuario,
   obtenerJuegosMejorPuntuados,
   limpiarPuntuaciones
 };

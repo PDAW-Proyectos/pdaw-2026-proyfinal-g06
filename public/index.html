@@ -4,38 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>respawn. - El juego continúa aquí</title>
+    <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="index-page">
 
-    <nav class="navbar navbar-expand-lg bg-body border-bottom py-3">
-        <div class="container-fluid px-3 px-sm-4 px-lg-5">
-            <a class="navbar-brand fw-bold text-body-emphasis d-flex align-items-center" href="#">
+    <nav class="navbar barra-navegacion border-bottom py-3 sticky-top">
+        <div class="container contenedor-principal d-flex align-items-center justify-content-between gap-2">
+            <a class="navbar-brand fw-bold text-body-emphasis d-flex align-items-center mb-0" href="#">
                 <i class="bi bi-asterisk text-primary fs-4 me-2"></i> respawn.
             </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Abrir menú">
-                <span class="navbar-toggler-icon"></span>
-            </button>
 
-            <div class="collapse navbar-collapse" id="navbarContent">
-                <div class="d-flex align-items-center gap-3 ms-auto">
-                    <button id="theme-toggle" class="btn btn-link text-body p-0 text-decoration-none" type="button" aria-label="Cambiar tema">
-                        <i class="bi bi-moon fs-5"></i>
+            <div class="d-flex align-items-center gap-2 gap-sm-3">
+                <button id="theme-toggle" class="btn btn-outline-secondary btn-sm nav-btn rounded-circle" type="button" aria-label="Cambiar tema">
+                    <i class="bi bi-moon fs-6"></i>
+                </button>
+                <div class="border-start ps-2 ps-sm-3 d-flex align-items-center gap-2">
+                    <button id="auth-trigger" class="btn btn-primary btn-sm px-3 rounded-pill" type="button" data-bs-toggle="modal" data-bs-target="#auth-modal">
+                        Iniciar sesión
                     </button>
-                    <div class="border-start ps-3 ms-2 d-flex align-items-center gap-2">
-                        <button id="auth-trigger" class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#auth-modal">
-                            Iniciar sesión
+                    <div id="user-profile" class="d-none align-items-center gap-2">
+                        <a href="perfil.html" class="d-flex align-items-center gap-2 text-decoration-none text-body" title="Mi perfil">
+                            <div id="user-avatar" class="avatar bg-body-tertiary text-body-emphasis fw-bold rounded-circle d-flex justify-content-center align-items-center border"></div>
+                            <span id="user-name" class="fw-medium fs-sm d-none d-sm-inline"></span>
+                        </a>
+                        <button id="logout-button" class="btn btn-outline-danger btn-sm rounded-pill" type="button">
+                            Cerrar sesión
                         </button>
-                        <div id="user-profile" class="d-none align-items-center">
-                            <div id="user-avatar" class="avatar bg-body-tertiary text-muted fw-bold rounded-circle d-flex justify-content-center align-items-center me-2"></div>
-                            <span id="user-name" class="fw-medium fs-sm"></span>
-                            <button id="logout-button" class="btn btn-outline-danger btn-sm ms-2" type="button">
-                                Cerrar sesión
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -72,8 +69,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="register-password" class="form-label">Contraseña</label>
-                            <input id="register-password" name="password" class="form-control" type="password" autocomplete="new-password" minlength="8" aria-describedby="password-help">
-                            <div id="password-help" class="form-text">Debe tener al menos 8 caracteres.</div>
+                            <input id="register-password" name="password" class="form-control" type="password" autocomplete="new-password" aria-describedby="password-help">
+                            <div id="password-help" class="form-text">Entre 8 y 20 caracteres, una mayúscula, un número y un carácter especial.</div>
                         </div>
                         <button class="btn btn-primary w-100" type="submit">Crear cuenta</button>
                     </form>
@@ -86,38 +83,51 @@
         </div>
     </div>
 
-    <div class="container-fluid px-3 px-sm-4 px-lg-5 my-5">
+    <div class="container contenedor-principal my-4">
 
-        <header class="mb-5">
-            <div>
-                <span class="text-primary fw-bold text-uppercase fs-xs">Tu punto de encuentro</span>
-                <h1 class="display-4 hero-title fw-bold text-body-emphasis mt-2 mb-3">El juego continúa aquí.</h1>
-                <p class="text-muted fs-5 mb-0">Descubre tu próximo mundo. Comparte el que ya es tuyo.</p>
+        <header class="banner-inicio superficie-tarjeta rounded-4 px-4 py-5 p-md-5 mb-4" data-bs-theme="dark">
+            <div class="row align-items-center g-4 w-100 mx-0">
+                <div class="col-lg-7 px-0">
+                    <h1 class="display-6 fw-bold text-white mb-2">El juego continúa acá</h1>
+                    <p class="banner-inicio-subtitulo fs-6 mb-0">Buscá videojuegos, puntuá con estrellas y debatí en comunidad.</p>
+                </div>
+                <div class="col-lg-5 px-0 ps-lg-4">
+                    <form id="formulario-buscar-juego" class="game-search-form d-flex gap-2">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark bg-opacity-75 border-secondary border-end-0 rounded-start-pill ps-3">
+                                <i class="bi bi-search text-light"></i>
+                            </span>
+                            <input type="search" id="campo-buscar-juego" class="form-control bg-dark bg-opacity-75 text-white border-secondary border-start-0 rounded-end-pill" placeholder="Buscar videojuego..." aria-label="Buscar videojuego">
+                        </div>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 flex-shrink-0 fw-medium">Buscar</button>
+                    </form>
+                </div>
             </div>
         </header>
 
-        <section class="mb-5 pb-4 border-bottom">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4">
-                <h3 class="fs-4 fw-medium mb-0">Juegos recomendados</h3>
-                <form id="formulario-buscar-juego" class="game-search-form d-flex gap-2">
-                    <input type="search" id="campo-buscar-juego" class="form-control form-control-sm" placeholder="Buscar videojuego..." aria-label="Buscar videojuego">
-                    <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
-                </form>
+        <section class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 fw-bold mb-0">Juegos recomendados</h2>
+                <div class="d-none d-sm-flex align-items-center gap-1">
+                    <button id="boton-juegos-anterior" type="button" class="btn btn-outline-secondary btn-sm nav-btn rounded-circle" aria-label="Juegos anteriores">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button id="boton-juegos-siguiente" type="button" class="btn btn-outline-secondary btn-sm nav-btn rounded-circle" aria-label="Siguientes juegos">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
             </div>
 
             <div id="contenedor-juegos" class="game-grid d-none" aria-live="polite"></div>
         </section>
 
-        <div class="row gx-3 gx-lg-5">
+        <div class="row gx-4 gy-4">
 
             <div class="col-lg-8">
-                <div class="conversation-header d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
-                    <div>
-                        <h3 class="fs-4 fw-medium mb-1">Conversaciones para ti</h3>
-                        <p class="text-muted fs-sm mb-0">Por tu interés en los RPG, la exploración y las buenas historias.</p>
-                    </div>
+                <div class="conversation-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                    <h2 class="h5 fw-bold mb-0">Foro de la comunidad</h2>
                     <div class="publication-toolbar d-flex align-items-center flex-wrap gap-2">
-                        <select id="selector-categoria-publicaciones" class="form-select form-select-sm w-auto" aria-label="Filtrar por categoría">
+                        <select id="selector-categoria-publicaciones" class="form-select form-select-sm w-auto rounded-pill" aria-label="Filtrar por categoría">
                             <option value="">Todas las categorías</option>
                             <option value="Descubrimiento o secreto">Descubrimiento o secreto</option>
                             <option value="Informativa">Informativa</option>
@@ -125,121 +135,96 @@
                             <option value="Crítica">Crítica</option>
                             <option value="Bug o problema técnico">Bug o problema técnico</option>
                         </select>
-                        <select id="selector-orden-publicaciones" class="form-select form-select-sm w-auto" aria-label="Ordenar publicaciones">
+                        <select id="selector-orden-publicaciones" class="form-select form-select-sm w-auto rounded-pill" aria-label="Ordenar publicaciones">
                             <option value="recientes">Más recientes</option>
                             <option value="votados">Más votados</option>
                         </select>
-                        <button id="boton-crear-publicacion" class="btn btn-primary btn-sm">
-                            <i class="bi bi-pencil-square me-1"></i> Nueva publicación
+                        <button id="boton-crear-publicacion" class="btn btn-primary btn-sm rounded-pill px-3">
+                            <i class="bi bi-plus-lg me-1"></i> Publicar
                         </button>
                     </div>
                 </div>
 
-                <div id="contenedor-publicaciones" class="thread-list mb-4">
+                <div id="contenedor-publicaciones" class="thread-list d-flex flex-column gap-3 mb-4">
                     <div class="text-center text-muted py-5" id="indicador-carga-publicaciones">Cargando publicaciones...</div>
                 </div>
 
                 <template id="plantilla-publicacion">
-                    <div class="publicacion d-flex align-items-center py-4 border-bottom">
-                        <img class="publicacion-portada post-cover d-none rounded-2 me-3" alt="">
-                        <div class="flex-grow-1 min-w-0">
-                            <div class="fs-xs fw-medium mb-2">
-                                <span class="text-primary publicacion-juego post-game"></span> 
-                                <span class="text-muted">/ <span class="publicacion-categoria post-category"></span></span>
-                                <span class="badge rounded-pill text-bg-warning ms-2 d-none publicacion-verificacion">En verificación</span>
+                    <div class="publicacion tarjeta-publicacion superficie-tarjeta d-flex align-items-stretch gap-3 p-3 rounded-4">
+                        <img class="publicacion-portada post-cover d-none rounded-3 align-self-center" alt="">
+                        <div class="flex-grow-1 min-w-0 d-flex flex-column justify-content-between py-1">
+                            <div>
+                                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                    <span class="fs-xs fw-semibold text-primary publicacion-juego post-game"></span>
+                                    <span class="text-muted fs-xs">·</span>
+                                    <span class="badge rounded-pill bg-body-tertiary text-body-secondary border publicacion-categoria post-category"></span>
+                                    <span class="badge rounded-pill text-bg-warning d-none publicacion-verificacion">En verificación</span>
+                                </div>
+                                <a class="publicacion-enlace text-decoration-none text-body-emphasis d-block" href="#">
+                                    <h5 class="fs-5 fw-bold mb-0 text-truncate publicacion-titulo post-title"></h5>
+                                </a>
                             </div>
-                            <a class="publicacion-enlace text-decoration-none text-body-emphasis" href="#">
-                                <h5 class="fw-bold mb-1 publicacion-titulo post-title"></h5>
-                            </a>
-                            <p class="text-body-secondary fs-sm mb-2 text-truncate publicacion-resumen"></p>
-                            <div class="text-muted fs-xs publicacion-metadatos post-meta"></div>
+                            <div class="mt-2">
+                                <span class="text-muted fs-xs publicacion-metadatos post-meta"></span>
+                            </div>
                         </div>
-                        <div class="publication-votes d-flex align-items-center text-center ms-3">
-                            <div class="d-flex align-items-center gap-1" data-contenedor-votos>
+                        <div class="publication-votes d-flex flex-column align-items-end justify-content-between flex-shrink-0">
+                            <div class="d-flex align-items-center gap-1 bg-body-tertiary px-2 py-1 rounded-pill border" data-contenedor-votos>
                                 <button type="button" class="btn btn-sm btn-link text-decoration-none p-1 text-muted boton-voto-arriba" data-accion-voto="1" aria-label="Votar positivamente">
                                     <i class="bi bi-arrow-up"></i>
                                 </button>
-                                <span class="fw-medium puntaje-votos">0</span>
+                                <span class="fw-semibold puntaje-votos px-1">0</span>
                                 <button type="button" class="btn btn-sm btn-link text-decoration-none p-1 text-muted boton-voto-abajo" data-accion-voto="-1" aria-label="Votar negativamente">
                                     <i class="bi bi-arrow-down"></i>
                                 </button>
                             </div>
+                            <div class="acciones-publicacion"></div>
                         </div>
                     </div>
                 </template>
 
-                <div class="modal fade" id="modal-juego" tabindex="-1" aria-labelledby="titulo-modal-juego" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="titulo-modal-juego"></h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="game-detail-layout d-flex gap-3 align-items-start mb-4">
-                                    <img id="imagen-modal-juego" class="game-detail-image rounded d-none" alt="">
-                                    <div class="game-detail-information">
-                                        <div class="mb-3">
-                                            <h6 class="fw-bold mb-1">Descripción</h6>
-                                            <p id="descripcion-modal-juego" class="text-muted mb-0"></p>
-                                        </div>
-                                        <div class="mb-3">
-                                            <h6 class="fw-bold mb-1">Géneros</h6>
-                                            <p id="generos-modal-juego" class="text-muted mb-0"></p>
-                                        </div>
-                                        <div class="mb-3">
-                                            <h6 class="fw-bold mb-1">Plataformas</h6>
-                                            <p id="plataformas-modal-juego" class="text-muted mb-0"></p>
-                                        </div>
-                                        <div class="mb-3">
-                                            <h6 class="fw-bold mb-1">Puntaje de IGDB</h6>
-                                            <p id="puntaje-modal-juego" class="text-muted mb-0"></p>
-                                        </div>
-                                        <div>
-                                            <h6 class="fw-bold mb-1">Puntaje de la comunidad (Juego)</h6>
-                                            <p id="puntaje-comunidad-modal-juego" class="text-muted mb-2"></p>
-                                            <div id="estrellas-nota-juego" class="d-flex align-items-center flex-wrap gap-1" role="group" aria-label="Puntuar videojuego del 1 al 5">
-                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="1" aria-label="1 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="2" aria-label="2 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="3" aria-label="3 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="4" aria-label="4 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                                                <button type="button" class="btn btn-link p-0 text-muted" data-nota-juego="5" aria-label="5 de 5 estrellas"><i class="bi bi-star fs-5"></i></button>
-                                            </div>
-                                            <div id="mensaje-puntuacion-juego" class="fs-xs text-muted mt-1" role="status" aria-live="polite"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <h6 class="fw-bold mb-3">Publicaciones de este juego</h6>
-                                <div id="estado-publicaciones-juego" class="text-muted mb-3" role="status" aria-live="polite"></div>
-                                <div id="publicaciones-del-juego" class="d-grid gap-3"></div>
-                                <p id="sin-publicaciones-juego" class="text-muted fs-sm d-none mt-3 mb-2" role="status">
-                                    Todavía no hay publicaciones sobre este juego.
-                                </p>
-                                <button id="boton-primera-publicacion" type="button" class="btn btn-primary w-100 d-none">
-                                    Crear primera publicación
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="modal fade" id="modal-crear-publicacion" tabindex="-1" aria-labelledby="titulo-modal-crear-publicacion" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="titulo-modal-crear-publicacion">Crear nueva publicación</h5>
+                        <div class="modal-content superficie-tarjeta border-0 p-1">
+                            <div class="modal-header border-bottom-0 pb-2">
+                                <h5 class="modal-title fw-bold" id="titulo-modal-crear-publicacion">Crear nueva publicación</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                             </div>
-                            <div class="modal-body">
+                            <div class="modal-body pt-2">
                                 <form id="formulario-crear-publicacion">
                                     <div id="grupo-juego-publicacion" class="mb-3">
-                                        <label class="form-label" for="campo-juego-publicacion">Juego</label>
-                                        <input type="text" id="campo-juego-publicacion" name="game" list="lista-sugerencias-juegos" class="form-control" placeholder="Ej. Elden Ring">
-                                        <datalist id="lista-sugerencias-juegos"></datalist>
+                                        <label class="form-label fw-medium fs-sm" for="campo-juego-publicacion">Videojuego</label>
+                                        <div class="position-relative">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-body-tertiary border-end-0">
+                                                    <i class="bi bi-controller text-primary"></i>
+                                                </span>
+                                                <input type="text" id="campo-juego-publicacion" name="game" class="form-control border-start-0" autocomplete="off" placeholder="Escribe para buscar un videojuego...">
+                                            </div>
+                                            <div id="desplegable-juegos-publicacion" class="desplegable-juegos d-none rounded-3 shadow-lg mt-1"></div>
+                                        </div>
+                                        <div id="vista-juego-seleccionado" class="d-none align-items-center gap-3 p-2 mt-2 rounded-3 bg-body-tertiary border">
+                                            <img id="imagen-juego-seleccionado" class="portada-mini-selector rounded-2 d-none" alt="">
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div id="titulo-juego-seleccionado" class="fw-semibold fs-sm text-truncate"></div>
+                                                <div id="detalle-juego-seleccionado" class="text-muted fs-xs text-truncate"></div>
+                                            </div>
+                                            <button id="boton-limpiar-juego" type="button" class="btn btn-sm btn-link text-muted text-decoration-none" aria-label="Cambiar juego">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label" for="campo-categoria-publicacion">Categoría</label>
-                                        <select id="campo-categoria-publicacion" name="category" class="form-select">
+                                        <label class="form-label fw-medium fs-sm" for="campo-titulo-publicacion">Título</label>
+                                        <input type="text" id="campo-titulo-publicacion" name="title" class="form-control" placeholder="Sé claro y descriptivo...">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium fs-sm" for="campo-contenido-publicacion">Contenido</label>
+                                        <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5" placeholder="Comparte tu experiencia..."></textarea>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-4">
+                                        <label class="form-label mb-0 text-muted fs-sm text-nowrap" for="campo-categoria-publicacion">Categoría</label>
+                                        <select id="campo-categoria-publicacion" name="category" class="form-select form-select-sm w-auto">
                                             <option value="">Selecciona una categoría...</option>
                                             <option value="Informativa">Informativa</option>
                                             <option value="Review o reseña">Review o reseña</option>
@@ -248,15 +233,7 @@
                                             <option value="Descubrimiento o secreto">Descubrimiento o secreto</option>
                                         </select>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label" for="campo-titulo-publicacion">Título</label>
-                                        <input type="text" id="campo-titulo-publicacion" name="title" class="form-control" placeholder="Sé claro y descriptivo...">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label" for="campo-contenido-publicacion">Contenido</label>
-                                        <textarea id="campo-contenido-publicacion" name="content" class="form-control" rows="5" placeholder="Comparte tu experiencia..."></textarea>
-                                    </div>
-                                    <button id="boton-enviar-publicacion" type="submit" class="btn btn-primary w-100">Publicar</button>
+                                    <button id="boton-enviar-publicacion" type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-medium">Publicar</button>
                                 </form>
                             </div>
                         </div>
@@ -264,10 +241,10 @@
                 </div>
             </div>
 
-            <div class="col-lg-4 mt-5 mt-lg-0">
-                <div class="card border border-opacity-10 shadow-sm rounded-4 mb-4">
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="card superficie-tarjeta rounded-4 mb-4 tarjeta-lateral-fija">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-4">Juegos mejor valorados</h5>
+                        <h5 class="fw-bold mb-2">Juegos mejor valorados</h5>
                         <div id="contenedor-juegos-mejor-valorados" aria-live="polite">
                             <p class="text-muted fs-sm mb-0" role="status">Cargando juegos...</p>
                         </div>
@@ -277,7 +254,7 @@
         </div>
     </div>
 
-    <footer class="container-fluid px-3 px-sm-4 px-lg-5 py-4 border-top mt-5 d-flex justify-content-between align-items-center">
+    <footer class="container contenedor-principal py-4 border-top mt-5 d-flex justify-content-center align-items-center text-center">
         <div class="text-muted fs-sm">
             respawn. © 2026 · El siguiente punto de encuentro.
         </div>

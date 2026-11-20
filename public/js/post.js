@@ -198,8 +198,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             insigniaVerificacion.classList.toggle('d-none', !publicacion.requiereRevision);
         }
         if (botonReportarPublicacion) {
+            const autor = publicacion.author || publicacion.autor;
+            const esAutor = usuarioActual && autor
+                && String(usuarioActual.id) === String(autor.id);
             const yaReportado = Boolean(publicacion.yaReportado);
-            botonReportarPublicacion.disabled = yaReportado;
+            botonReportarPublicacion.classList.toggle('d-none', Boolean(esAutor));
+            botonReportarPublicacion.disabled = Boolean(esAutor) || yaReportado;
             botonReportarPublicacion.textContent = yaReportado ? 'Reportado' : 'Reportar';
         }
     }
@@ -286,6 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function actualizarPerfilUsuario(usuario) {
         usuarioActual = usuario;
         actualizarFormularioComentarios();
+        actualizarEstadoReportes(publicacionActual);
         if (!usuario) {
             botonAbrirAutenticacion.classList.remove('d-none');
             perfilUsuario.classList.add('d-none');

@@ -6,10 +6,10 @@ const crearErrorValidacionReporte = (mensaje) => {
 };
 
 class Reporte {
-  #idUsuario;
-  #idPublicacion;
-  #motivo;
-  #fecha;
+  idUsuario;
+  idPublicacion;
+  motivo;
+  fecha;
 
   constructor({
     idUsuario,
@@ -28,34 +28,18 @@ class Reporte {
       throw crearErrorValidacionReporte('El motivo del reporte es obligatorio');
     }
 
-    this.#idUsuario = idUsuario.trim();
-    this.#idPublicacion = idPublicacion.trim();
-    this.#motivo = motivoNormalizado;
-    this.#fecha = fecha;
-  }
-
-  get idUsuario() {
-    return this.#idUsuario;
-  }
-
-  get idPublicacion() {
-    return this.#idPublicacion;
-  }
-
-  get motivo() {
-    return this.#motivo;
-  }
-
-  get fecha() {
-    return this.#fecha;
+    this.idUsuario = idUsuario.trim();
+    this.idPublicacion = idPublicacion.trim();
+    this.motivo = motivoNormalizado;
+    this.fecha = fecha;
   }
 
   toJSON() {
     return {
-      idUsuario: this.#idUsuario,
-      idPublicacion: this.#idPublicacion,
-      motivo: this.#motivo,
-      fecha: this.#fecha
+      idUsuario: this.idUsuario,
+      idPublicacion: this.idPublicacion,
+      motivo: this.motivo,
+      fecha: this.fecha
     };
   }
 

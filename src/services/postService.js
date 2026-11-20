@@ -150,6 +150,11 @@ const reportarPublicacion = async (id, motivo, idUsuario) => {
     throw crearErrorPublicacion('Publicación no encontrada', 404);
   }
 
+  const autor = publicacionExistente.author || publicacionExistente.autor;
+  if (autor && String(autor.id) === String(idUsuario)) {
+    throw crearErrorPublicacion('No puedes reportar tu propia publicación', 403);
+  }
+
   return await repositorioPublicaciones.registrarReportePublicacion(id, idUsuario, motivo);
 };
 

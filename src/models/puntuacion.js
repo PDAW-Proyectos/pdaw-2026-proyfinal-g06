@@ -8,11 +8,11 @@ const crearErrorValidacion = (mensaje) => {
 };
 
 class Puntuacion {
-  #id;
-  #idUsuario;
-  #juego;
-  #nota;
-  #fechaActualizacion;
+  id;
+  idUsuario;
+  juego;
+  nota;
+  fechaActualizacion;
 
   constructor({ id = randomUUID(), idUsuario, juego, nota, fechaActualizacion = new Date().toISOString() }) {
     if (typeof idUsuario !== 'string' || !idUsuario.trim()) {
@@ -26,31 +26,11 @@ class Puntuacion {
       throw crearErrorValidacion('La puntuación debe ser un número entero entre 1 y 5');
     }
 
-    this.#id = id;
-    this.#idUsuario = idUsuario.trim();
-    this.#juego = juego.trim();
-    this.#nota = notaEntera;
-    this.#fechaActualizacion = fechaActualizacion;
-  }
-
-  get id() {
-    return this.#id;
-  }
-
-  get idUsuario() {
-    return this.#idUsuario;
-  }
-
-  get juego() {
-    return this.#juego;
-  }
-
-  get nota() {
-    return this.#nota;
-  }
-
-  get fechaActualizacion() {
-    return this.#fechaActualizacion;
+    this.id = id;
+    this.idUsuario = idUsuario.trim();
+    this.juego = juego.trim();
+    this.nota = notaEntera;
+    this.fechaActualizacion = fechaActualizacion;
   }
 
   actualizarNota(nuevaNota) {
@@ -58,18 +38,18 @@ class Puntuacion {
     if (!Number.isInteger(notaEntera) || notaEntera < 1 || notaEntera > 5) {
       throw crearErrorValidacion('La puntuación debe ser un número entero entre 1 y 5');
     }
-    this.#nota = notaEntera;
-    this.#fechaActualizacion = new Date().toISOString();
+    this.nota = notaEntera;
+    this.fechaActualizacion = new Date().toISOString();
     return this;
   }
 
   toJSON() {
     return {
-      id: this.#id,
-      idUsuario: this.#idUsuario,
-      juego: this.#juego,
-      nota: this.#nota,
-      fechaActualizacion: this.#fechaActualizacion
+      id: this.id,
+      idUsuario: this.idUsuario,
+      juego: this.juego,
+      nota: this.nota,
+      fechaActualizacion: this.fechaActualizacion
     };
   }
 

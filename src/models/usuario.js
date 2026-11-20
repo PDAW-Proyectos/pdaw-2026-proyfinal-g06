@@ -8,11 +8,11 @@ const crearErrorValidacion = (mensaje) => {
 };
 
 class Usuario {
-  #id;
-  #nombre;
-  #correo;
-  #contrasenaHash;
-  #fechaCreacion;
+  id;
+  nombre;
+  correo;
+  contrasenaHash;
+  fechaCreacion;
 
   constructor({
     id = randomUUID(),
@@ -39,52 +39,36 @@ class Usuario {
       throw crearErrorValidacion('La contraseña procesada es obligatoria');
     }
 
-    this.#id = id;
-    this.#nombre = nombreFinal.trim();
-    this.#correo = correoFinal.trim().toLowerCase();
-    this.#contrasenaHash = hashFinal;
-    this.#fechaCreacion = fechaCreacion || createdAt;
+    this.id = id;
+    this.nombre = nombreFinal.trim();
+    this.correo = correoFinal.trim().toLowerCase();
+    this.contrasenaHash = hashFinal;
+    this.fechaCreacion = fechaCreacion || createdAt;
   }
 
-  get id() {
-    return this.#id;
+  obtenerNombre() {
+    return this.nombre;
   }
 
-  get name() {
-    return this.#nombre;
+  obtenerCorreo() {
+    return this.correo;
   }
 
-  get nombre() {
-    return this.#nombre;
+  obtenerContrasenaHash() {
+    return this.contrasenaHash;
   }
 
-  get email() {
-    return this.#correo;
-  }
-
-  get correo() {
-    return this.#correo;
-  }
-
-  get passwordHash() {
-    return this.#contrasenaHash;
-  }
-
-  get contrasenaHash() {
-    return this.#contrasenaHash;
-  }
-
-  get createdAt() {
-    return this.#fechaCreacion;
+  obtenerFechaCreacion() {
+    return this.fechaCreacion;
   }
 
   toJSON() {
     return {
-      id: this.#id,
-      name: this.#nombre,
-      email: this.#correo,
-      passwordHash: this.#contrasenaHash,
-      createdAt: this.#fechaCreacion
+      id: this.id,
+      name: this.nombre,
+      email: this.correo,
+      passwordHash: this.contrasenaHash,
+      createdAt: this.fechaCreacion
     };
   }
 

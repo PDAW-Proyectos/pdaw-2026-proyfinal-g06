@@ -6,10 +6,10 @@ const crearErrorValidacionVoto = (mensaje) => {
 };
 
 class VotoPublicacion {
-  #idUsuario;
-  #idPublicacion;
-  #valor;
-  #fechaActualizacion;
+  idUsuario;
+  idPublicacion;
+  valor;
+  fechaActualizacion;
 
   constructor({ idUsuario, idPublicacion, valor, fechaActualizacion = new Date().toISOString() }) {
     if (typeof idUsuario !== 'string' || !idUsuario.trim()) {
@@ -23,26 +23,10 @@ class VotoPublicacion {
       throw crearErrorValidacionVoto('El voto debe ser positivo (1) o negativo (-1)');
     }
 
-    this.#idUsuario = idUsuario.trim();
-    this.#idPublicacion = idPublicacion.trim();
-    this.#valor = valorNumerico;
-    this.#fechaActualizacion = fechaActualizacion;
-  }
-
-  get idUsuario() {
-    return this.#idUsuario;
-  }
-
-  get idPublicacion() {
-    return this.#idPublicacion;
-  }
-
-  get valor() {
-    return this.#valor;
-  }
-
-  get fechaActualizacion() {
-    return this.#fechaActualizacion;
+    this.idUsuario = idUsuario.trim();
+    this.idPublicacion = idPublicacion.trim();
+    this.valor = valorNumerico;
+    this.fechaActualizacion = fechaActualizacion;
   }
 
   actualizarValor(nuevoValor) {
@@ -50,17 +34,17 @@ class VotoPublicacion {
     if (valorNumerico !== 1 && valorNumerico !== -1) {
       throw crearErrorValidacionVoto('El voto debe ser positivo (1) o negativo (-1)');
     }
-    this.#valor = valorNumerico;
-    this.#fechaActualizacion = new Date().toISOString();
+    this.valor = valorNumerico;
+    this.fechaActualizacion = new Date().toISOString();
     return this;
   }
 
   toJSON() {
     return {
-      idUsuario: this.#idUsuario,
-      idPublicacion: this.#idPublicacion,
-      valor: this.#valor,
-      fechaActualizacion: this.#fechaActualizacion
+      idUsuario: this.idUsuario,
+      idPublicacion: this.idPublicacion,
+      valor: this.valor,
+      fechaActualizacion: this.fechaActualizacion
     };
   }
 

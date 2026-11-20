@@ -8,15 +8,15 @@ const crearErrorValidacion = (mensaje) => {
 };
 
 class Comentario {
-  #id;
-  #idPublicacion;
-  #idPadre;
-  #contenido;
-  #autor;
-  #eliminado;
-  #fechaCreacion;
-  #fechaActualizacion;
-  #fechaEliminacion;
+  id;
+  idPublicacion;
+  idPadre;
+  contenido;
+  autor;
+  eliminado;
+  fechaCreacion;
+  fechaActualizacion;
+  fechaEliminacion;
 
   constructor({
     id = randomUUID(),
@@ -56,55 +56,51 @@ class Comentario {
       throw crearErrorValidacion('El autor del comentario es obligatorio');
     }
 
-    this.#id = id;
-    this.#idPublicacion = publicacionFinal.trim();
-    this.#idPadre = padreFinal ? String(padreFinal) : null;
-    this.#contenido = eliminadoFinal ? '' : contenidoFinal.trim();
-    this.#autor = { id: autorFinal.id, name: autorFinal.name || autorFinal.nombre || 'Usuario' };
-    this.#eliminado = eliminadoFinal;
-    this.#fechaCreacion = fechaCreacion || createdAt;
-    this.#fechaActualizacion = fechaActualizacion || updatedAt;
-    this.#fechaEliminacion = fechaEliminacion || deletedAt;
+    this.id = id;
+    this.idPublicacion = publicacionFinal.trim();
+    this.idPadre = padreFinal ? String(padreFinal) : null;
+    this.contenido = eliminadoFinal ? '' : contenidoFinal.trim();
+    this.autor = { id: autorFinal.id, name: autorFinal.name || autorFinal.nombre || 'Usuario' };
+    this.eliminado = eliminadoFinal;
+    this.fechaCreacion = fechaCreacion || createdAt;
+    this.fechaActualizacion = fechaActualizacion || updatedAt;
+    this.fechaEliminacion = fechaEliminacion || deletedAt;
   }
 
-  get id() {
-    return this.#id;
+  obtenerIdPublicacion() {
+    return this.idPublicacion;
   }
 
-  get postId() {
-    return this.#idPublicacion;
+  obtenerIdPadre() {
+    return this.idPadre;
   }
 
-  get parentId() {
-    return this.#idPadre;
+  obtenerContenido() {
+    return this.contenido;
   }
 
-  get content() {
-    return this.#contenido;
+  obtenerAutor() {
+    return { ...this.autor };
   }
 
-  get author() {
-    return { ...this.#autor };
+  estaEliminado() {
+    return this.eliminado;
   }
 
-  get deleted() {
-    return this.#eliminado;
+  obtenerFechaCreacion() {
+    return this.fechaCreacion;
   }
 
-  get createdAt() {
-    return this.#fechaCreacion;
+  obtenerFechaActualizacion() {
+    return this.fechaActualizacion;
   }
 
-  get updatedAt() {
-    return this.#fechaActualizacion;
-  }
-
-  get deletedAt() {
-    return this.#fechaEliminacion;
+  obtenerFechaEliminacion() {
+    return this.fechaEliminacion;
   }
 
   actualizarContenido(nuevoContenido) {
-    if (this.#eliminado) {
+    if (this.eliminado) {
       throw crearErrorValidacion('No se puede editar un comentario eliminado');
     }
     if (typeof nuevoContenido !== 'string' || !nuevoContenido.trim()) {
@@ -113,31 +109,31 @@ class Comentario {
     if (nuevoContenido.trim().length > 2000) {
       throw crearErrorValidacion('El comentario no puede superar los 2000 caracteres');
     }
-    this.#contenido = nuevoContenido.trim();
-    this.#fechaActualizacion = new Date().toISOString();
+    this.contenido = nuevoContenido.trim();
+    this.fechaActualizacion = new Date().toISOString();
   }
 
   marcarEliminado() {
-    this.#contenido = '';
-    this.#eliminado = true;
-    this.#fechaEliminacion = new Date().toISOString();
+    this.contenido = '';
+    this.eliminado = true;
+    this.fechaEliminacion = new Date().toISOString();
   }
 
   toJSON() {
     const objeto = {
-      id: this.#id,
-      postId: this.#idPublicacion,
-      parentId: this.#idPadre,
-      content: this.#contenido,
-      author: { ...this.#autor },
-      createdAt: this.#fechaCreacion
+      id: this.id,
+      postId: this.idPublicacion,
+      parentId: this.idPadre,
+      content: this.contenido,
+      author: { ...this.autor },
+      createdAt: this.fechaCreacion
     };
-    if (this.#fechaActualizacion) {
-      objeto.updatedAt = this.#fechaActualizacion;
+    if (this.fechaActualizacion) {
+      objeto.updatedAt = this.fechaActualizacion;
     }
-    if (this.#eliminado) {
+    if (this.eliminado) {
       objeto.deleted = true;
-      objeto.deletedAt = this.#fechaEliminacion;
+      objeto.deletedAt = this.fechaEliminacion;
     }
     return objeto;
   }

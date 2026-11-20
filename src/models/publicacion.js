@@ -8,15 +8,15 @@ const crearErrorValidacion = (mensaje) => {
 };
 
 class Publicacion {
-  #id;
-  #titulo;
-  #categoria;
-  #contenido;
-  #juego;
-  #imagenJuego;
-  #datosJuego;
-  #autor;
-  #fechaCreacion;
+  id;
+  titulo;
+  categoria;
+  contenido;
+  juego;
+  imagenJuego;
+  datosJuego;
+  autor;
+  fechaCreacion;
 
   constructor({
     id = randomUUID(),
@@ -51,73 +51,41 @@ class Publicacion {
       throw crearErrorValidacion('El autor de la publicación es obligatorio');
     }
 
-    this.#id = id;
-    this.#titulo = tituloFinal.trim();
-    this.#categoria = typeof categoriaFinal === 'string' && categoriaFinal.trim()
+    this.id = id;
+    this.titulo = tituloFinal.trim();
+    this.categoria = typeof categoriaFinal === 'string' && categoriaFinal.trim()
       ? categoriaFinal.trim()
       : 'Informativa';
-    this.#contenido = typeof contenidoFinal === 'string' ? contenidoFinal.trim() : '';
-    this.#juego = juegoFinal.trim();
-    this.#imagenJuego = imagenJuego || '';
-    this.#datosJuego = datosJuego || null;
-    this.#autor = { id: autorFinal.id, name: autorFinal.name || autorFinal.nombre || 'Usuario' };
-    this.#fechaCreacion = fechaCreacion || createdAt;
+    this.contenido = typeof contenidoFinal === 'string' ? contenidoFinal.trim() : '';
+    this.juego = juegoFinal.trim();
+    this.imagenJuego = imagenJuego || '';
+    this.datosJuego = datosJuego || null;
+    this.autor = { id: autorFinal.id, name: autorFinal.name || autorFinal.nombre || 'Usuario' };
+    this.fechaCreacion = fechaCreacion || createdAt;
   }
 
-  get id() {
-    return this.#id;
+  obtenerTitulo() {
+    return this.titulo;
   }
 
-  get title() {
-    return this.#titulo;
+  obtenerCategoria() {
+    return this.categoria;
   }
 
-  get titulo() {
-    return this.#titulo;
+  obtenerContenido() {
+    return this.contenido;
   }
 
-  get category() {
-    return this.#categoria;
+  obtenerJuego() {
+    return this.juego;
   }
 
-  get categoria() {
-    return this.#categoria;
+  obtenerAutor() {
+    return { ...this.autor };
   }
 
-  get content() {
-    return this.#contenido;
-  }
-
-  get contenido() {
-    return this.#contenido;
-  }
-
-  get game() {
-    return this.#juego;
-  }
-
-  get juego() {
-    return this.#juego;
-  }
-
-  get imagenJuego() {
-    return this.#imagenJuego;
-  }
-
-  get datosJuego() {
-    return this.#datosJuego;
-  }
-
-  get author() {
-    return { ...this.#autor };
-  }
-
-  get autor() {
-    return { ...this.#autor };
-  }
-
-  get createdAt() {
-    return this.#fechaCreacion;
+  obtenerFechaCreacion() {
+    return this.fechaCreacion;
   }
 
   actualizar(datos = {}) {
@@ -130,40 +98,40 @@ class Publicacion {
       if (typeof nuevoTitulo !== 'string' || !nuevoTitulo.trim()) {
         throw crearErrorValidacion('El título de la publicación es obligatorio');
       }
-      this.#titulo = nuevoTitulo.trim();
+      this.titulo = nuevoTitulo.trim();
     }
     if (nuevaCategoria !== undefined && typeof nuevaCategoria === 'string' && nuevaCategoria.trim()) {
-      this.#categoria = nuevaCategoria.trim();
+      this.categoria = nuevaCategoria.trim();
     }
     if (nuevoContenido !== undefined && typeof nuevoContenido === 'string') {
-      this.#contenido = nuevoContenido.trim();
+      this.contenido = nuevoContenido.trim();
     }
     if (nuevoJuego !== undefined && typeof nuevoJuego === 'string' && nuevoJuego.trim()) {
-      this.#juego = nuevoJuego.trim();
+      this.juego = nuevoJuego.trim();
     }
     if (datos.imagenJuego !== undefined) {
-      this.#imagenJuego = datos.imagenJuego || '';
+      this.imagenJuego = datos.imagenJuego || '';
     }
     if (datos.datosJuego !== undefined) {
-      this.#datosJuego = datos.datosJuego || null;
+      this.datosJuego = datos.datosJuego || null;
     }
   }
 
   toJSON() {
     return {
-      id: this.#id,
-      title: this.#titulo,
-      titulo: this.#titulo,
-      category: this.#categoria,
-      categoria: this.#categoria,
-      content: this.#contenido,
-      contenido: this.#contenido,
-      game: this.#juego,
-      juego: this.#juego,
-      imagenJuego: this.#imagenJuego,
-      datosJuego: this.#datosJuego,
-      author: { ...this.#autor },
-      createdAt: this.#fechaCreacion
+      id: this.id,
+      title: this.titulo,
+      titulo: this.titulo,
+      category: this.categoria,
+      categoria: this.categoria,
+      content: this.contenido,
+      contenido: this.contenido,
+      game: this.juego,
+      juego: this.juego,
+      imagenJuego: this.imagenJuego,
+      datosJuego: this.datosJuego,
+      author: { ...this.autor },
+      createdAt: this.fechaCreacion
     };
   }
 

@@ -25,9 +25,11 @@ test('Usuario valida campos obligatorios y normaliza el correo', () => {
     passwordHash: 'hash-seguro'
   });
 
-  assert.equal(usuario.name, 'Luca');
-  assert.equal(usuario.email, 'luca@example.com');
-  assert.equal(Usuario.fromJSON(usuario.toJSON()).email, 'luca@example.com');
+  assert.equal(usuario.nombre, 'Luca');
+  assert.equal(usuario.obtenerNombre(), 'Luca');
+  assert.equal(usuario.correo, 'luca@example.com');
+  assert.equal(usuario.obtenerCorreo(), 'luca@example.com');
+  assert.equal(Usuario.fromJSON(usuario.toJSON()).obtenerCorreo(), 'luca@example.com');
 
   assert.throws(() => new Usuario({ name: '  ', email: 'a@b.com', passwordHash: 'x' }), { statusCode: 400 });
   assert.throws(() => new Usuario({ name: 'Luca', email: 'invalido', passwordHash: 'x' }), { statusCode: 400 });
@@ -43,11 +45,13 @@ test('Publicacion valida estado y permite actualizar campos', () => {
     author: { id: 'u1', name: 'Luca' }
   });
 
-  assert.equal(publicacion.title, 'Guía inicial');
+  assert.equal(publicacion.titulo, 'Guía inicial');
+  assert.equal(publicacion.obtenerTitulo(), 'Guía inicial');
   publicacion.actualizar({ title: 'Guía editada', category: 'Descubrimiento o secreto', content: 'Nuevo' });
-  assert.equal(publicacion.title, 'Guía editada');
-  assert.equal(publicacion.category, 'Descubrimiento o secreto');
-  assert.equal(Publicacion.fromJSON(publicacion.toJSON()).game, 'Elden Ring');
+  assert.equal(publicacion.titulo, 'Guía editada');
+  assert.equal(publicacion.obtenerTitulo(), 'Guía editada');
+  assert.equal(publicacion.obtenerCategoria(), 'Descubrimiento o secreto');
+  assert.equal(Publicacion.fromJSON(publicacion.toJSON()).obtenerJuego(), 'Elden Ring');
 
   assert.throws(() => publicacion.actualizar({ title: '   ' }), { statusCode: 400 });
   assert.throws(() => new Publicacion({ title: 'Hola', game: '', author: { id: 'u1' } }), { statusCode: 400 });
@@ -62,7 +66,8 @@ test('Comentario aplica valores limite de longitud y estado eliminado', () => {
     content: textoLimite,
     author: { id: 'u1', name: 'Luca' }
   });
-  assert.equal(comentario.content.length, 2000);
+  assert.equal(comentario.contenido.length, 2000);
+  assert.equal(comentario.obtenerContenido().length, 2000);
 
   assert.throws(
     () => new Comentario({ postId: 'p1', content: textoExcedido, author: { id: 'u1' } }),
@@ -74,12 +79,12 @@ test('Comentario aplica valores limite de longitud y estado eliminado', () => {
   );
 
   comentario.actualizarContenido('Editado');
-  assert.equal(comentario.content, 'Editado');
-  assert.ok(comentario.updatedAt);
+  assert.equal(comentario.contenido, 'Editado');
+  assert.ok(comentario.obtenerFechaActualizacion());
 
   comentario.marcarEliminado();
-  assert.equal(comentario.deleted, true);
-  assert.equal(comentario.content, '');
+  assert.equal(comentario.eliminado, true);
+  assert.equal(comentario.contenido, '');
   assert.throws(() => comentario.actualizarContenido('Otro'), { statusCode: 400 });
 });
 

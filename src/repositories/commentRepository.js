@@ -10,7 +10,7 @@ const sincronizarComentarios = () => {
 };
 
 const obtenerComentariosPorPublicacion = async (idPublicacion) => comentariosBD
-  .filter((comentario) => comentario.postId === idPublicacion)
+  .filter((comentario) => comentario.idPublicacion === idPublicacion)
   .map((comentario) => comentario.toJSON());
 
 const buscarComentarioPorId = async (id) => {
@@ -27,7 +27,7 @@ const crearComentario = async (datosComentario) => {
 
 const actualizarComentario = async (id, contenido) => {
   const comentario = comentariosBD.find((item) => item.id === id);
-  if (!comentario || comentario.deleted) return null;
+  if (!comentario || comentario.eliminado) return null;
 
   comentario.actualizarContenido(contenido);
   sincronizarComentarios();
@@ -36,7 +36,7 @@ const actualizarComentario = async (id, contenido) => {
 
 const eliminarComentario = async (id) => {
   const comentario = comentariosBD.find((item) => item.id === id);
-  if (!comentario || comentario.deleted) return null;
+  if (!comentario || comentario.eliminado) return null;
 
   comentario.marcarEliminado();
   sincronizarComentarios();
@@ -52,7 +52,7 @@ const eliminarHiloComentario = async (id) => {
   while (encontroRespuestas) {
     encontroRespuestas = false;
     for (const respuesta of comentariosBD) {
-      if (idsHilo.has(respuesta.parentId) && !idsHilo.has(respuesta.id)) {
+      if (idsHilo.has(respuesta.idPadre) && !idsHilo.has(respuesta.id)) {
         idsHilo.add(respuesta.id);
         encontroRespuestas = true;
       }
@@ -71,7 +71,7 @@ const eliminarHiloComentario = async (id) => {
 
 const eliminarComentariosPorPublicacion = async (idPublicacion) => {
   for (let indice = comentariosBD.length - 1; indice >= 0; indice -= 1) {
-    if (comentariosBD[indice].postId === idPublicacion) {
+    if (comentariosBD[indice].idPublicacion === idPublicacion) {
       comentariosBD.splice(indice, 1);
     }
   }

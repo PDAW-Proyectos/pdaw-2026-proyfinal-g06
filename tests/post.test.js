@@ -392,18 +392,18 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   assert.equal(respuesta.status, 401);
 
   respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spam' }, cookieLogin);
+  assert.equal(respuesta.status, 403);
+  assert.equal((await respuesta.json()).error, 'No puedes reportar tu propia publicación');
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spam' }, cookieSegundoUsuario);
   assert.equal(respuesta.status, 201);
   let reporteRes = await respuesta.json();
   assert.equal(reporteRes.cantidadReportes, 1);
   assert.equal(reporteRes.requiereRevision, false);
   assert.equal(reporteRes.yaReportado, true);
 
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spam' }, cookieLogin);
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spam' }, cookieSegundoUsuario);
   assert.equal(respuesta.status, 409);
-
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spoilers sin aviso' }, cookieSegundoUsuario);
-  assert.equal(respuesta.status, 201);
-  assert.equal((await respuesta.json()).requiereRevision, false);
 
   await enviarPost('/api/auth/register', {
     name: 'GamerTres',
@@ -416,7 +416,24 @@ test('puntos de acceso para creación y consulta de publicaciones', async (t) =>
   });
   const cookieTercerUsuario = loginTres.headers.get('set-cookie').split(';')[0];
 
-  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Contenido ofensivo' }, cookieTercerUsuario);
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Spoilers sin aviso' }, cookieTercerUsuario);
+  assert.equal(respuesta.status, 201);
+  reporteRes = await respuesta.json();
+  assert.equal(reporteRes.cantidadReportes, 2);
+  assert.equal(reporteRes.requiereRevision, false);
+
+  await enviarPost('/api/auth/register', {
+    name: 'GamerCuatro',
+    email: 'gamer4@example.com',
+    password: 'password123'
+  });
+  const loginCuatro = await enviarPost('/api/auth/login', {
+    email: 'gamer4@example.com',
+    password: 'password123'
+  });
+  const cookieCuartoUsuario = loginCuatro.headers.get('set-cookie').split(';')[0];
+
+  respuesta = await enviarPost(`/api/posts/${idPublicacion}/reportes`, { motivo: 'Contenido ofensivo' }, cookieCuartoUsuario);
   assert.equal(respuesta.status, 201);
   reporteRes = await respuesta.json();
   assert.equal(reporteRes.cantidadReportes, 3);

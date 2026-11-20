@@ -8,7 +8,7 @@ const sincronizarUsuarios = () => {
 };
 
 const buscarUsuarioPorEmail = async (email) => {
-  const encontrado = usuariosDB.find((usuario) => usuario.email === email.toLowerCase());
+  const encontrado = usuariosDB.find((usuario) => usuario.correo === email.toLowerCase());
   return encontrado ? encontrado.toJSON() : undefined;
 };
 
@@ -19,7 +19,7 @@ const buscarUsuarioPorId = async (id) => {
 
 const crearUsuario = async (datosUsuario) => {
   const nuevoUsuario = new Usuario(datosUsuario);
-  if (usuariosDB.some((usuarioGuardado) => usuarioGuardado.email === nuevoUsuario.email)) {
+  if (usuariosDB.some((usuarioGuardado) => usuarioGuardado.correo === nuevoUsuario.correo)) {
     const error = new Error('El correo electrónico ya está registrado');
     error.statusCode = 409;
     throw error;
